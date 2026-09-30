@@ -129,8 +129,61 @@ def section_pipeline(m: dict) -> list[str]:
     ]
 
 
+def section_tiering(m: dict) -> list[str]:
+    tiers = {t["tier"]: t for t in m["tiers"]}
+    comp = {c["method"]: c for c in m["comparison"]}
+    hand, mono = comp["Hand-weighted score"], comp["Monetary only"]
+    v2 = comp["Hand-weighted v2 (learned weights, rounded)"]
+    ex_lines = []
+    for ex in m["examples"]:
+        ex_lines += ["```", ex["text"], f"  -> actual Jun-Nov 2011 revenue: £{ex['future_revenue']:,.2f}", "```", ""]
+    weights = ", ".join(f"{f} {w}" for f, w in m["weights"].items() if w)
+    v2_weights = ", ".join(f"{f} {w}" for f, w in m["v2_weights"].items() if w)
+    return [
+        "## Customer tiering (python -m tiering.validate)",
+        "",
+        f"- Scored on {m['cutoff']} using only earlier data: **{m['customers_scored']:,} customers**; "
+        f"outcome = revenue {m['outcome_window']}",
+        f"- {m['pct_scored_customers_active_in_outcome']}% of scored customers bought again in the outcome window; "
+        f"{m['outcome_revenue_new_customers_pct']}% of outcome-window revenue came from new customers who could not be scored",
+        f"- v1 weights (documented): {weights}",
+        f"- **Tier 1 (top 10%) earned {tiers['Tier 1']['share_pct']}% of next-period revenue**; "
+        f"monetary-only top 10% earned {mono['capture_top10_pct']}%",
+        f"- Monotonic by tier: mean **{m['monotonic_mean']}**, median **{m['monotonic_median']}**",
+        f"- Spearman(score, future revenue): hand-weighted **{hand['spearman']}** vs monetary-only {mono['spearman']}",
+        f"- v2 weights (logistic regression fit on {m['train_cutoff']} data, rounded to 0.05): {v2_weights} -> "
+        f"top-10% capture **{v2['capture_top10_pct']}%**, Spearman {v2['spearman']}",
+        f"- Weight sensitivity (each weight x0.5 / x1.5): at most **{m['sensitivity_max_pct_changing']}%** of "
+        f"customers change tier; top-10% capture stays within {m['sensitivity_capture_range'][0]}–"
+        f"{m['sensitivity_capture_range'][1]}%",
+        "",
+        "**Future revenue by tier (v1)**",
+        "",
+        table(m["tiers"], ["tier", "customers", "mean", "median", "total", "share_pct", "pct_active"]),
+        "",
+        "**Ranking quality vs baselines** (all scored on the same customers at the same cutoff)",
+        "",
+        table([{**c, "spearman": f"{c['spearman']:.3f}"} for c in m["comparison"]], ["method", "spearman", "capture_top10_pct", "capture_top20_pct", "capture_top30_pct"]),
+        "",
+        "**Learned vs hand weights** (logistic regression on standardized percentile features; "
+        "target = top 20% of next-6-month revenue, trained one period earlier)",
+        "",
+        table([{k: (f"{v:.3f}" if isinstance(v, float) else v) for k, v in r.items()} for r in m["learned_weights"]],
+              ["feature", "coefficient", "implied_weight", "hand_weight"]),
+        "",
+        "**Weight sensitivity**",
+        "",
+        table([{**r, "weight": f"{r['weight']:.3f}"} for r in m["sensitivity"]], ["feature", "factor", "weight", "customers_changing_tier", "pct_changing_tier",
+                                 "tier1_changes", "capture_top10_pct"]),
+        "",
+        "**Worked examples: explain(customer_id)**",
+        "",
+        *ex_lines,
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
-            ("03_rfm", section_rfm)]
+            ("03_rfm", section_rfm), ("tiering", section_tiering)]
 
 
 def main() -> None:

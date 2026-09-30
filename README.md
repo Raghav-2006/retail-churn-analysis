@@ -31,7 +31,7 @@ Data: 1.07M transactions from a UK online wholesaler (UCI Online Retail II, Dec 
 - **Cleaning** (`src/clean.py`, `notebooks/01_clean.ipynb`). The steps run in a fixed order and each one is logged: drop rows with no Customer ID, set cancellations aside (17.6% of invoices, 6.2% of revenue; kept for a return-rate feature), drop non-positive quantity or price, drop exact duplicates, and drop non-product codes such as postage and fees. In total **27.2%** of rows are removed, 22.8 points of it from missing Customer IDs.
 - **SQL** (`notebooks/02_sql_analysis.ipynb`). All aggregation is plain SQL in DuckDB: monthly trends, top countries, top 3 products per country (`ROW_NUMBER() OVER (PARTITION BY ...)`), revenue concentration and a Lorenz curve (window functions), and month-over-month retention (a self-join on customer-month, pooled rate **38.6%**).
 - **RFM** (`notebooks/03_rfm.ipynb`). R, F and M are split into quintile scores from 1 to 5; frequency is ranked first to break ties. The seven segments come from explicit, ordered rules documented in the notebook. The R, F and M values for two random customers are recomputed independently and asserted equal.
-- **Churn model.** *In progress.* A 90-day churn classifier with time-based validation is the next phase.
+- **Customer tiering** (`tiering/`). The planned churn classifier was replaced by a multi-factor tiering model: 8 features computed in SQL before 2011-06-01, percentile-ranked and combined with documented weights into a 0–100 score, cut into four tiers, and validated on Jun–Nov 2011 revenue. `explain(customer_id)` shows each feature's contribution. See RESULTS.md.
 
 ## Limitations
 

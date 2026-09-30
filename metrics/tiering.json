@@ -1,0 +1,454 @@
+{
+  "cutoff": "2011-06-01",
+  "outcome_window": "2011-06-01 to 2011-11-30",
+  "train_cutoff": "2010-12-01",
+  "customers_scored": 4908,
+  "customers_scored_train": 4239,
+  "train_positive_rate": 0.2,
+  "pct_scored_customers_active_in_outcome": 51.94,
+  "outcome_revenue_scored_customers": 4260697.94,
+  "outcome_revenue_new_customers_pct": 14.06,
+  "weights": {
+    "recency": 0.25,
+    "frequency": 0.25,
+    "monetary": 0.3,
+    "tenure": 0.0,
+    "avg_order_value": 0.0,
+    "breadth": 0.1,
+    "cancel_rate": 0.1,
+    "regularity": 0.0
+  },
+  "tiers": [
+    {
+      "tier": "Tier 1",
+      "customers": 490,
+      "mean": 5073.09,
+      "median": 1953.04,
+      "total": 2485812.99,
+      "pct_active": 95.31,
+      "share_pct": 58.34
+    },
+    {
+      "tier": "Tier 2",
+      "customers": 982,
+      "mean": 1007.14,
+      "median": 590.28,
+      "total": 989008.09,
+      "pct_active": 80.65,
+      "share_pct": 23.21
+    },
+    {
+      "tier": "Tier 3",
+      "customers": 1472,
+      "mean": 367.61,
+      "median": 83.92,
+      "total": 541116.3,
+      "pct_active": 51.9,
+      "share_pct": 12.7
+    },
+    {
+      "tier": "Tier 4",
+      "customers": 1964,
+      "mean": 124.62,
+      "median": 0.0,
+      "total": 244760.56,
+      "pct_active": 26.78,
+      "share_pct": 5.74
+    }
+  ],
+  "monotonic_mean": true,
+  "monotonic_median": true,
+  "comparison": [
+    {
+      "method": "Hand-weighted score",
+      "spearman": 0.6067,
+      "capture_top10_pct": 58.34,
+      "capture_top20_pct": 72.39,
+      "capture_top30_pct": 81.56
+    },
+    {
+      "method": "Monetary only",
+      "spearman": 0.5691,
+      "capture_top10_pct": 62.32,
+      "capture_top20_pct": 75.1,
+      "capture_top30_pct": 82.38
+    },
+    {
+      "method": "Equal weights",
+      "spearman": 0.5803,
+      "capture_top10_pct": 52.79,
+      "capture_top20_pct": 70.12,
+      "capture_top30_pct": 80.77
+    },
+    {
+      "method": "Logistic regression (learned)",
+      "spearman": 0.5964,
+      "capture_top10_pct": 62.58,
+      "capture_top20_pct": 75.68,
+      "capture_top30_pct": 82.87
+    },
+    {
+      "method": "Gradient boosting (learned)",
+      "spearman": 0.5727,
+      "capture_top10_pct": 61.31,
+      "capture_top20_pct": 73.36,
+      "capture_top30_pct": 82.28
+    },
+    {
+      "method": "Hand-weighted v2 (learned weights, rounded)",
+      "spearman": 0.5996,
+      "capture_top10_pct": 62.57,
+      "capture_top20_pct": 75.63,
+      "capture_top30_pct": 82.81
+    }
+  ],
+  "best_capture_top10_method": "Logistic regression (learned)",
+  "learned_weights": [
+    {
+      "feature": "recency",
+      "coefficient": 0.337,
+      "implied_weight": 0.129,
+      "hand_weight": 0.25
+    },
+    {
+      "feature": "frequency",
+      "coefficient": 0.417,
+      "implied_weight": 0.16,
+      "hand_weight": 0.25
+    },
+    {
+      "feature": "monetary",
+      "coefficient": 1.091,
+      "implied_weight": 0.418,
+      "hand_weight": 0.3
+    },
+    {
+      "feature": "tenure",
+      "coefficient": 0.005,
+      "implied_weight": 0.002,
+      "hand_weight": 0.0
+    },
+    {
+      "feature": "avg_order_value",
+      "coefficient": 0.505,
+      "implied_weight": 0.194,
+      "hand_weight": 0.0
+    },
+    {
+      "feature": "breadth",
+      "coefficient": 0.002,
+      "implied_weight": 0.001,
+      "hand_weight": 0.1
+    },
+    {
+      "feature": "cancel_rate",
+      "coefficient": -0.042,
+      "implied_weight": 0.0,
+      "hand_weight": 0.1
+    },
+    {
+      "feature": "regularity",
+      "coefficient": 0.25,
+      "implied_weight": 0.096,
+      "hand_weight": 0.0
+    }
+  ],
+  "v2_weights": {
+    "recency": 0.15,
+    "frequency": 0.15,
+    "monetary": 0.4,
+    "tenure": 0.0,
+    "avg_order_value": 0.2,
+    "breadth": 0.0,
+    "cancel_rate": 0.0,
+    "regularity": 0.1
+  },
+  "tiers_v2": [
+    {
+      "tier": "Tier 1",
+      "customers": 490,
+      "mean": 5440.54,
+      "median": 2243.43,
+      "total": 2665865.51,
+      "pct_active": 92.86,
+      "share_pct": 62.57
+    },
+    {
+      "tier": "Tier 2",
+      "customers": 982,
+      "mean": 878.26,
+      "median": 638.26,
+      "total": 862449.73,
+      "pct_active": 77.7,
+      "share_pct": 20.24
+    },
+    {
+      "tier": "Tier 3",
+      "customers": 1472,
+      "mean": 345.03,
+      "median": 101.97,
+      "total": 507883.84,
+      "pct_active": 52.45,
+      "share_pct": 11.92
+    },
+    {
+      "tier": "Tier 4",
+      "customers": 1964,
+      "mean": 114.31,
+      "median": 0.0,
+      "total": 224498.86,
+      "pct_active": 28.46,
+      "share_pct": 5.27
+    }
+  ],
+  "monotonic_mean_v2": true,
+  "sensitivity": [
+    {
+      "feature": "recency",
+      "factor": 0.5,
+      "weight": 0.143,
+      "customers_changing_tier": 406,
+      "pct_changing_tier": 8.27,
+      "tier1_changes": 84,
+      "capture_top10_pct": 58.12
+    },
+    {
+      "feature": "recency",
+      "factor": 1.5,
+      "weight": 0.333,
+      "customers_changing_tier": 312,
+      "pct_changing_tier": 6.36,
+      "tier1_changes": 42,
+      "capture_top10_pct": 58.16
+    },
+    {
+      "feature": "frequency",
+      "factor": 0.5,
+      "weight": 0.143,
+      "customers_changing_tier": 248,
+      "pct_changing_tier": 5.05,
+      "tier1_changes": 34,
+      "capture_top10_pct": 58.57
+    },
+    {
+      "feature": "frequency",
+      "factor": 1.5,
+      "weight": 0.333,
+      "customers_changing_tier": 168,
+      "pct_changing_tier": 3.42,
+      "tier1_changes": 30,
+      "capture_top10_pct": 58.71
+    },
+    {
+      "feature": "monetary",
+      "factor": 0.5,
+      "weight": 0.176,
+      "customers_changing_tier": 310,
+      "pct_changing_tier": 6.32,
+      "tier1_changes": 50,
+      "capture_top10_pct": 57.51
+    },
+    {
+      "feature": "monetary",
+      "factor": 1.5,
+      "weight": 0.391,
+      "customers_changing_tier": 216,
+      "pct_changing_tier": 4.4,
+      "tier1_changes": 50,
+      "capture_top10_pct": 59.4
+    },
+    {
+      "feature": "breadth",
+      "factor": 0.5,
+      "weight": 0.053,
+      "customers_changing_tier": 136,
+      "pct_changing_tier": 2.77,
+      "tier1_changes": 34,
+      "capture_top10_pct": 59.25
+    },
+    {
+      "feature": "breadth",
+      "factor": 1.5,
+      "weight": 0.143,
+      "customers_changing_tier": 122,
+      "pct_changing_tier": 2.49,
+      "tier1_changes": 26,
+      "capture_top10_pct": 58.09
+    },
+    {
+      "feature": "cancel_rate",
+      "factor": 0.5,
+      "weight": 0.053,
+      "customers_changing_tier": 208,
+      "pct_changing_tier": 4.24,
+      "tier1_changes": 48,
+      "capture_top10_pct": 58.47
+    },
+    {
+      "feature": "cancel_rate",
+      "factor": 1.5,
+      "weight": 0.143,
+      "customers_changing_tier": 198,
+      "pct_changing_tier": 4.03,
+      "tier1_changes": 50,
+      "capture_top10_pct": 57.71
+    }
+  ],
+  "sensitivity_max_pct_changing": 8.27,
+  "sensitivity_capture_range": [
+    57.51,
+    59.4
+  ],
+  "examples": [
+    {
+      "customer_id": 15716,
+      "tier": "Tier 1",
+      "score": 85.2,
+      "rank": 245,
+      "customers": 4908,
+      "breakdown": [
+        {
+          "feature": "monetary",
+          "label": "Revenue to date (\u00a3)",
+          "value": 2266.37,
+          "percentile": 78.7,
+          "weight": 0.3,
+          "points": 23.6
+        },
+        {
+          "feature": "recency",
+          "label": "Days since last order",
+          "value": 10.0,
+          "percentile": 93.4,
+          "weight": 0.25,
+          "points": 23.4
+        },
+        {
+          "feature": "frequency",
+          "label": "Orders",
+          "value": 10.0,
+          "percentile": 88.3,
+          "weight": 0.25,
+          "points": 22.1
+        },
+        {
+          "feature": "breadth",
+          "label": "Distinct products bought",
+          "value": 174.0,
+          "percentile": 90.6,
+          "weight": 0.1,
+          "points": 9.1
+        },
+        {
+          "feature": "cancel_rate",
+          "label": "Share of orders cancelled",
+          "value": 0.0,
+          "percentile": 70.9,
+          "weight": 0.1,
+          "points": 7.1
+        },
+        {
+          "feature": "tenure",
+          "label": "Days since first order",
+          "value": 541.0,
+          "percentile": 90.7,
+          "weight": 0.0,
+          "points": 0.0
+        },
+        {
+          "feature": "avg_order_value",
+          "label": "Average order value (\u00a3)",
+          "value": 226.637,
+          "percentile": 38.4,
+          "weight": 0.0,
+          "points": 0.0
+        },
+        {
+          "feature": "regularity",
+          "label": "Std dev of days between orders",
+          "value": 33.301651610693426,
+          "percentile": 59.2,
+          "weight": 0.0,
+          "points": 0.0
+        }
+      ],
+      "text": "Customer 15716: Tier 1, score 85.2/100 (rank 245 of 4,908)\n  Revenue to date (\u00a3)                    2,266.37  percentile  78.7  x weight 0.30  =  23.6 pts\n  Days since last order                        10  percentile  93.4  x weight 0.25  =  23.4 pts\n  Orders                                       10  percentile  88.3  x weight 0.25  =  22.1 pts\n  Distinct products bought                    174  percentile  90.6  x weight 0.10  =   9.1 pts\n  Share of orders cancelled                     0  percentile  70.9  x weight 0.10  =   7.1 pts\n  Days since first order                      541  percentile  90.7  (not weighted)\n  Average order value (\u00a3)                  226.64  percentile  38.4  (not weighted)\n  Std dev of days between orders             33.3  percentile  59.2  (not weighted)",
+      "future_revenue": 216.37
+    },
+    {
+      "customer_id": 12346,
+      "tier": "Tier 3",
+      "score": 60.1,
+      "rank": 1679,
+      "customers": 4908,
+      "breakdown": [
+        {
+          "feature": "monetary",
+          "label": "Revenue to date (\u00a3)",
+          "value": 77352.96,
+          "percentile": 99.8,
+          "weight": 0.3,
+          "points": 29.9
+        },
+        {
+          "feature": "frequency",
+          "label": "Orders",
+          "value": 3.0,
+          "percentile": 54.4,
+          "weight": 0.25,
+          "points": 13.6
+        },
+        {
+          "feature": "recency",
+          "label": "Days since last order",
+          "value": 134.0,
+          "percentile": 51.9,
+          "weight": 0.25,
+          "points": 13.0
+        },
+        {
+          "feature": "breadth",
+          "label": "Distinct products bought",
+          "value": 25.0,
+          "percentile": 35.4,
+          "weight": 0.1,
+          "points": 3.5
+        },
+        {
+          "feature": "cancel_rate",
+          "label": "Share of orders cancelled",
+          "value": 0.625,
+          "percentile": 0.9,
+          "weight": 0.1,
+          "points": 0.1
+        },
+        {
+          "feature": "tenure",
+          "label": "Days since first order",
+          "value": 456.0,
+          "percentile": 65.0,
+          "weight": 0.0,
+          "points": 0.0
+        },
+        {
+          "feature": "avg_order_value",
+          "label": "Average order value (\u00a3)",
+          "value": 25784.32,
+          "percentile": 100.0,
+          "weight": 0.0,
+          "points": 0.0
+        },
+        {
+          "feature": "regularity",
+          "label": "Std dev of days between orders",
+          "value": 60.81118318204309,
+          "percentile": 31.0,
+          "weight": 0.0,
+          "points": 0.0
+        }
+      ],
+      "text": "Customer 12346: Tier 3, score 60.1/100 (rank 1,679 of 4,908)\n  Revenue to date (\u00a3)                   77,352.96  percentile  99.8  x weight 0.30  =  29.9 pts\n  Orders                                        3  percentile  54.4  x weight 0.25  =  13.6 pts\n  Days since last order                       134  percentile  51.9  x weight 0.25  =  13.0 pts\n  Distinct products bought                     25  percentile  35.4  x weight 0.10  =   3.5 pts\n  Share of orders cancelled                  0.62  percentile   0.9  x weight 0.10  =   0.1 pts\n  Days since first order                      456  percentile  65.0  (not weighted)\n  Average order value (\u00a3)               25,784.32  percentile 100.0  (not weighted)\n  Std dev of days between orders            60.81  percentile  31.0  (not weighted)",
+      "future_revenue": 0.0
+    }
+  ]
+}
