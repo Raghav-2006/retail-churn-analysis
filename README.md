@@ -21,12 +21,13 @@ flowchart LR
     D --> Q{quality.py<br/>17 checks}
     Q -->|any FAIL| X[pipeline stops, exit 1]
     Q -->|pass| E[sql/analysis/*.sql<br/>notebooks]
-    Q -->|pass| F[tiering/<br/>score + validate + explain]
+    Q -->|pass| T[dbt build<br/>staging -> marts, 63 tests]
+    T --> F[tiering/<br/>reads mart_customer_features]
     Q -->|pass| G[analyst/<br/>Gemini -> SQL as read-only role]
     G --> H[evaluate.py<br/>55 ground-truth questions]
 ```
 
-Star schema: `fact_sales` and `fact_cancellations` (order-line grain) share the `dim_customer`, `dim_product` and `dim_date` dimensions. See [`sql/schema.sql`](sql/schema.sql).
+Star schema: `fact_sales` and `fact_cancellations` (order-line grain) share the `dim_customer`, `dim_product` and `dim_date` dimensions. See [`sql/schema.sql`](sql/schema.sql). On top of that, a dbt project (`dbt/`) builds the analytics layer that the tiering model reads (see below). Design decisions and rejected alternatives are listed in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ## Charts
 
@@ -65,6 +66,36 @@ Star schema: `fact_sales` and `fact_cancellations` (order-line grain) share the 
   - SQL guardrails and result matching
 
   GitHub Actions runs them on every push against a `postgres:16` service.
+
+## dbt transformation layer (`dbt/`)
+
+`python -m pipeline.dbt_runner build` runs `dbt build` against the same database as the pipeline: it builds every model, then runs every test.
+
+**Layers.**
+- **Source:** the loader's quality-checked tables in `retail`.
+- **`staging/`:** 4 views that rename and type the raw columns (`invoice → invoice_id`, `stock_code → product_code`, `price → unit_price`).
+- **`marts/`:** 7 tables in `analytics`:
+  - `fct_sales` and `fct_cancellations`;
+  - `dim_customer` (home country plus lifetime stats), `dim_product` and `dim_date`;
+  - **`mart_customer_features`**: the 8 tiering features, one row per (cutoff date, customer), for both the training cutoff (2010-12-01) and the scoring cutoff (2011-06-01);
+  - **`mart_customer_tiers`**: the tiering score and tier, re-implemented in SQL.
+
+**Tests: 63 in total, all passing.** They break down into 34 `not_null`, 12 `unique`, 8 `relationships`, 5 `accepted_values`, and 4 custom:
+- **revenue reconciliation**: the mart equals the source, overall and in every month;
+- **no future-dated invoices**;
+- **tier shares** of 10/20/30/40%;
+- **unique (cutoff date, customer)** in the feature mart.
+
+`figures/06_dbt_lineage.png` is a screenshot of the lineage graph from `dbt docs`.
+
+**Tiering now reads from `mart_customer_features`** instead of the raw tables, and the outputs match v1 *exactly*. Before changing any code I froze v1's per-customer scores and tiers (`metrics/v1_tiers.csv`, 4,908 customers). `python -m tiering.verify_dbt` then asserts three things, with no tolerance:
+- the mart features equal v1's SQL (73,176 values, both cutoffs);
+- the Python tiers computed from the mart equal v1 for every customer, **scores bit for bit**;
+- the SQL tier mart equals v1 too.
+
+The SQL twin matches to the bit because its percentile rank reproduces pandas' tie-averaging, and it sums in the same order as pandas. Everything in `metrics/tiering.json` and the charts is unchanged. CI runs a real `dbt build` on a synthetic dataset and asserts the same equalities (`tests/test_dbt.py`).
+
+![dbt lineage graph](figures/06_dbt_lineage.png)
 
 ## Tiering method and validation
 
@@ -212,7 +243,9 @@ curl -L -o data/online_retail_ii.zip "https://archive.ics.uci.edu/static/public/
 unzip data/online_retail_ii.zip -d data/
 
 python -m pipeline.run          # extract -> clean -> load PostgreSQL (embedded pgserver) -> 17 checks
-pytest                          # 54 tests; uses the same embedded Postgres (or DATABASE_URL)
+pytest                          # 59 tests; uses the same embedded Postgres (or DATABASE_URL)
+python -m pipeline.dbt_runner build   # dbt: 11 models + 63 tests into schema analytics
+python -m tiering.verify_dbt    # assert dbt features/tiers == frozen v1 output
 python -m tiering.validate      # tiers, baselines, learned weights, sensitivity, charts
 
 export GEMINI_API_KEY=...       # never committed; .env is gitignored

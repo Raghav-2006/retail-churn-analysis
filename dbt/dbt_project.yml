@@ -1,0 +1,34 @@
+name: retail
+version: "1.0.0"
+config-version: 2
+profile: retail
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Schema the pipeline loads into (python -m pipeline.run). dbt treats it as the source layer.
+  source_schema: retail
+  # Feature snapshots: 2010-12-01 trains the learned model, 2011-06-01 is the scoring date.
+  feature_cutoffs: ["2010-12-01", "2011-06-01"]
+  tier_cutoff: "2011-06-01"
+  # Must equal tiering/score.py WEIGHTS (tests/test_dbt.py asserts it).
+  tier_weights:
+    recency: 0.25
+    frequency: 0.25
+    monetary: 0.30
+    tenure: 0.0
+    avg_order_value: 0.0
+    breadth: 0.10
+    cancel_rate: 0.10
+    regularity: 0.0
+
+models:
+  retail:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

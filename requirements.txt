@@ -14,3 +14,4 @@ jupyter>=1.0
 nbconvert>=7.0
 fastapi>=0.110          # optional: POST /ask endpoint (analyst/api.py)
 uvicorn>=0.29
+dbt-postgres>=1.9       # Phase 5: dbt transformation layer (dbt/)

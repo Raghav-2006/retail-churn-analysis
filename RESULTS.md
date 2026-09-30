@@ -200,6 +200,32 @@ Customer 12346: Tier 3, score 60.1/100 (rank 1,679 of 4,908)
   -> actual Jun-Nov 2011 revenue: £0.00
 ```
 
+## dbt transformation layer (dbt build + python -m tiering.verify_dbt)
+
+- `dbt build` from scratch: **11 models** (4 staging views, 7 mart tables), **63 data tests: 63 pass, 0 fail**
+- Tier outputs match v1 exactly: **True** (features, Python tiers and the SQL tier mart, compared customer by customer with no tolerance)
+
+| test | count |
+|---|---|
+| not_null | 34 |
+| unique | 12 |
+| relationships | 8 |
+| accepted_values | 5 |
+| custom: assert_tier_shares | 1 |
+| custom: assert_no_future_invoices | 1 |
+| custom: assert_revenue_reconciles | 1 |
+| unique_combination | 1 |
+
+| cutoff | customers | same_customers | values_compared | mismatched_values |
+|---|---|---|---|---|
+| 2010-12-01 | 4,239 | yes | 33,912 | 0 |
+| 2011-06-01 | 4,908 | yes | 39,264 | 0 |
+
+| comparison | customers | same_customers | tier_mismatches | score_mismatches_exact | max_abs_score_diff |
+|---|---|---|---|---|---|
+| python tiers vs v1 | 4,908 | yes | 0 | 0 | 0.00 |
+| sql tiers vs v1 | 4,908 | yes | 0 | 0 | 0.00 |
+
 ## AI analyst evaluation (python -m analyst.evaluate)
 
 - Frozen eval set v2: **55 questions** (6 easy, 10 medium, 27 hard, 12 unanswerable), sha256 `da756242da03`; every model and prompt version was graded on this exact file

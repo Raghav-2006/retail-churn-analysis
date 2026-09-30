@@ -5,7 +5,7 @@ from pipeline.db import connect
 from pipeline.load import build_star, load
 from pipeline.transform import clean
 from tests.conftest import make_raw
-from tiering.features import FEATURES, build_dataset
+from tiering.features import FEATURES, build_features_legacy, future_revenue
 from tiering.score import WEIGHTS, assign_tiers, explain, percentiles, score_customers
 from tiering.validate import capture, rounded_weights
 
@@ -88,7 +88,9 @@ def test_features_respect_the_cutoff(pg_dsn):
     conn = connect(schema="test_tiering", dsn=pg_dsn)
     try:
         load(conn, build_star(sales, cancels))
-        data = build_dataset("2011-03-01", "2011-04-01", schema="test_tiering")
+        feats = build_features_legacy("2011-03-01", schema="test_tiering")
+        future = future_revenue("2011-03-01", "2011-04-01", schema="test_tiering")
+        data = feats.assign(future_revenue=future.reindex(feats.index).fillna(0.0))
     finally:
         conn.execute("DROP SCHEMA test_tiering CASCADE")
         conn.commit()

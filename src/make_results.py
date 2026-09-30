@@ -18,6 +18,8 @@ def table(rows: list[dict], cols: list[str]) -> str:
 
 
 def fmt(v) -> str:
+    if isinstance(v, bool):
+        return "yes" if v else "no"
     if isinstance(v, float):
         return f"{v:,.2f}"
     if isinstance(v, int):
@@ -247,8 +249,34 @@ def section_analyst(m: dict) -> list[str]:
     ]
 
 
+def section_dbt(m: dict) -> list[str]:
+    b = m["dbt_build"]
+    tests = [{"test": k, "count": v} for k, v in sorted(m["test_types"].items(), key=lambda kv: -kv[1])]
+    feats = [{"cutoff": c, **v} for c, v in m["features"].items()]
+    tiers = [{"comparison": k.replace("_vs_v1", " vs v1").replace("_", " "), **m[k]}
+             for k in ("python_tiers_vs_v1", "sql_tiers_vs_v1")]
+    return [
+        "## dbt transformation layer (dbt build + python -m tiering.verify_dbt)",
+        "",
+        f"- `dbt build` from scratch: **{b['model'].get('success', 0)} models** "
+        f"({m['models'].get('staging', 0)} staging views, {m['models'].get('marts', 0)} mart tables), "
+        f"**{sum(b['test'].values())} data tests: {b['test'].get('pass', 0)} pass, "
+        f"{b['test'].get('fail', 0) + b['test'].get('error', 0)} fail**",
+        f"- Tier outputs match v1 exactly: **{m['matches_v1_exactly']}** "
+        "(features, Python tiers and the SQL tier mart, compared customer by customer with no tolerance)",
+        "",
+        table(tests, ["test", "count"]),
+        "",
+        table(feats, ["cutoff", "customers", "same_customers", "values_compared", "mismatched_values"]),
+        "",
+        table(tiers, ["comparison", "customers", "same_customers", "tier_mismatches", "score_mismatches_exact",
+                      "max_abs_score_diff"]),
+        "",
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
-            ("03_rfm", section_rfm), ("tiering", section_tiering),
+            ("03_rfm", section_rfm), ("tiering", section_tiering), ("dbt", section_dbt),
             ("analyst", section_analyst)]
 
 
