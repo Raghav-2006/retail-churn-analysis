@@ -182,8 +182,50 @@ def section_tiering(m: dict) -> list[str]:
     ]
 
 
+def section_analyst(m: dict) -> list[str]:
+    bv, av = m["before_version"], m["after_version"]
+    mix = ", ".join(f"{n} {d}" for d, n in m["eval_mix"].items())
+    rows, diff_rows, fail_lines = [], [], []
+    for r in m["models"]:
+        for label, x in [(bv, r["before"]), (av, r["after"])]:
+            rows.append({
+                "model": r["model"], "prompt": label, "runs": x["runs"],
+                "execution_accuracy_pct": x["execution_accuracy_pct"],
+                "abstention_accuracy_pct": x["abstention_accuracy_pct"],
+                "confidently_wrong_pct": x["confidently_wrong_pct"],
+                "false_abstention_pct": x["false_abstention_pct"],
+                "latency_p50_s": x["latency_p50_s"], "latency_p95_s": x["latency_p95_s"],
+            })
+            diff_rows.append({"model": r["model"], "prompt": label, **x["by_difficulty"]})
+            for f in x["failures"]:
+                fail_lines.append(f"- {r['model']} / {label} / `{f['id']}` ({f['difficulty']}): {f['question']} "
+                                  f"-> {f['outcomes']}")
+    return [
+        "## AI analyst evaluation (python -m analyst.evaluate)",
+        "",
+        f"- Ground-truth set: **{m['eval_questions']} questions** ({mix}); each answerable one has a hand-written "
+        "reference SQL, and results are compared as result sets (order-insensitive, numeric tolerance)",
+        "- Confidently wrong = answered (did not abstain, SQL ran) but the result was wrong, "
+        "or answered an unanswerable question; as % of all question-runs",
+        f"- Mitigation `{av}`: data dictionary with the business's metric definitions + a no-proxy answerability rule",
+        "",
+        table(rows, ["model", "prompt", "runs", "execution_accuracy_pct", "abstention_accuracy_pct",
+                     "confidently_wrong_pct", "false_abstention_pct", "latency_p50_s", "latency_p95_s"]),
+        "",
+        "**Accuracy by difficulty (% correct, incl. correct refusals)**",
+        "",
+        table(diff_rows, ["model", "prompt", "easy", "medium", "hard", "unanswerable"]),
+        "",
+        "**Questions not right in every run**",
+        "",
+        *(fail_lines or ["- none"]),
+        "",
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
-            ("03_rfm", section_rfm), ("tiering", section_tiering)]
+            ("03_rfm", section_rfm), ("tiering", section_tiering),
+            ("analyst", section_analyst)]
 
 
 def main() -> None:

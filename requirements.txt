@@ -12,3 +12,5 @@ PyYAML>=6.0
 google-genai>=1.0      # Gemini API for the AI analyst
 jupyter>=1.0
 nbconvert>=7.0
+fastapi>=0.110          # optional: POST /ask endpoint (analyst/api.py)
+uvicorn>=0.29

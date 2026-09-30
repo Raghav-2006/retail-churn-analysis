@@ -1,0 +1,72 @@
+{
+  "prompt_version": "v2",
+  "model": "gemini-3.5-flash-lite",
+  "runs": 3,
+  "questions": 120,
+  "execution_accuracy_pct": 97.92,
+  "abstention_accuracy_pct": 100.0,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 98.33,
+  "confidently_wrong_pct": 1.67,
+  "confidently_wrong_of_answered_pct": 2.08,
+  "outcomes": {
+    "correct": 94,
+    "refused": 24,
+    "wrong": 2
+  },
+  "by_difficulty": {
+    "easy": 100.0,
+    "medium": 100.0,
+    "hard": 95.83,
+    "unanswerable": 100.0
+  },
+  "retried": 7,
+  "per_run": {
+    "execution_accuracy_pct": [
+      100.0,
+      96.88,
+      96.88
+    ],
+    "abstention_accuracy_pct": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "confidently_wrong_pct": [
+      0.0,
+      2.5,
+      2.5
+    ],
+    "overall_accuracy_pct": [
+      100.0,
+      97.5,
+      97.5
+    ]
+  },
+  "latency_p50_s": 4.5,
+  "latency_p95_s": 9.77,
+  "failures": [
+    {
+      "id": "h02",
+      "difficulty": "hard",
+      "question": "For each month from February 2011 to November 2011, what was the percentage change in revenue versus the previous month?",
+      "outcomes": {
+        "correct": 2,
+        "wrong": 1
+      },
+      "example_sql": "WITH monthly_revenue AS (\n    SELECT \n        d.year,\n        d.month,\n        d.month_name,\n        d.month_start,\n        SUM(s.revenue) AS revenue\n    FROM fact_sales s\n    JOIN dim_date d ON s.date_key = d.date_key\n    WHERE s.invoice_date >= '2011-02-01' AND s.invoice_date < '2011-12-01'\n    GROUP BY d.year, d.month, d.month_name, d.month_start\n),\nwith_lag AS (\n    SELECT \n        year,\n        month,\n        month_name,\n        month_start,\n        revenue,\n        LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue\n    FROM monthly_revenue\n)\nSELECT \n    to_char(month_start, 'YYYY-MM') AS year_month,\n    revenue,\n    prev_revenue,\n    CASE \n        WHEN prev_revenue IS NULL OR prev_revenue = 0 THEN NULL\n        ELSE ROUND(CAST(((revenue - prev_revenue) / prev_revenue) * 100 AS NUMERIC), 2)\n    END AS percentage_change\nFROM with_lag\nWHERE month_start >= '2011-02-01' AND month_start <= '2011-11-01'\nORDER BY year, month",
+      "example_error": null
+    },
+    {
+      "id": "h12",
+      "difficulty": "hard",
+      "question": "What was our net revenue in 2011 after cancellations?",
+      "outcomes": {
+        "correct": 2,
+        "wrong": 1
+      },
+      "example_sql": "SELECT COALESCE(SUM(s.revenue), 0) + COALESCE(SUM(c.revenue), 0) AS net_revenue FROM dim_date d LEFT JOIN fact_sales s ON s.date_key = d.date_key AND s.invoice_date >= '2011-01-01' AND s.invoice_date < '2012-01-01' LEFT JOIN fact_cancellations c ON c.date_key = d.date_key AND c.invoice_date >= '2011-01-01' AND c.invoice_date < '2012-01-01' WHERE d.year = 2011",
+      "example_error": null
+    }
+  ]
+}

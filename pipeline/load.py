@@ -151,7 +151,6 @@ def grant_readonly(conn: psycopg.Connection, schema: str = SCHEMA, password: str
         conn.execute(f"CREATE ROLE {READONLY_ROLE} LOGIN PASSWORD '{password}'")
     conn.execute(f"GRANT USAGE ON SCHEMA {schema} TO {READONLY_ROLE}")
     conn.execute(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {READONLY_ROLE}")
-    conn.execute(f"ALTER ROLE {READONLY_ROLE} SET search_path = {schema}")
     conn.execute(f"ALTER ROLE {READONLY_ROLE} SET default_transaction_read_only = on")
     conn.execute(f"ALTER ROLE {READONLY_ROLE} SET statement_timeout = '15s'")
     conn.commit()
