@@ -48,7 +48,8 @@ pip install -r requirements.txt
 curl -L -o data/online_retail_ii.zip "https://archive.ics.uci.edu/static/public/502/online+retail+ii.zip"
 unzip data/online_retail_ii.zip -d data/
 
-python src/load_data.py                      # both Excel sheets -> data/raw.parquet (~2 min)
+python -m pipeline.run        # extract -> clean -> load PostgreSQL (embedded pgserver) -> quality checks
+pytest                        # unit + idempotency tests
 jupyter nbconvert --to notebook --execute --inplace notebooks/0*.ipynb
-python src/make_results.py                   # metrics/*.json -> RESULTS.md
+python src/make_results.py    # metrics/*.json -> RESULTS.md
 ```
