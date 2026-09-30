@@ -1,0 +1,37 @@
+{
+  "_comment": "Data contract checked by pipeline/quality.py. Raw dtypes are compared by family (string/integer/float/datetime) so a pandas upgrade that changes object -> str or ns -> us is not drift, but a column that turns from numbers into text is.",
+  "raw": {
+    "Invoice": "string",
+    "StockCode": "string",
+    "Description": "string",
+    "Quantity": "integer",
+    "InvoiceDate": "datetime",
+    "Price": "float",
+    "Customer ID": "float",
+    "Country": "string"
+  },
+  "warehouse": {
+    "dim_date": {
+      "date_key": "integer", "full_date": "date", "year": "smallint", "quarter": "smallint",
+      "month": "smallint", "month_name": "text", "month_start": "date", "day_of_month": "smallint",
+      "day_of_week": "smallint", "day_name": "text", "is_weekend": "boolean"
+    },
+    "dim_customer": {
+      "customer_id": "integer", "country": "text",
+      "first_invoice_date": "timestamp without time zone", "last_invoice_date": "timestamp without time zone"
+    },
+    "dim_product": {
+      "stock_code": "text", "description": "text", "is_product": "boolean"
+    },
+    "fact_sales": {
+      "sales_line_id": "bigint", "invoice": "text", "invoice_date": "timestamp without time zone",
+      "date_key": "integer", "customer_id": "integer", "stock_code": "text", "country": "text",
+      "quantity": "integer", "price": "numeric", "revenue": "numeric"
+    },
+    "fact_cancellations": {
+      "cancellation_line_id": "bigint", "invoice": "text", "invoice_date": "timestamp without time zone",
+      "date_key": "integer", "customer_id": "integer", "stock_code": "text", "country": "text",
+      "quantity": "integer", "price": "numeric", "revenue": "numeric"
+    }
+  }
+}

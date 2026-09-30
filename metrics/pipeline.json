@@ -1,0 +1,322 @@
+{
+  "raw_rows": 1067371,
+  "table_rows": {
+    "dim_date": 739,
+    "dim_customer": 5928,
+    "dim_product": 4643,
+    "fact_sales": 776579,
+    "fact_cancellations": 18744
+  },
+  "expected_rows": {
+    "dim_date": 739,
+    "dim_customer": 5928,
+    "dim_product": 4643,
+    "fact_sales": 776579,
+    "fact_cancellations": 18744
+  },
+  "checks": [
+    {
+      "name": "schema_drift_raw",
+      "status": "PASS",
+      "detail": "8 columns match the contract"
+    },
+    {
+      "name": "schema_drift_warehouse",
+      "status": "PASS",
+      "detail": "38 columns in 5 tables match the contract"
+    },
+    {
+      "name": "row_count_fact_sales",
+      "status": "PASS",
+      "detail": "loaded 776,579 vs 776,579 after transform"
+    },
+    {
+      "name": "row_count_fact_cancellations",
+      "status": "PASS",
+      "detail": "loaded 18,744 vs 18,744 after transform"
+    },
+    {
+      "name": "row_count_dim_customer",
+      "status": "PASS",
+      "detail": "loaded 5,928 vs 5,928 after transform"
+    },
+    {
+      "name": "row_count_dim_product",
+      "status": "PASS",
+      "detail": "loaded 4,643 vs 4,643 after transform"
+    },
+    {
+      "name": "row_count_dim_date",
+      "status": "PASS",
+      "detail": "loaded 739 vs 739 after transform"
+    },
+    {
+      "name": "revenue_reconciliation_fact_sales",
+      "status": "PASS",
+      "detail": "Postgres \u00a317,068,582.72 vs pandas \u00a317,068,582.72 (diff \u00a30.0000)"
+    },
+    {
+      "name": "revenue_reconciliation_fact_cancellations",
+      "status": "PASS",
+      "detail": "Postgres \u00a3-1,095,136.79 vs pandas \u00a3-1,095,136.79 (diff \u00a30.0000)"
+    },
+    {
+      "name": "not_null_keys_fact_sales",
+      "status": "PASS",
+      "detail": "0 rows with a NULL in invoice, invoice_date, date_key, customer_id, stock_code, quantity, price"
+    },
+    {
+      "name": "not_null_keys_fact_cancellations",
+      "status": "PASS",
+      "detail": "0 rows with a NULL in invoice, invoice_date, date_key, customer_id, stock_code, quantity, price"
+    },
+    {
+      "name": "positive_quantity_price_sales",
+      "status": "PASS",
+      "detail": "0 sales lines with quantity <= 0 or price <= 0"
+    },
+    {
+      "name": "negative_quantity_cancellations",
+      "status": "PASS",
+      "detail": "0 cancellation lines with quantity >= 0 or a non-'C' invoice"
+    },
+    {
+      "name": "unique_keys",
+      "status": "PASS",
+      "detail": "no duplicate keys"
+    },
+    {
+      "name": "referential_integrity",
+      "status": "PASS",
+      "detail": "every fact row joins to date, customer and product"
+    },
+    {
+      "name": "volume_anomaly",
+      "status": "WARN",
+      "detail": "2011-12 is a partial period: data covers 2011-12-01 to 2011-12-09 (9 of 31 days, 29%); 2010-10: 48,575 rows vs median 27,436 (z=+6.8); 2010-11: 58,717 rows vs median 29,374 (z=+3.5); 2011-09: 39,510 rows vs median 26,716 (z=+6.6); 2011-10: 48,611 rows vs median 26,752 (z=+3.8); 2011-11: 62,938 rows vs median 27,390 (z=+3.8)"
+    },
+    {
+      "name": "freshness",
+      "status": "PASS",
+      "detail": "max invoice_date loaded 2011-12-09 12:50:00 (source 2011-12-09 12:50:00)"
+    }
+  ],
+  "etl_runs_logged": 5,
+  "fingerprint": "94297e019d2ca97adfa4a0b783e47a36",
+  "identical_to_previous_run": true,
+  "seconds": 48.3,
+  "fact_sales_revenue": 17068582.72,
+  "fact_cancellations_revenue": -1095136.79,
+  "volume_by_month": [
+    {
+      "month": "2009-12",
+      "rows": 30208.0,
+      "rolling_median": NaN,
+      "rolling_std": NaN,
+      "z": NaN,
+      "anomaly": false
+    },
+    {
+      "month": "2010-01",
+      "rows": 21370.0,
+      "rolling_median": NaN,
+      "rolling_std": NaN,
+      "z": NaN,
+      "anomaly": false
+    },
+    {
+      "month": "2010-02",
+      "rows": 22954.0,
+      "rolling_median": NaN,
+      "rolling_std": NaN,
+      "z": NaN,
+      "anomaly": false
+    },
+    {
+      "month": "2010-03",
+      "rows": 31647.0,
+      "rolling_median": 22954.0,
+      "rolling_std": 4712.39,
+      "z": 1.84,
+      "anomaly": false
+    },
+    {
+      "month": "2010-04",
+      "rows": 26719.0,
+      "rolling_median": 26581.0,
+      "rolling_std": 5135.62,
+      "z": 0.03,
+      "anomaly": false
+    },
+    {
+      "month": "2010-05",
+      "rows": 28152.0,
+      "rolling_median": 26719.0,
+      "rolling_std": 4448.26,
+      "z": 0.32,
+      "anomaly": false
+    },
+    {
+      "month": "2010-06",
+      "rows": 30595.0,
+      "rolling_median": 27435.5,
+      "rolling_std": 4030.1,
+      "z": 0.78,
+      "anomaly": false
+    },
+    {
+      "month": "2010-07",
+      "rows": 26547.0,
+      "rolling_median": 27435.5,
+      "rolling_std": 4097.29,
+      "z": -0.22,
+      "anomaly": false
+    },
+    {
+      "month": "2010-08",
+      "rows": 25948.0,
+      "rolling_median": 27435.5,
+      "rolling_std": 3128.96,
+      "z": -0.48,
+      "anomaly": false
+    },
+    {
+      "month": "2010-09",
+      "rows": 33997.0,
+      "rolling_median": 27435.5,
+      "rolling_std": 2349.03,
+      "z": 2.79,
+      "anomaly": false
+    },
+    {
+      "month": "2010-10",
+      "rows": 48575.0,
+      "rolling_median": 27435.5,
+      "rolling_std": 3100.74,
+      "z": 6.82,
+      "anomaly": true
+    },
+    {
+      "month": "2010-11",
+      "rows": 58717.0,
+      "rolling_median": 29373.5,
+      "rolling_std": 8500.74,
+      "z": 3.45,
+      "anomaly": true
+    },
+    {
+      "month": "2010-12",
+      "rows": 25569.0,
+      "rolling_median": 32296.0,
+      "rolling_std": 13312.55,
+      "z": -0.51,
+      "anomaly": false
+    },
+    {
+      "month": "2011-01",
+      "rows": 20896.0,
+      "rolling_median": 30272.0,
+      "rolling_std": 13968.1,
+      "z": -0.67,
+      "anomaly": false
+    },
+    {
+      "month": "2011-02",
+      "rows": 19630.0,
+      "rolling_median": 29972.5,
+      "rolling_std": 14935.22,
+      "z": -0.69,
+      "anomaly": false
+    },
+    {
+      "month": "2011-03",
+      "rows": 26750.0,
+      "rolling_median": 29783.0,
+      "rolling_std": 15942.06,
+      "z": -0.19,
+      "anomaly": false
+    },
+    {
+      "month": "2011-04",
+      "rows": 22345.0,
+      "rolling_median": 26159.5,
+      "rolling_std": 16264.87,
+      "z": -0.23,
+      "anomaly": false
+    },
+    {
+      "month": "2011-05",
+      "rows": 27960.0,
+      "rolling_median": 23957.0,
+      "rolling_std": 14816.84,
+      "z": 0.27,
+      "anomaly": false
+    },
+    {
+      "month": "2011-06",
+      "rows": 26820.0,
+      "rolling_median": 23957.0,
+      "rolling_std": 3378.05,
+      "z": 0.85,
+      "anomaly": false
+    },
+    {
+      "month": "2011-07",
+      "rows": 26474.0,
+      "rolling_median": 24547.5,
+      "rolling_std": 3539.5,
+      "z": 0.54,
+      "anomaly": false
+    },
+    {
+      "month": "2011-08",
+      "rows": 26683.0,
+      "rolling_median": 26612.0,
+      "rolling_std": 3261.75,
+      "z": 0.02,
+      "anomaly": false
+    },
+    {
+      "month": "2011-09",
+      "rows": 39510.0,
+      "rolling_median": 26716.5,
+      "rolling_std": 1946.75,
+      "z": 6.57,
+      "anomaly": true
+    },
+    {
+      "month": "2011-10",
+      "rows": 48611.0,
+      "rolling_median": 26751.5,
+      "rolling_std": 5820.33,
+      "z": 3.76,
+      "anomaly": true
+    },
+    {
+      "month": "2011-11",
+      "rows": 62938.0,
+      "rolling_median": 27390.0,
+      "rolling_std": 9290.23,
+      "z": 3.83,
+      "anomaly": true
+    }
+  ],
+  "volume_anomaly_months": [
+    "2010-10",
+    "2010-11",
+    "2011-09",
+    "2011-10",
+    "2011-11"
+  ],
+  "partial_periods": [
+    {
+      "month": "2011-12",
+      "first_day": "2011-12-01",
+      "last_day": "2011-12-09",
+      "days_covered": 9,
+      "days_in_month": 31,
+      "coverage": 0.29
+    }
+  ],
+  "max_invoice_date": "2011-12-09 12:50:00"
+}

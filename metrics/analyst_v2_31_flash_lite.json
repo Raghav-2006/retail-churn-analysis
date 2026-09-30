@@ -1,0 +1,63 @@
+{
+  "prompt_version": "v2",
+  "model": "gemini-3.1-flash-lite",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
+  "runs": 3,
+  "questions": 165,
+  "execution_accuracy_pct": 97.67,
+  "abstention_accuracy_pct": 100.0,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 98.18,
+  "confidently_wrong_pct": 1.82,
+  "confidently_wrong_of_answered_pct": 2.33,
+  "outcomes": {
+    "correct": 126,
+    "refused": 36,
+    "wrong": 3
+  },
+  "by_difficulty": {
+    "easy": 100.0,
+    "medium": 100.0,
+    "hard": 96.3,
+    "unanswerable": 100.0
+  },
+  "retried": 3,
+  "self_check": {},
+  "per_run": {
+    "execution_accuracy_pct": [
+      97.67,
+      97.67,
+      97.67
+    ],
+    "abstention_accuracy_pct": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "confidently_wrong_pct": [
+      1.82,
+      1.82,
+      1.82
+    ],
+    "overall_accuracy_pct": [
+      98.18,
+      98.18,
+      98.18
+    ]
+  },
+  "latency_p50_s": 1.03,
+  "latency_p95_s": 2.36,
+  "failures": [
+    {
+      "id": "x01",
+      "difficulty": "hard",
+      "question": "What was net revenue, after cancellations, in each calendar year?",
+      "outcomes": {
+        "wrong": 3
+      },
+      "example_sql": "SELECT d.year, SUM(s.revenue) + COALESCE(SUM(c.revenue), 0) AS net_revenue FROM dim_date d JOIN fact_sales s ON d.date_key = s.date_key LEFT JOIN fact_cancellations c ON d.date_key = c.date_key GROUP BY d.year ORDER BY d.year",
+      "example_error": null
+    }
+  ]
+}

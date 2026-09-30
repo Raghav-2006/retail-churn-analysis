@@ -220,3 +220,6 @@ __marimo__/
 # Project: raw and derived data are large and re-downloadable
 data/
 .ipynb_checkpoints/
+
+# Analyst query log
+logs/

@@ -1,0 +1,90 @@
+{
+  "prompt_version": "v3",
+  "model": "gemini-3.5-flash-lite",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
+  "runs": 3,
+  "questions": 165,
+  "execution_accuracy_pct": 97.67,
+  "abstention_accuracy_pct": 100.0,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 98.18,
+  "confidently_wrong_pct": 0.61,
+  "confidently_wrong_of_answered_pct": 0.79,
+  "outcomes": {
+    "correct": 126,
+    "wrong": 1,
+    "error": 2,
+    "refused": 36
+  },
+  "by_difficulty": {
+    "easy": 100.0,
+    "medium": 100.0,
+    "hard": 96.3,
+    "unanswerable": 100.0
+  },
+  "retried": 5,
+  "self_check": {
+    "ok": 125,
+    "fix": 2
+  },
+  "per_run": {
+    "execution_accuracy_pct": [
+      95.35,
+      100.0,
+      97.67
+    ],
+    "abstention_accuracy_pct": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "confidently_wrong_pct": [
+      1.82,
+      0.0,
+      0.0
+    ],
+    "overall_accuracy_pct": [
+      96.36,
+      100.0,
+      98.18
+    ]
+  },
+  "latency_p50_s": 1.4,
+  "latency_p95_s": 2.25,
+  "failures": [
+    {
+      "id": "h02",
+      "difficulty": "hard",
+      "question": "For each month from February 2011 to November 2011, what was the percentage change in revenue versus the previous month?",
+      "outcomes": {
+        "wrong": 1,
+        "correct": 2
+      },
+      "example_sql": "WITH monthly_revenue AS (\n    SELECT \n        d.year,\n        d.month,\n        d.month_start,\n        SUM(s.revenue) AS revenue\n    FROM fact_sales s\n    JOIN dim_date d ON s.date_key = d.date_key\n    WHERE s.invoice_date >= '2011-02-01' AND s.invoice_date < '2011-12-01'\n    GROUP BY d.year, d.month, d.month_start\n),\nrevenue_with_lag AS (\n    SELECT \n        month_start,\n        revenue,\n        LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue\n    FROM monthly_revenue\n)\nSELECT \n    TO_CHAR(month_start, 'YYYY-MM') AS month,\n    revenue,\n    prev_revenue,\n    CASE \n        WHEN prev_revenue IS NULL OR prev_revenue = 0 THEN NULL\n        ELSE ROUND(CAST(((revenue - prev_revenue) / prev_revenue) * 100 AS NUMERIC), 2)\n    END AS percentage_change\nFROM revenue_with_lag\nORDER BY month_start",
+      "example_error": null
+    },
+    {
+      "id": "h03",
+      "difficulty": "hard",
+      "question": "For each of the 3 countries with the most revenue, what is its single best-selling product by revenue (stock code and revenue)?",
+      "outcomes": {
+        "error": 1,
+        "correct": 2
+      },
+      "example_sql": "WITH country_revenue AS (    SELECT country, SUM(revenue) AS total_revenue    FROM fact_sales    WHERE country IS NOT NULL    GROUP BY country    ORDER BY total_revenue DESC    LIMIT 3), product_country_revenue AS (    SELECT         s.country,         s.stock_code,         SUM(s.revenue) AS product_revenue,         ROW_NUMBER() OVER (PARTITION BY s.country ORDER BY SUM(s.revenue) DESC) AS rn    FROM fact_sales s    JOIN country_revenue c ON s.country = c.country    GROUP BY s.country, s.stock_code)SELECT country, stock_code, product_revenue AS revenueFROM product_country_revenueWHERE rn = 1",
+      "example_error": "SyntaxError: syntax error at or near \"product_country_revenueWHERE\"\nLINE 1: ...untry, stock_code, product_revenue AS revenueFROM product_co...\n                                                             ^"
+    },
+    {
+      "id": "x02",
+      "difficulty": "hard",
+      "question": "What percentage of gross sales value was cancelled in 2011?",
+      "outcomes": {
+        "correct": 2,
+        "error": 1
+      },
+      "example_sql": "SELECT ROUND(COALESCE(ABS(SUM(c.revenue)), 0) * 100.0 / NULLIF(SUM(s.revenue), 0), 4) AS cancellation_percentage FROM (SELECT revenue FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') s CROSS JOIN (SELECT revenue FROM fact_cancellations WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') c",
+      "example_error": "QueryCanceled: canceling statement due to statement timeout"
+    }
+  ]
+}

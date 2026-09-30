@@ -1,0 +1,473 @@
+# Ground-truth questions for the AI analyst.
+#
+# Every answerable question has a hand-written reference SQL. The evaluator
+# runs the reference and the agent's SQL and compares the RESULT SETS
+# (order-insensitive, numeric tolerance, extra columns allowed), not the SQL
+# text. Unanswerable questions have no reference: the only correct behaviour
+# is to abstain.
+#
+# Conventions the references use (stated in the questions where it matters):
+#   revenue = sum(fact_sales.revenue), sales only (cancellations live in their own table)
+#   an order = a distinct invoice
+#
+# History: the first version (31 answerable questions, each spelling out its definitions)
+# saturated: the baseline scored 100% execution accuracy, so it could not show whether a
+# mitigation helps. Before any mitigation was written, 4 redundant easy/medium items
+# (distinct products, distinct countries, customers in Germany, top products by units) and
+# 2 obvious unanswerables (age, reviews) were replaced by the "stakeholder" items below
+# (h12-h16, u09-u10), phrased the way a sales manager would ask, with the business
+# definition implied rather than stated.
+#
+# EVAL SET v2 (FROZEN). That version still saturated (every model at or near 100%), so 15 harder
+# items were added (x01-x15), again before running the self-check mitigation (v3):
+# net-vs-gross revenue with cancellations, multi-step time comparisons, questions that
+# tempt a sales x cancellations fan-out join, ambiguous business terms ("active customer"),
+# and 4 more unanswerable questions. v1, v2 and v3 prompts were all re-run on this exact
+# file for every model. Its SHA-256 is pinned in tests/test_analyst.py and recorded in
+# every metrics file; do not edit it without bumping the version.
+
+- id: e01
+  difficulty: easy
+  question: What was the total revenue across all sales?
+  sql: SELECT sum(revenue) FROM fact_sales
+
+- id: e02
+  difficulty: easy
+  question: How many distinct customers made at least one purchase?
+  sql: SELECT count(DISTINCT customer_id) FROM fact_sales
+
+- id: e03
+  difficulty: easy
+  question: How many orders (distinct invoices) were placed?
+  sql: SELECT count(DISTINCT invoice) FROM fact_sales
+
+- id: e06
+  difficulty: easy
+  question: What are the timestamps of the first and the last sale in the data?
+  sql: SELECT min(invoice_date), max(invoice_date) FROM fact_sales
+
+- id: e07
+  difficulty: easy
+  question: How many cancelled invoices are there?
+  sql: SELECT count(DISTINCT invoice) FROM fact_cancellations
+
+- id: e08
+  difficulty: easy
+  question: What was total revenue in calendar year 2010?
+  sql: |
+    SELECT sum(revenue) FROM fact_sales
+    WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'
+
+- id: m01
+  difficulty: medium
+  question: What are the top 5 countries by revenue, and how much revenue did each generate?
+  sql: |
+    SELECT country, sum(revenue) AS revenue FROM fact_sales
+    GROUP BY country ORDER BY revenue DESC LIMIT 5
+
+- id: m02
+  difficulty: medium
+  question: What was total revenue in each calendar year?
+  sql: |
+    SELECT extract(year FROM invoice_date) AS year, sum(revenue) AS revenue
+    FROM fact_sales GROUP BY 1 ORDER BY 1
+
+- id: m03
+  difficulty: medium
+  question: What are the 10 best-selling products by revenue? Give stock code, description and revenue.
+  sql: |
+    SELECT s.stock_code, p.description, sum(s.revenue) AS revenue
+    FROM fact_sales s JOIN dim_product p USING (stock_code)
+    GROUP BY s.stock_code, p.description ORDER BY revenue DESC LIMIT 10
+
+- id: m04
+  difficulty: medium
+  question: What is the average order value, where an order's value is the total revenue of its invoice?
+  sql: |
+    SELECT avg(order_value) FROM (
+      SELECT invoice, sum(revenue) AS order_value FROM fact_sales GROUP BY invoice
+    ) o
+
+- id: m05
+  difficulty: medium
+  question: Which customer has spent the most in total, and how much?
+  sql: |
+    SELECT customer_id, sum(revenue) AS revenue FROM fact_sales
+    GROUP BY customer_id ORDER BY revenue DESC LIMIT 1
+
+- id: m06
+  difficulty: medium
+  question: What is total revenue by day of the week?
+  sql: |
+    SELECT d.day_name, sum(s.revenue) AS revenue
+    FROM fact_sales s JOIN dim_date d USING (date_key)
+    GROUP BY d.day_name
+
+- id: m09
+  difficulty: medium
+  question: What was the revenue in each month of 2011?
+  sql: |
+    SELECT date_trunc('month', invoice_date) AS month, sum(revenue) AS revenue
+    FROM fact_sales
+    WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'
+    GROUP BY 1 ORDER BY 1
+
+- id: m10
+  difficulty: medium
+  question: Which country has the largest total value of cancelled items (as a positive amount), and what is that value?
+  sql: |
+    SELECT country, -sum(revenue) AS cancelled_value FROM fact_cancellations
+    GROUP BY country ORDER BY cancelled_value DESC LIMIT 1
+
+- id: m11
+  difficulty: medium
+  question: On average, how many distinct products are on a single order?
+  sql: |
+    SELECT avg(n) FROM (
+      SELECT invoice, count(DISTINCT stock_code) AS n FROM fact_sales GROUP BY invoice
+    ) o
+
+- id: m12
+  difficulty: medium
+  question: How many customers placed exactly one order?
+  sql: |
+    SELECT count(*) FROM (
+      SELECT customer_id FROM fact_sales GROUP BY customer_id HAVING count(DISTINCT invoice) = 1
+    ) c
+
+- id: h01
+  difficulty: hard
+  question: Which calendar month had the highest revenue, and what was it?
+  sql: |
+    SELECT date_trunc('month', invoice_date) AS month, sum(revenue) AS revenue
+    FROM fact_sales GROUP BY 1 ORDER BY revenue DESC LIMIT 1
+
+- id: h02
+  difficulty: hard
+  unit: percent        # a fraction (0.25) and a percentage (25) are both accepted
+  question: For each month from February 2011 to November 2011, what was the percentage change in revenue versus the previous month?
+  sql: |
+    WITH m AS (
+      SELECT date_trunc('month', invoice_date) AS month, sum(revenue) AS revenue
+      FROM fact_sales GROUP BY 1
+    ), g AS (
+      SELECT month, 100.0 * (revenue - lag(revenue) OVER (ORDER BY month))
+                    / lag(revenue) OVER (ORDER BY month) AS pct_change
+      FROM m
+    )
+    SELECT month, pct_change FROM g
+    WHERE month BETWEEN '2011-02-01' AND '2011-11-01' ORDER BY month
+
+- id: h03
+  difficulty: hard
+  question: For each of the 3 countries with the most revenue, what is its single best-selling product by revenue (stock code and revenue)?
+  sql: |
+    WITH top_c AS (
+      SELECT country FROM fact_sales GROUP BY country ORDER BY sum(revenue) DESC LIMIT 3
+    ), pr AS (
+      SELECT s.country, s.stock_code, sum(s.revenue) AS revenue,
+             ROW_NUMBER() OVER (PARTITION BY s.country ORDER BY sum(s.revenue) DESC) AS rn
+      FROM fact_sales s JOIN top_c USING (country)
+      GROUP BY s.country, s.stock_code
+    )
+    SELECT country, stock_code, revenue FROM pr WHERE rn = 1
+
+- id: h04
+  difficulty: hard
+  unit: percent        # a fraction (0.25) and a percentage (25) are both accepted
+  question: What percentage of total revenue comes from the top 10% of customers by revenue?
+  sql: |
+    WITH c AS (
+      SELECT customer_id, sum(revenue) AS revenue FROM fact_sales GROUP BY customer_id
+    ), r AS (
+      SELECT revenue, ROW_NUMBER() OVER (ORDER BY revenue DESC) AS rn, count(*) OVER () AS n FROM c
+    )
+    SELECT 100.0 * sum(revenue) FILTER (WHERE rn <= ceil(0.1 * n)) / sum(revenue) FROM r
+
+- id: h05
+  difficulty: hard
+  question: Among customers who bought in both 2010 and 2011, how many spent less in 2011 than in 2010?
+  sql: |
+    WITH y AS (
+      SELECT customer_id,
+             sum(revenue) FILTER (WHERE extract(year FROM invoice_date) = 2010) AS r2010,
+             sum(revenue) FILTER (WHERE extract(year FROM invoice_date) = 2011) AS r2011
+      FROM fact_sales GROUP BY customer_id
+    )
+    SELECT count(*) FROM y WHERE r2010 IS NOT NULL AND r2011 IS NOT NULL AND r2011 < r2010
+
+- id: h06
+  difficulty: hard
+  unit: percent        # a fraction (0.25) and a percentage (25) are both accepted
+  question: By what percentage did revenue in Q1 2011 change compared with Q1 2010?
+  sql: |
+    SELECT 100.0 * (
+      sum(revenue) FILTER (WHERE invoice_date >= '2011-01-01' AND invoice_date < '2011-04-01')
+      - sum(revenue) FILTER (WHERE invoice_date >= '2010-01-01' AND invoice_date < '2010-04-01'))
+      / sum(revenue) FILTER (WHERE invoice_date >= '2010-01-01' AND invoice_date < '2010-04-01')
+    FROM fact_sales
+
+- id: h07
+  difficulty: hard
+  unit: percent        # a fraction (0.25) and a percentage (25) are both accepted
+  question: Of the customers who made a purchase in 2010, what percentage also made a purchase in 2011?
+  sql: |
+    WITH c10 AS (SELECT DISTINCT customer_id FROM fact_sales WHERE extract(year FROM invoice_date) = 2010),
+         c11 AS (SELECT DISTINCT customer_id FROM fact_sales WHERE extract(year FROM invoice_date) = 2011)
+    SELECT 100.0 * count(c11.customer_id) / count(*) FROM c10 LEFT JOIN c11 USING (customer_id)
+
+- id: h08
+  difficulty: hard
+  question: For each of the 3 customers with the highest total revenue, when were their first and last purchases?
+  sql: |
+    SELECT customer_id, min(invoice_date) AS first_purchase, max(invoice_date) AS last_purchase
+    FROM fact_sales
+    WHERE customer_id IN (
+      SELECT customer_id FROM fact_sales GROUP BY customer_id ORDER BY sum(revenue) DESC LIMIT 3)
+    GROUP BY customer_id
+
+- id: h09
+  difficulty: hard
+  question: What was the cumulative (running total) revenue at the end of each month of 2011?
+  sql: |
+    SELECT month, sum(revenue) OVER (ORDER BY month) AS cumulative_revenue FROM (
+      SELECT date_trunc('month', invoice_date) AS month, sum(revenue) AS revenue
+      FROM fact_sales
+      WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'
+      GROUP BY 1
+    ) m ORDER BY month
+
+- id: h10
+  difficulty: hard
+  question: Among products sold in both 2010 and 2011, which 5 had the largest revenue increase from 2010 to 2011? Give stock code and the increase.
+  sql: |
+    WITH p AS (
+      SELECT stock_code,
+             sum(revenue) FILTER (WHERE extract(year FROM invoice_date) = 2010) AS r2010,
+             sum(revenue) FILTER (WHERE extract(year FROM invoice_date) = 2011) AS r2011
+      FROM fact_sales GROUP BY stock_code
+    )
+    SELECT stock_code, r2011 - r2010 AS increase FROM p
+    WHERE r2010 IS NOT NULL AND r2011 IS NOT NULL
+    ORDER BY increase DESC LIMIT 5
+
+- id: h11
+  difficulty: hard
+  question: What is the median order value, where an order's value is the total revenue of its invoice?
+  sql: |
+    SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY order_value) FROM (
+      SELECT invoice, sum(revenue) AS order_value FROM fact_sales GROUP BY invoice
+    ) o
+
+
+- id: h12
+  difficulty: hard
+  question: What was our net revenue in 2011 after cancellations?
+  sql: |
+    SELECT (SELECT sum(revenue) FROM fact_sales
+            WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+         + (SELECT sum(revenue) FROM fact_cancellations
+            WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+
+- id: h13
+  difficulty: hard
+  question: Which product was returned the most, by units, and how many units came back?
+  sql: |
+    SELECT stock_code, -sum(quantity) AS units_returned FROM fact_cancellations
+    GROUP BY stock_code ORDER BY units_returned DESC LIMIT 1
+
+- id: h14
+  difficulty: hard
+  question: How many new customers did we win in 2011?
+  sql: |
+    SELECT count(*) FROM (
+      SELECT customer_id FROM fact_sales GROUP BY customer_id
+      HAVING min(invoice_date) >= '2011-01-01' AND min(invoice_date) < '2012-01-01'
+    ) c
+
+- id: h15
+  difficulty: hard
+  unit: percent        # a fraction (0.25) and a percentage (25) are both accepted
+  question: What share of 2011 revenue came from customers who had already bought from us in 2010?
+  sql: |
+    WITH c2010 AS (
+      SELECT DISTINCT customer_id FROM fact_sales
+      WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'
+    )
+    SELECT 100.0 * sum(s.revenue) FILTER (WHERE c.customer_id IS NOT NULL) / sum(s.revenue)
+    FROM fact_sales s LEFT JOIN c2010 c USING (customer_id)
+    WHERE s.invoice_date >= '2011-01-01' AND s.invoice_date < '2012-01-01'
+
+- id: h16
+  difficulty: hard
+  question: What was the average revenue per active customer in 2011?
+  sql: |
+    SELECT sum(revenue) / count(DISTINCT customer_id) FROM fact_sales
+    WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'
+
+- id: u01
+  difficulty: unanswerable
+  question: What was our profit margin in 2011?
+  why: no cost or margin data
+
+- id: u02
+  difficulty: unanswerable
+  question: Which salesperson generated the most revenue?
+  why: no salesperson column
+
+- id: u04
+  difficulty: unanswerable
+  question: How much did we spend on marketing in 2011, and what was the return on that spend?
+  why: no marketing spend data
+
+- id: u05
+  difficulty: unanswerable
+  question: What was the website conversion rate in November 2011?
+  why: no web traffic or session data
+
+- id: u06
+  difficulty: unanswerable
+  question: How many units of product 85123A are currently in stock?
+  why: no inventory data
+
+- id: u07
+  difficulty: unanswerable
+  question: What was the average delivery time for orders shipped to France?
+  why: no shipping or delivery dates
+
+- id: u09
+  difficulty: unanswerable
+  question: Which of our customers are based in London?
+  why: only country is recorded, no city
+
+- id: u10
+  difficulty: unanswerable
+  question: How much discount did customer 12346 get on their orders?
+  why: no list prices or discounts, only the price charged
+
+- id: x01
+  difficulty: hard
+  question: What was net revenue, after cancellations, in each calendar year?
+  sql: |
+    WITH s AS (SELECT extract(year FROM invoice_date) AS year, sum(revenue) AS gross
+               FROM fact_sales GROUP BY 1),
+         c AS (SELECT extract(year FROM invoice_date) AS year, sum(revenue) AS cancelled
+               FROM fact_cancellations GROUP BY 1)
+    SELECT s.year, s.gross + coalesce(c.cancelled, 0) AS net_revenue
+    FROM s LEFT JOIN c USING (year) ORDER BY s.year
+
+- id: x02
+  difficulty: hard
+  unit: percent
+  question: What percentage of gross sales value was cancelled in 2011?
+  sql: |
+    SELECT 100.0 * -(SELECT sum(revenue) FROM fact_cancellations
+                     WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+         / (SELECT sum(revenue) FROM fact_sales
+            WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+
+- id: x03
+  difficulty: hard
+  question: Which 5 customers had the highest net revenue after cancellations, and what was it?
+  sql: |
+    WITH s AS (SELECT customer_id, sum(revenue) AS gross FROM fact_sales GROUP BY customer_id),
+         c AS (SELECT customer_id, sum(revenue) AS cancelled FROM fact_cancellations GROUP BY customer_id)
+    SELECT s.customer_id, s.gross + coalesce(c.cancelled, 0) AS net_revenue
+    FROM s LEFT JOIN c USING (customer_id)
+    ORDER BY net_revenue DESC LIMIT 5
+
+- id: x04
+  difficulty: hard
+  question: For each of the 3 customers with the highest revenue, give their revenue and their number of cancelled invoices.
+  sql: |
+    WITH top3 AS (SELECT customer_id, sum(revenue) AS revenue FROM fact_sales
+                  GROUP BY customer_id ORDER BY revenue DESC LIMIT 3),
+         c AS (SELECT customer_id, count(DISTINCT invoice) AS cancelled_invoices
+               FROM fact_cancellations GROUP BY customer_id)
+    SELECT t.customer_id, t.revenue, coalesce(c.cancelled_invoices, 0) AS cancelled_invoices
+    FROM top3 t LEFT JOIN c USING (customer_id)
+
+- id: x05
+  difficulty: hard
+  question: For sales to France, how many orders were placed and how many invoices were cancelled?
+  sql: |
+    SELECT (SELECT count(DISTINCT invoice) FROM fact_sales WHERE country = 'France') AS orders,
+           (SELECT count(DISTINCT invoice) FROM fact_cancellations WHERE country = 'France') AS cancelled_invoices
+
+- id: x06
+  difficulty: hard
+  question: Among countries with at least £10,000 of revenue in 2010, which grew revenue by more than 50% from 2010 to 2011?
+  sql: |
+    WITH y AS (
+      SELECT country,
+             sum(revenue) FILTER (WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01') AS r2010,
+             sum(revenue) FILTER (WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') AS r2011
+      FROM fact_sales GROUP BY country
+    )
+    SELECT country FROM y WHERE r2010 >= 10000 AND r2011 > 1.5 * r2010
+
+- id: x07
+  difficulty: hard
+  unit: percent
+  question: By what percentage did revenue for September to November 2011 change compared with September to November 2010?
+  sql: |
+    SELECT 100.0 * (
+      sum(revenue) FILTER (WHERE invoice_date >= '2011-09-01' AND invoice_date < '2011-12-01')
+      - sum(revenue) FILTER (WHERE invoice_date >= '2010-09-01' AND invoice_date < '2010-12-01'))
+      / sum(revenue) FILTER (WHERE invoice_date >= '2010-09-01' AND invoice_date < '2010-12-01')
+    FROM fact_sales
+
+- id: x08
+  difficulty: hard
+  question: How many customers who bought in the first half of 2011 (January to June) did not buy again in the second half (July to December)?
+  sql: |
+    WITH h1 AS (SELECT DISTINCT customer_id FROM fact_sales
+                WHERE invoice_date >= '2011-01-01' AND invoice_date < '2011-07-01'),
+         h2 AS (SELECT DISTINCT customer_id FROM fact_sales
+                WHERE invoice_date >= '2011-07-01' AND invoice_date < '2012-01-01')
+    SELECT count(*) FROM h1 WHERE customer_id NOT IN (SELECT customer_id FROM h2)
+
+- id: x09
+  difficulty: hard
+  question: Which month of 2011 brought in the most new customers (first-ever purchase), and how many?
+  sql: |
+    WITH first AS (SELECT customer_id, min(invoice_date) AS first_purchase FROM fact_sales GROUP BY customer_id)
+    SELECT date_trunc('month', first_purchase) AS month, count(*) AS new_customers
+    FROM first
+    WHERE first_purchase >= '2011-01-01' AND first_purchase < '2012-01-01'
+    GROUP BY 1 ORDER BY new_customers DESC LIMIT 1
+
+- id: x10
+  difficulty: hard
+  question: How many active customers did we have in November 2011?
+  sql: |
+    SELECT count(DISTINCT customer_id) FROM fact_sales
+    WHERE invoice_date >= '2011-11-01' AND invoice_date < '2011-12-01'
+
+- id: x11
+  difficulty: hard
+  question: What was the average revenue per order for each of the top 3 countries by number of orders?
+  sql: |
+    WITH o AS (SELECT country, invoice, sum(revenue) AS order_value FROM fact_sales GROUP BY country, invoice)
+    SELECT country, avg(order_value) AS avg_order_value FROM o
+    GROUP BY country ORDER BY count(*) DESC LIMIT 3
+
+- id: x12
+  difficulty: unanswerable
+  question: What was the gross margin for each product category?
+  why: no product categories and no cost data
+
+- id: x13
+  difficulty: unanswerable
+  question: Which marketing channel brought in the most new customers in 2011?
+  why: no acquisition channel data
+
+- id: x14
+  difficulty: unanswerable
+  question: How much revenue came from wholesale customers versus retail customers?
+  why: no customer type column (tempting to invent a threshold)
+
+- id: x15
+  difficulty: unanswerable
+  question: Did we hit our 2011 revenue target?
+  why: no targets or budget data
