@@ -17,7 +17,7 @@ def table(rows: list[dict], cols: list[str]) -> str:
     return "\n".join(lines)
 
 
-def fmt(v) -> str:
+def fmt(v: object) -> str:
     if isinstance(v, bool):
         return "yes" if v else "no"
     if isinstance(v, float):
@@ -123,7 +123,7 @@ def section_pipeline(m: dict) -> list[str]:
         f"- Freshness: max invoice_date loaded **{m['max_invoice_date']}**",
         f"- Idempotency: content fingerprint `{m['fingerprint']}`; identical to the previous run: "
         f"**{m['identical_to_previous_run']}** ({m['etl_runs_logged']} runs logged in `etl_run_log`)",
-        f"- Partial periods flagged (data covers <50% of the calendar month): "
+        "- Partial periods flagged (data covers <50% of the calendar month): "
         + (", ".join(f"{p['month']} ({p['days_covered']} of {p['days_in_month']} days)"
                      for p in m.get("partial_periods", [])) or "none"),
         f"- Volume anomalies flagged (>3 sd from the rolling 6-month median of full months): "
@@ -281,7 +281,7 @@ def section_orchestration(_: dict) -> list[str]:
     clean, inj = load_metrics("parity_clean"), load_metrics("parity_injected")
     loud = load_metrics("orchestration")["quality_failure"]
 
-    def row(name, r):
+    def row(name: str, r: dict) -> dict:
         ic = r["orchestrated_internal_checks"]
         return {"scenario": name, "injected_bug": r["inject_bug"] or "none",
                 "airflow_run": r["orchestrated_dag_state"],

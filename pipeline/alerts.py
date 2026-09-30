@@ -6,7 +6,7 @@ and Airflow stops the downstream tasks: nothing continues silently on bad data.
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,7 +20,7 @@ class AlertError(RuntimeError):
 def write_alert(source: str, check: str, message: str, details: dict | None = None,
                 severity: str = "error", run_id: str | None = None, path: Path | None = None) -> dict:
     record = {
-        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "ts": datetime.now(UTC).isoformat(timespec="seconds"),
         "severity": severity,
         "source": source,
         "check": check,
@@ -35,6 +35,6 @@ def write_alert(source: str, check: str, message: str, details: dict | None = No
     return record
 
 
-def alert_and_fail(source: str, check: str, message: str, details: dict | None = None, **kw) -> None:
+def alert_and_fail(source: str, check: str, message: str, details: dict | None = None, **kw: object) -> None:
     write_alert(source, check, message, details, **kw)
     raise AlertError(f"[{source}/{check}] {message}")

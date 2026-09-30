@@ -68,3 +68,14 @@ Numbers come from [RESULTS.md](../RESULTS.md).
 | 44 | **`dashboard/requirements.txt` separate from the root requirements** | Cloud needs about 8 packages, not dbt, pgserver or jupyter | One heavy requirements file for everything |
 | 45 | **Docker: slim base, dependency layer first, non-root numeric user, HEALTHCHECK, an optional CA build secret**; compose adds Postgres 16 with a healthcheck | Small, cache-friendly, safe defaults; the optional secret lets it build behind a TLS-inspecting proxy without changing the file | Baking the proxy CA into the image |
 | 46 | **Chart colours from the validated project palette**, one axis per chart, legends plus data tables | The dataviz check passes; aqua is under 3:1 contrast, so every chart has labels and a table view | Streamlit's default colours |
+
+## Phase 10: polish
+
+| # | Decision | Why | Rejected alternative |
+|---|---|---|---|
+| 47 | **ruff with pycodestyle, pyflakes, isort, bugbear, pyupgrade and ANN (annotations)**; tests and the DAG file are exempt from ANN | ANN turns "type hints on public functions" from a convention into a CI check | mypy (a larger adoption cost for pandas-heavy code); annotations without enforcement |
+| 48 | **Lint only, no `ruff format` sweep** | Reformatting 40 files would bury the real changes in a huge diff and make history hard to review; formatting can be its own PR | Reformatting everything in the same PR |
+| 49 | **B905 (`zip` without `strict=`) ignored, with the reason in the config** | Every flagged `zip` is either intentionally uneven (the DAG pairs `tasks` with `tasks[1:]`) or already length-checked | Adding `strict=False` everywhere just to silence it |
+| 50 | **CI split into a lint job and a test job, with an explicit dbt step** | A failing check says immediately whether it's style, the dbt project or the Python tests | One monolithic step |
+| 51 | **README: one-screen summary (diagram + key-results table), details below** | A recruiter reads the top 30 lines; an interviewer reads the rest | A long narrative README |
+| 52 | **`docs/INTERVIEW_NOTES.md` answers only from this repo's results**, including where the model lost | Interview answers have to survive "show me" | Generic textbook answers |

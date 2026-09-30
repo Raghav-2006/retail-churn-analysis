@@ -18,7 +18,7 @@ import pandas as pd
 from pipeline.db import read_sql
 from pipeline.dbt_runner import ANALYTICS_SCHEMA, run_results
 from src.metrics import save_metrics
-from tiering.features import FEATURES, build_features, build_features_legacy
+from tiering.features import build_features, build_features_legacy
 from tiering.score import score_customers
 
 ROOT = Path(__file__).resolve().parents[1]

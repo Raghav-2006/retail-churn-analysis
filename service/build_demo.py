@@ -10,7 +10,7 @@ the cached answers from the analyst evaluation runs.
 import json
 import re
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -27,7 +27,7 @@ def _metrics(name: str) -> dict:
     return json.loads((ROOT / "metrics" / f"{name}.json").read_text())
 
 
-def _jsonable(v):
+def _jsonable(v: object) -> object:
     return float(v) if hasattr(v, "is_finite") else (v.isoformat() if hasattr(v, "isoformat") else v)
 
 
@@ -141,7 +141,8 @@ def kpis() -> pd.DataFrame:
         ("parity_injected_pct", pi["parity_pct"], "Parity with injected silent bug (%)"),
         ("tier1_capture_pct", comp["Hand-weighted score"]["capture_top10_pct"], "Tier 1 share of next-6-month revenue (%)"),
         ("monetary_capture_pct", comp["Monetary only"]["capture_top10_pct"], "Monetary-only top 10% share (%)"),
-        ("v2_capture_pct", comp["Hand-weighted v2 (learned weights, rounded)"]["capture_top10_pct"], "v2 weights top 10% share (%)"),
+        ("v2_capture_pct", comp["Hand-weighted v2 (learned weights, rounded)"]["capture_top10_pct"],
+         "v2 weights top 10% share (%)"),
         ("spearman_v1", comp["Hand-weighted score"]["spearman"], "Spearman, v1 score vs future revenue"),
         *[(f"cw_{v}_pct", round(100 * n / d_, 2), f"Confidently wrong, prompt {v} (%, pooled over 3 models)")
           for v, (n, d_) in pooled.items()],
@@ -163,7 +164,7 @@ def main(path: Path = DEMO_DB) -> Path:
         "tier_methods": pd.DataFrame(t["comparison"]),
         "quality_checks": pd.DataFrame(_metrics("pipeline")["checks"]),
         "eval_answers": eval_answers(),
-        "meta": pd.DataFrame([{"built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "meta": pd.DataFrame([{"built_at": datetime.now(UTC).isoformat(timespec="seconds"),
                                "pipeline_fingerprint": _metrics("pipeline")["fingerprint"],
                                "scoring_cutoff": t["cutoff"], "outcome_window": t["outcome_window"],
                                "note": "Pre-aggregated demo data; no raw transactions."}]),

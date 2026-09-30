@@ -21,11 +21,12 @@ import logging
 import os
 import time
 import uuid
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from service.cache import TTLCache
@@ -72,7 +73,7 @@ def live_enabled() -> bool:
 
 # ---- app --------------------------------------------------------------------------------------
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.store = DemoStore()
     app.state.cache = TTLCache(maxsize=1024, ttl_s=float(os.environ.get("CACHE_TTL_S", "600")))
     app.state.analyst = None  # created lazily, only in live mode
@@ -84,7 +85,7 @@ app = FastAPI(title="Retail sales platform API", version=VERSION, lifespan=lifes
 
 
 @app.middleware("http")
-async def access_log(request: Request, call_next):
+async def access_log(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     request_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
     t0 = time.perf_counter()
     try:
@@ -182,7 +183,7 @@ async def ask_live(body: AskRequest, request: Request) -> JSONResponse:
     try:
         ans = await asyncio.wait_for(asyncio.to_thread(request.app.state.analyst.ask, body.question),
                                      timeout=ASK_TIMEOUT_S)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         log.warning("live ask timeout", extra={"fields": {"timeout_s": ASK_TIMEOUT_S}})
         return JSONResponse({"status": "timeout", "fallback": True, "message": (
             f"The analyst did not answer within {ASK_TIMEOUT_S:.0f}s. No answer is given rather than a guess.")},

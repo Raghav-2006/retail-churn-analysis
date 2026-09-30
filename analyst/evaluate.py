@@ -31,7 +31,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 
-from analyst.agent import Analyst, run_readonly
+from analyst.agent import Analyst, Answer, run_readonly
 from src.metrics import METRICS, save_metrics
 
 EVAL_SET = Path(__file__).parent / "eval_set.yaml"
@@ -57,7 +57,7 @@ def load_eval_set() -> list[dict]:
 
 
 # ---- result-set matching ------------------------------------------------------------
-def norm(v):
+def norm(v: object) -> object:
     """Normalise one cell so equivalent values from different queries compare equal."""
     if v is None:
         return None
@@ -84,13 +84,13 @@ def norm(v):
     return str(v)
 
 
-def close(a, b) -> bool:
+def close(a: object, b: object) -> bool:
     if isinstance(a, float) and isinstance(b, float):
         return math.isclose(a, b, rel_tol=1e-3, abs_tol=0.01)
     return a == b
 
 
-def _sort_key(v):
+def _sort_key(v: object) -> tuple:
     return (0, v, "") if isinstance(v, float) else (1, 0.0, "" if v is None else str(v))
 
 
@@ -118,7 +118,7 @@ def month_variants(col: list) -> list[list]:
     return variants
 
 
-def _canon(v):
+def _canon(v: object) -> object:
     return v.lower().strip() if isinstance(v, str) else v
 
 
@@ -141,7 +141,7 @@ def results_match(ref_rows: list, pred_rows: list, percent: bool = False) -> boo
     ref_cols = [[r[j] for r in ref] for j in range(n_ref)]
     pred_cols = [[r[k] for r in pred] for k in range(n_pred)]
     # every acceptable spelling of each reference column
-    def fractions(col):
+    def fractions(col: list) -> list[list]:
         return [[v / 100 for v in col]] if percent and all(isinstance(v, float) for v in col) else []
 
     variants = [[[_canon(v) for v in c] for c in [col, *month_variants(col), *fractions(col)]] for col in ref_cols]
@@ -164,7 +164,7 @@ def results_match(ref_rows: list, pred_rows: list, percent: bool = False) -> boo
 
 
 # ---- grading --------------------------------------------------------------------------
-def grade(item: dict, ans, reference: list | None) -> str:
+def grade(item: dict, ans: "Answer", reference: list | None) -> str:
     answerable = item["difficulty"] != "unanswerable"
     if ans.abstained:
         return "abstained" if answerable else "refused"

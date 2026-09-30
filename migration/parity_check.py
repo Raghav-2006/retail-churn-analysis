@@ -29,6 +29,7 @@ import time
 from pathlib import Path
 
 import pandas as pd
+import psycopg
 
 from pipeline.alerts import write_alert
 from pipeline.db import connect
@@ -67,14 +68,14 @@ def run_orchestrated(run_name: str, schema: str, analytics_schema: str, inject_b
 
 
 # ---- comparisons -----------------------------------------------------------------------------
-def columns(conn, schema: str, table: str) -> list[str]:
+def columns(conn: psycopg.Connection, schema: str, table: str) -> list[str]:
     rows = conn.execute("""SELECT column_name FROM information_schema.columns
                            WHERE table_schema = %s AND table_name = %s ORDER BY ordinal_position""",
                         (schema, table)).fetchall()
     return [r[0] for r in rows]
 
 
-def column_checksums(conn, schema: str, table: str) -> dict[str, str]:
+def column_checksums(conn: psycopg.Connection, schema: str, table: str) -> dict[str, str]:
     key = PRIMARY_KEYS[table]
     cols = columns(conn, schema, table)
     exprs = ", ".join(f"md5(coalesce(string_agg(coalesce({c}::text, '<null>'), '|' ORDER BY {key}), ''))"
@@ -130,12 +131,13 @@ def compare_tiers(legacy: pd.DataFrame, orch: pd.DataFrame) -> dict:
 # ---- report ----------------------------------------------------------------------------------
 def to_markdown(r: dict) -> str:
     bad = [c for c in r["warehouse"]["checks"] if not c["match"]]
+    ic, tr = r["orchestrated_internal_checks"], r["tiers"]
     lines = [f"# Parity report: {r['scenario']}", "",
              f"- Injected bug: `{r['inject_bug'] or 'none'}`",
              f"- Legacy job exit code {r['legacy_exit']}; orchestrated Airflow run: **{r['orchestrated_dag_state']}** "
              f"({', '.join(f'{k} {v}' for k, v in r['orchestrated_task_states'].items())})",
-             f"- The orchestrated run's own checks: {r['orchestrated_internal_checks']['quality_checks']} quality checks, "
-             f"{r['orchestrated_internal_checks']['quality_failures']} failed; dbt tests {r['orchestrated_internal_checks']['dbt_tests']}",
+             f"- The orchestrated run's own checks: {ic['quality_checks']} quality checks, "
+             f"{ic['quality_failures']} failed; dbt tests {ic['dbt_tests']}",
              f"- **Parity: {r['parity_pct']}%** ({r['checks_passed']} of {r['checks_total']} checks match); "
              f"verdict: **{'PASS' if r['pass'] else 'FAIL'}**",
              f"- Tiers: {r['tiers']['tier_agreement_pct']}% of customers agree; "
@@ -147,7 +149,8 @@ def to_markdown(r: dict) -> str:
         k[1] += 1
     lines += ["| check | matching | total |", "|---|---|---|"]
     lines += [f"| {k} | {v[0]} | {v[1]} |" for k, v in by_kind.items()]
-    lines += [f"| tier assignments (customers) | {r['tiers']['customers_legacy'] - r['tiers']['missing_in_orchestrated'] - r['tiers']['tier_changed']} | {r['tiers']['customers_legacy']} |", ""]
+    matched = tr["customers_legacy"] - tr["missing_in_orchestrated"] - tr["tier_changed"]
+    lines += [f"| tier assignments (customers) | {matched} | {tr['customers_legacy']} |", ""]
     if bad:
         lines += ["**Mismatches**", "", "| kind | name | legacy | orchestrated |", "|---|---|---|---|"]
         lines += [f"| {c['kind']} | {c['name']} | {str(c['legacy'])[:18]} | {str(c['orchestrated'])[:18]} |"

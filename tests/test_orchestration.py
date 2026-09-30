@@ -10,7 +10,8 @@ from migration.parity_check import compare_tiers, compare_warehouses
 from pipeline import alerts
 from pipeline.db import connect
 from pipeline.load import build_star, load
-from pipeline.steps import STEPS, inject, main as step
+from pipeline.steps import STEPS, inject
+from pipeline.steps import main as step
 from pipeline.transform import clean
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -3,7 +3,7 @@ import pytest
 
 from pipeline.db import connect
 from pipeline.load import build_star, fingerprint, load, table_counts
-from pipeline.quality import assert_all_pass, QualityCheckError, run_checks
+from pipeline.quality import QualityCheckError, assert_all_pass, run_checks
 from pipeline.transform import clean
 
 SCHEMA = "test_retail"

@@ -16,7 +16,7 @@ SCHEMA = "retail"            # = pipeline.db.SCHEMA; the DB layer is imported la
 ANALYTICS_SCHEMA = "analytics"  # tiering.score (and the dashboard) need only pandas
 
 
-def read_sql(sql: str, schema: str, **params) -> pd.DataFrame:
+def read_sql(sql: str, schema: str, **params: object) -> pd.DataFrame:
     from pipeline.db import read_sql as _read_sql
 
     return _read_sql(sql, schema=schema, **params)

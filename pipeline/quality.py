@@ -14,6 +14,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import psycopg
 
@@ -48,7 +49,7 @@ class Check:
     detail: str
 
 
-def dtype_family(dtype) -> str:
+def dtype_family(dtype: object) -> str:
     kind = pd.api.types
     if kind.is_bool_dtype(dtype):
         return "boolean"
@@ -58,7 +59,7 @@ def dtype_family(dtype) -> str:
         return "float"
     if kind.is_datetime64_any_dtype(dtype):
         return "datetime"
-    if kind.is_string_dtype(dtype) or dtype == object:
+    if kind.is_string_dtype(dtype) or dtype == np.dtype(object):
         return "string"
     return str(dtype)
 

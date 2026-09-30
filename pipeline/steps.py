@@ -50,13 +50,13 @@ def inject(sales: pd.DataFrame, bug: str | None) -> pd.DataFrame:
     raise ValueError(f"unknown bug {bug!r}")
 
 
-def step_extract(a) -> dict:
+def step_extract(a: argparse.Namespace) -> dict:
     raw = extract()
     raw.to_parquet(a.run_dir / "raw.parquet", index=False)
     return {"raw_rows": len(raw)}
 
 
-def step_transform(a) -> dict:
+def step_transform(a: argparse.Namespace) -> dict:
     raw = pd.read_parquet(a.run_dir / "raw.parquet")
     sales, cancels, log_df, _ = clean(raw)
     sales = inject(sales, a.inject_bug)
@@ -66,21 +66,21 @@ def step_transform(a) -> dict:
     return {"sales_rows": len(sales), "cancellation_rows": len(cancels), "injected_bug": a.inject_bug}
 
 
-def _frames(a):
+def _frames(a: argparse.Namespace) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     raw = pd.read_parquet(a.run_dir / "raw.parquet")
     sales = pd.read_parquet(a.run_dir / "sales.parquet")
     cancels = pd.read_parquet(a.run_dir / "cancellations.parquet")
     return raw, sales, cancels
 
 
-def step_load(a) -> dict:
+def step_load(a: argparse.Namespace) -> dict:
     _, sales, cancels = _frames(a)
     with connect(schema=a.schema) as conn:
         load(conn, build_star(sales, cancels))
         return {"table_rows": table_counts(conn)}
 
 
-def step_quality(a) -> dict:
+def step_quality(a: argparse.Namespace) -> dict:
     raw, sales, cancels = _frames(a)
     with connect(schema=a.schema) as conn:
         checks, extra = quality.run_checks(conn, raw, sales, cancels, build_star(sales, cancels))
@@ -93,7 +93,7 @@ def step_quality(a) -> dict:
             "fact_sales_revenue": extra["fact_sales_revenue"]}
 
 
-def step_dbt_build(a) -> dict:
+def step_dbt_build(a: argparse.Namespace) -> dict:
     from pipeline.dbt_runner import run_dbt, run_results
 
     proc = run_dbt(["build"], source_schema=a.schema, target_schema=a.analytics_schema, check=False)
@@ -103,7 +103,7 @@ def step_dbt_build(a) -> dict:
     return {"dbt": counts}
 
 
-def step_tiering(a) -> dict:
+def step_tiering(a: argparse.Namespace) -> dict:
     from tiering.features import build_features
     from tiering.score import score_customers
 
@@ -119,7 +119,7 @@ def step_tiering(a) -> dict:
     return {"customers": len(out), "tiers": out["tier"].value_counts().sort_index().to_dict()}
 
 
-def step_export(a) -> dict:
+def step_export(a: argparse.Namespace) -> dict:
     """Publish the run: a summary other systems (and the parity check) can read."""
     with connect(schema=a.schema) as conn:
         summary = {

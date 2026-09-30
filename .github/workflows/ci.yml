@@ -5,6 +5,18 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Ruff (lint + type hints on public functions)
+        run: |
+          pip install ruff==0.15.8
+          ruff check . --output-format github
+
   test:
     runs-on: ubuntu-latest
     services:
@@ -29,7 +41,10 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run tests
-        # Unit tests for every cleaning rule, quality check, tiering score and SQL guardrail,
-        # plus load/idempotency tests against the real Postgres service. No API key needed.
-        run: pytest -v
+      - name: dbt build + dbt tests (synthetic dataset, real Postgres)
+        # Runs the real dbt project (11 models, all dbt tests) and asserts the marts equal the Python code.
+        run: pytest -v tests/test_dbt.py
+      - name: Unit, integration, API and dashboard tests
+        # Cleaning rules, quality checks, load idempotency, tiering, analyst guardrails and grading,
+        # orchestration steps and parity, FastAPI and Streamlit. No API key is needed or used.
+        run: pytest -v --ignore=tests/test_dbt.py
