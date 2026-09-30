@@ -1,0 +1,409 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "runs": [
+    0,
+    1
+  ],
+  "conditions": {
+    "no_rag_v3": {
+      "frozen55": {
+        "execution_accuracy_pct": 100.0,
+        "abstention_accuracy_pct": 100.0,
+        "false_abstention_pct": 0.0,
+        "confidently_wrong_pct": 0.0,
+        "confidently_wrong_of_answered_pct": 0.0,
+        "overall_accuracy_pct": 100.0,
+        "question_runs": 110,
+        "outcomes": {
+          "correct": 86,
+          "refused": 24
+        },
+        "per_run_execution_accuracy_pct": [
+          100.0,
+          100.0
+        ],
+        "per_run_confidently_wrong_pct": [
+          0.0,
+          0.0
+        ],
+        "latency_p50_s": 1.83,
+        "latency_p95_s": 3.64
+      },
+      "defs10": {
+        "execution_accuracy_pct": 20.0,
+        "abstention_accuracy_pct": null,
+        "false_abstention_pct": 20.0,
+        "confidently_wrong_pct": 60.0,
+        "confidently_wrong_of_answered_pct": 75.0,
+        "overall_accuracy_pct": 20.0,
+        "question_runs": 20,
+        "outcomes": {
+          "wrong": 12,
+          "abstained": 4,
+          "correct": 4
+        },
+        "per_run_execution_accuracy_pct": [
+          20.0,
+          20.0
+        ],
+        "per_run_confidently_wrong_pct": [
+          60.0,
+          60.0
+        ],
+        "latency_p50_s": 1.83,
+        "latency_p95_s": 3.43
+      },
+      "all65": {
+        "execution_accuracy_pct": 84.91,
+        "abstention_accuracy_pct": 100.0,
+        "false_abstention_pct": 3.77,
+        "confidently_wrong_pct": 9.23,
+        "confidently_wrong_of_answered_pct": 11.76,
+        "overall_accuracy_pct": 87.69,
+        "question_runs": 130,
+        "outcomes": {
+          "correct": 90,
+          "refused": 24,
+          "wrong": 12,
+          "abstained": 4
+        },
+        "per_run_execution_accuracy_pct": [
+          84.91,
+          84.91
+        ],
+        "per_run_confidently_wrong_pct": [
+          9.23,
+          9.23
+        ],
+        "latency_p50_s": 1.83,
+        "latency_p95_s": 3.62
+      },
+      "cost_per_question_cad": 0.00092,
+      "cost_note": "v3 frozen runs predate the ledger; cost measured on its 20 fresh definition-question runs"
+    },
+    "rag_v4": {
+      "frozen55": {
+        "execution_accuracy_pct": 97.67,
+        "abstention_accuracy_pct": 100.0,
+        "false_abstention_pct": 0.0,
+        "confidently_wrong_pct": 1.82,
+        "confidently_wrong_of_answered_pct": 2.33,
+        "overall_accuracy_pct": 98.18,
+        "question_runs": 110,
+        "outcomes": {
+          "correct": 84,
+          "wrong": 2,
+          "refused": 24
+        },
+        "per_run_execution_accuracy_pct": [
+          97.67,
+          97.67
+        ],
+        "per_run_confidently_wrong_pct": [
+          1.82,
+          1.82
+        ],
+        "latency_p50_s": 1.86,
+        "latency_p95_s": 2.62
+      },
+      "defs10": {
+        "execution_accuracy_pct": 100.0,
+        "abstention_accuracy_pct": null,
+        "false_abstention_pct": 0.0,
+        "confidently_wrong_pct": 0.0,
+        "confidently_wrong_of_answered_pct": 0.0,
+        "overall_accuracy_pct": 100.0,
+        "question_runs": 20,
+        "outcomes": {
+          "correct": 20
+        },
+        "per_run_execution_accuracy_pct": [
+          100.0,
+          100.0
+        ],
+        "per_run_confidently_wrong_pct": [
+          0.0,
+          0.0
+        ],
+        "latency_p50_s": 1.97,
+        "latency_p95_s": 3.16
+      },
+      "all65": {
+        "execution_accuracy_pct": 98.11,
+        "abstention_accuracy_pct": 100.0,
+        "false_abstention_pct": 0.0,
+        "confidently_wrong_pct": 1.54,
+        "confidently_wrong_of_answered_pct": 1.89,
+        "overall_accuracy_pct": 98.46,
+        "question_runs": 130,
+        "outcomes": {
+          "correct": 104,
+          "wrong": 2,
+          "refused": 24
+        },
+        "per_run_execution_accuracy_pct": [
+          98.11,
+          98.11
+        ],
+        "per_run_confidently_wrong_pct": [
+          1.54,
+          1.54
+        ],
+        "latency_p50_s": 1.89,
+        "latency_p95_s": 2.64
+      },
+      "cost_per_question_cad": 0.00208,
+      "cost_note": "measured on all 130 question-runs",
+      "citations": {
+        "answered_with_citation_pct": 100.0,
+        "defs_cite_gold_doc_pct": 100.0,
+        "cites_deprecated_doc": 0,
+        "cites_unretrieved_doc": 0,
+        "cited_docs": {
+          "metric-revenue": 44,
+          "caveat-date-coverage": 28,
+          "metric-customer-count": 22,
+          "table-fact-sales": 20,
+          "metric-order-value": 16,
+          "table-fact-cancellations": 12,
+          "metric-net-revenue": 8,
+          "metric-new-customer": 8,
+          "metric-active-customer": 8,
+          "table-dim-date": 6,
+          "metric-international-revenue": 6,
+          "table-dim-product": 4
+        }
+      }
+    }
+  },
+  "defs_by_question": [
+    {
+      "id": "d01",
+      "run": 0,
+      "question": "How many active customers did we have at the end of Q3 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-active-customer"
+      ]
+    },
+    {
+      "id": "d02",
+      "run": 0,
+      "question": "How many customers had churned as of the end of June 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-churn",
+        "metric-active-customer",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d03",
+      "run": 0,
+      "question": "What was our churn rate at the end of 2010?",
+      "no_rag": "abstained",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-churn",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d04",
+      "run": 0,
+      "question": "What was our average order value (AOV) in 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-aov",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d05",
+      "run": 0,
+      "question": "What was the cancellation rate in 2010?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-cancellation-rate"
+      ]
+    },
+    {
+      "id": "d06",
+      "run": 0,
+      "question": "What was our repeat customer rate in 2011?",
+      "no_rag": "correct",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-repeat-customer",
+        "metric-customer-count"
+      ]
+    },
+    {
+      "id": "d07",
+      "run": 0,
+      "question": "How many new customers did we acquire in September 2011?",
+      "no_rag": "correct",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-new-customer",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d08",
+      "run": 0,
+      "question": "What was our international revenue in 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-international-revenue",
+        "metric-revenue"
+      ]
+    },
+    {
+      "id": "d09",
+      "run": 0,
+      "question": "How many large orders did we receive in 2011?",
+      "no_rag": "abstained",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-large-order",
+        "metric-order-value",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d10",
+      "run": 0,
+      "question": "What share of 2010 revenue came in peak season?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-peak-season",
+        "metric-revenue",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d01",
+      "run": 1,
+      "question": "How many active customers did we have at the end of Q3 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-active-customer"
+      ]
+    },
+    {
+      "id": "d02",
+      "run": 1,
+      "question": "How many customers had churned as of the end of June 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-churn",
+        "metric-active-customer",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d03",
+      "run": 1,
+      "question": "What was our churn rate at the end of 2010?",
+      "no_rag": "abstained",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-churn",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d04",
+      "run": 1,
+      "question": "What was our average order value (AOV) in 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-aov",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d05",
+      "run": 1,
+      "question": "What was the cancellation rate in 2010?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-cancellation-rate"
+      ]
+    },
+    {
+      "id": "d06",
+      "run": 1,
+      "question": "What was our repeat customer rate in 2011?",
+      "no_rag": "correct",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-repeat-customer",
+        "metric-customer-count"
+      ]
+    },
+    {
+      "id": "d07",
+      "run": 1,
+      "question": "How many new customers did we acquire in September 2011?",
+      "no_rag": "correct",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-new-customer",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d08",
+      "run": 1,
+      "question": "What was our international revenue in 2011?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-international-revenue",
+        "metric-revenue"
+      ]
+    },
+    {
+      "id": "d09",
+      "run": 1,
+      "question": "How many large orders did we receive in 2011?",
+      "no_rag": "abstained",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-large-order",
+        "metric-order-value",
+        "caveat-date-coverage"
+      ]
+    },
+    {
+      "id": "d10",
+      "run": 1,
+      "question": "What share of 2010 revenue came in peak season?",
+      "no_rag": "wrong",
+      "rag": "correct",
+      "rag_citations": [
+        "metric-peak-season",
+        "metric-revenue",
+        "caveat-date-coverage"
+      ]
+    }
+  ],
+  "frozen55_changed": {
+    "m04": [
+      "run0: correct -> wrong",
+      "run1: correct -> wrong"
+    ]
+  }
+}

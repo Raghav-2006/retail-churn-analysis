@@ -1,0 +1,133 @@
+{
+  "prompt_version": "v3",
+  "model": "gemini-3.1-flash-lite",
+  "eval_set": "defs",
+  "eval_set_version": 1,
+  "eval_set_sha256": "8c4e1723bf8a91a873061a89f45ed7c9fd24fa4340415c9347abdcc3ae7282bc",
+  "runs": 2,
+  "complete": true,
+  "stopped_reason": null,
+  "gemini_calls": 38,
+  "questions": 20,
+  "execution_accuracy_pct": 20.0,
+  "abstention_accuracy_pct": null,
+  "false_abstention_pct": 20.0,
+  "overall_accuracy_pct": 20.0,
+  "confidently_wrong_pct": 60.0,
+  "confidently_wrong_of_answered_pct": 75.0,
+  "outcomes": {
+    "wrong": 12,
+    "abstained": 4,
+    "correct": 4
+  },
+  "by_difficulty": {
+    "definition": 20.0
+  },
+  "retried": 2,
+  "self_check": {
+    "fix": 4,
+    "ok": 12
+  },
+  "per_run": {
+    "execution_accuracy_pct": [
+      20.0,
+      20.0
+    ],
+    "abstention_accuracy_pct": [
+      null,
+      null
+    ],
+    "confidently_wrong_pct": [
+      60.0,
+      60.0
+    ],
+    "overall_accuracy_pct": [
+      20.0,
+      20.0
+    ]
+  },
+  "latency_p50_s": 1.83,
+  "latency_p95_s": 3.43,
+  "failures": [
+    {
+      "id": "d01",
+      "difficulty": "definition",
+      "question": "How many active customers did we have at the end of Q3 2011?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "SELECT COUNT(DISTINCT customer_id) FROM dim_customer WHERE first_invoice_date < '2011-10-01' AND (last_invoice_date >= '2011-10-01' OR last_invoice_date IS NULL)",
+      "example_error": null
+    },
+    {
+      "id": "d02",
+      "difficulty": "definition",
+      "question": "How many customers had churned as of the end of June 2011?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "WITH customer_activity AS (SELECT customer_id, MAX(invoice_date) as last_purchase_date FROM fact_sales WHERE invoice_date < '2011-07-01' GROUP BY customer_id) SELECT COUNT(*) FROM customer_activity WHERE last_purchase_date < '2011-06-01'",
+      "example_error": null
+    },
+    {
+      "id": "d03",
+      "difficulty": "definition",
+      "question": "What was our churn rate at the end of 2010?",
+      "outcomes": {
+        "abstained": 2
+      },
+      "example_sql": null,
+      "example_error": null
+    },
+    {
+      "id": "d04",
+      "difficulty": "definition",
+      "question": "What was our average order value (AOV) in 2011?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "SELECT SUM(revenue) / COUNT(DISTINCT invoice) AS aov FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'",
+      "example_error": null
+    },
+    {
+      "id": "d05",
+      "difficulty": "definition",
+      "question": "What was the cancellation rate in 2010?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "WITH sales_2010 AS (SELECT SUM(revenue) AS total_revenue FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), cancellations_2010 AS (SELECT SUM(revenue) AS total_cancellations FROM fact_cancellations WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01') SELECT (ABS(COALESCE(c.total_cancellations, 0)) / NULLIF(COALESCE(s.total_revenue, 0) + ABS(COALESCE(c.total_cancellations, 0)), 0)) * 100 AS cancellation_rate_percentage FROM sales_2010 s CROSS JOIN cancellations_2010 c",
+      "example_error": null
+    },
+    {
+      "id": "d08",
+      "difficulty": "definition",
+      "question": "What was our international revenue in 2011?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "SELECT SUM(revenue) AS international_revenue FROM fact_sales WHERE country != 'United Kingdom' AND invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'",
+      "example_error": null
+    },
+    {
+      "id": "d09",
+      "difficulty": "definition",
+      "question": "How many large orders did we receive in 2011?",
+      "outcomes": {
+        "abstained": 2
+      },
+      "example_sql": null,
+      "example_error": null
+    },
+    {
+      "id": "d10",
+      "difficulty": "definition",
+      "question": "What share of 2010 revenue came in peak season?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "WITH annual_revenue AS (SELECT SUM(revenue) AS total_revenue FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), peak_revenue AS (SELECT SUM(s.revenue) AS peak_rev FROM fact_sales s JOIN dim_date d ON s.date_key = d.date_key WHERE s.invoice_date >= '2010-01-01' AND s.invoice_date < '2011-01-01' AND d.month IN (10, 11, 12)) SELECT (peak_rev / total_revenue) * 100 AS peak_season_revenue_share FROM annual_revenue, peak_revenue",
+      "example_error": null
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "prompt_version": "v4",
+  "model": "gemini-3.1-flash-lite",
+  "eval_set": "defs",
+  "eval_set_version": 1,
+  "eval_set_sha256": "8c4e1723bf8a91a873061a89f45ed7c9fd24fa4340415c9347abdcc3ae7282bc",
+  "runs": 2,
+  "complete": true,
+  "stopped_reason": null,
+  "gemini_calls": 60,
+  "questions": 20,
+  "execution_accuracy_pct": 100.0,
+  "abstention_accuracy_pct": null,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 100.0,
+  "confidently_wrong_pct": 0.0,
+  "confidently_wrong_of_answered_pct": 0.0,
+  "outcomes": {
+    "correct": 20
+  },
+  "by_difficulty": {
+    "definition": 100.0
+  },
+  "retried": 0,
+  "self_check": {
+    "ok": 20
+  },
+  "per_run": {
+    "execution_accuracy_pct": [
+      100.0,
+      100.0
+    ],
+    "abstention_accuracy_pct": [
+      null,
+      null
+    ],
+    "confidently_wrong_pct": [
+      0.0,
+      0.0
+    ],
+    "overall_accuracy_pct": [
+      100.0,
+      100.0
+    ]
+  },
+  "latency_p50_s": 1.97,
+  "latency_p95_s": 3.16,
+  "failures": []
+}

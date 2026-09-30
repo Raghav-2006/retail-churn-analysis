@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg16   # postgres:16 + the pgvector extension (Phase 7 knowledge store)
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -46,5 +46,6 @@ jobs:
         run: pytest -v tests/test_dbt.py
       - name: Unit, integration, API and dashboard tests
         # Cleaning rules, quality checks, load idempotency, tiering, analyst guardrails and grading,
-        # orchestration steps and parity, FastAPI and Streamlit. No API key is needed or used.
+        # orchestration steps and parity, FastAPI and Streamlit, knowledge base + pgvector retrieval (hash
+        # embedder, so no model download) and the Gemini spend guard. No API key is needed or used.
         run: pytest -v --ignore=tests/test_dbt.py

@@ -335,10 +335,124 @@ def section_demo(m: dict) -> list[str]:
     ]
 
 
+def section_rag_retrieval(m: dict) -> list[str]:
+    idx = m.get("index", {})
+    ch = m["chosen"]
+    rows = [r for r in m["results"] if r["policy"] == "penalize" and r["subset"] in ("all", "answerable", "defs")]
+    trap = [r for r in m["results"] if r["subset"] == "defs" and r["k"] == ch["k"]]
+    return [
+        "## Knowledge layer: retrieval eval (python -m rag.evaluate)",
+        "",
+        f"- {next(iter(idx.values()))['docs'] if idx else '?'} knowledge docs (`knowledge/`), embedded locally with "
+        f"`{m['embedder']}` (384-d, no API) into pgvector (`knowledge.chunks`), exact cosine search",
+        "- Chunk configurations: " + ", ".join(f"`{k}` {v['chunks']} chunks (mean {v['mean_words']} words)"
+                                               for k, v in idx.items()),
+        "- Hand-labelled relevant docs for all 65 questions (`knowledge/relevance.yaml`); ranking is doc level over the "
+        "top-k chunks the agent would see. Deprecated docs get a 0.10 similarity penalty (`penalize`)",
+        f"- **Chosen for the agent** (pre-registered rule: best recall@8, then the smallest k within 0.02): "
+        f"`{ch['config']}`, k = {ch['k']} (recall {ch['recall']:.3f}, MRR {ch['mrr']:.3f} on all 65)",
+        "",
+        table([{"subset": r["subset"], "chunks": r["config"], "k": r["k"], "questions": r["questions"],
+                "recall_at_k": r["recall"], "hit_at_k": r["hit"], "MRR": r["mrr"]} for r in rows],
+              ["subset", "chunks", "k", "questions", "recall_at_k", "hit_at_k", "MRR"]),
+        "",
+        f"**Deprecated/conflicting docs on the 10 definition questions (k = {ch['k']})**: share of questions whose "
+        "context contains a trap doc, and share where a trap outranks the current definition",
+        "",
+        table([{"chunks": r["config"], "policy": r["policy"], "recall": r["recall"],
+                "trap_in_context": r["trap_in_context"], "trap_above_relevant": r["trap_above_relevant"]} for r in trap],
+              ["chunks", "policy", "recall", "trap_in_context", "trap_above_relevant"]),
+        "",
+        f"**Misses at the chosen setting** ({len(m['misses_at_chosen'])}): "
+        + ", ".join(f"`{x['id']}`" for x in m["misses_at_chosen"]),
+        "",
+    ]
+
+
+def section_rag_ablation(m: dict) -> list[str]:
+    rows = []
+    for cond, r in m["conditions"].items():
+        for subset in ("frozen55", "defs10", "all65"):
+            x = r[subset]
+            n_cw = x["outcomes"].get("wrong", 0) + x["outcomes"].get("answered_unanswerable", 0)
+            rows.append({"condition": cond, "questions": subset, "question_runs": x["question_runs"],
+                         "execution_accuracy_pct": x["execution_accuracy_pct"],
+                         "abstention_accuracy_pct": x["abstention_accuracy_pct"] if x["abstention_accuracy_pct"]
+                         is not None else "-",
+                         "confidently_wrong_pct": x["confidently_wrong_pct"], "confidently_wrong": f"{n_cw}/{x['question_runs']}",
+                         "false_abstention_pct": x["false_abstention_pct"],
+                         "exec_per_run": " / ".join(f"{v:.1f}" for v in x["per_run_execution_accuracy_pct"]),
+                         "p50_s": x["latency_p50_s"], "p95_s": x["latency_p95_s"]})
+    cit = m["conditions"]["rag_v4"].get("citations", {})
+    by_q = {}
+    for d in m["defs_by_question"]:
+        by_q.setdefault(d["id"], {"id": d["id"], "question": d["question"], "no_rag": [], "rag": []})
+        by_q[d["id"]]["no_rag"].append(d["no_rag"])
+        by_q[d["id"]]["rag"].append(d["rag"])
+    return [
+        "## RAG ablation: without vs with retrieval (python -m analyst.ablation)",
+        "",
+        f"- Model `{m['model']}`, {len(m['runs'])} runs per condition. No RAG = prompt v3 (glossary + self-check); "
+        "RAG = v4 (v3 + the top-8 retrieved docs + mandatory citations)",
+        "- No-RAG on the frozen 55 reuses the cached v3 runs 0-1 from Part 3 (same question file, prompt and model; "
+        "SHA-256 checked); everything else was run fresh",
+        "",
+        table(rows, ["condition", "questions", "question_runs", "execution_accuracy_pct", "abstention_accuracy_pct",
+                     "confidently_wrong_pct", "confidently_wrong", "false_abstention_pct", "exec_per_run",
+                     "p50_s", "p95_s"]),
+        "",
+        "Latency excludes the prose-answer call and 429/503 back-off, so both conditions time the same steps "
+        "(v4 includes retrieval). Estimated cost per question (SQL + self-check calls): "
+        + ", ".join(f"{c} CA${r['cost_per_question_cad']:.4f}" for c, r in m["conditions"].items() if r["cost_per_question_cad"]),
+        "",
+        "**Definition questions, outcome per run**",
+        "",
+        table([{"id": v["id"], "question": v["question"], "no_rag": " / ".join(v["no_rag"]), "rag": " / ".join(v["rag"])}
+               for v in by_q.values()], ["id", "question", "no_rag", "rag"]),
+        "",
+        "**Frozen 55: question-runs whose outcome changed with RAG**: "
+        + ("; ".join(f"`{k}` {', '.join(v)}" for k, v in m["frozen55_changed"].items()) or "none"),
+        "",
+        f"**Citations (v4)**: {cit.get('answered_with_citation_pct')}% of answered question-runs cite at least one doc; "
+        f"definition questions cite the defining doc in {cit.get('defs_cite_gold_doc_pct')}%; "
+        f"{cit.get('cites_deprecated_doc')} cite a deprecated doc; {cit.get('cites_unretrieved_doc')} cite a doc that "
+        "was not retrieved",
+        "",
+    ]
+
+
+def section_judge(m: dict) -> list[str]:
+    return [
+        f"## LLM judge on {m['version']} answers (python -m analyst.judge)",
+        "",
+        f"- Judge `{m['judge_model']}` (the agent's model; the only one in budget), prompt `{m['judge_version']}`, "
+        f"temperature 0; {m['judged']} answered question-runs judged ({m['unparsed']} unparseable verdicts)",
+        f"- Faithful to the SQL result: **{m['faithful_pct']}%**; citations correct: **{m['citation_correct_pct']}%**",
+        "- Faithful % by eval outcome: " + ", ".join(f"{k} {v}" for k, v in m["faithful_pct_by_outcome"].items()),
+        "- Citation-correct % by question set: " + ", ".join(f"{k} {v}" for k, v in m["citation_correct_pct_by_set"].items()),
+        "",
+    ]
+
+
+def section_spend(m: dict) -> list[str]:
+    return [
+        "## Gemini spend, Phases 7-8 (metrics/gemini_ledger.json)",
+        "",
+        f"- **{m['calls']:,} calls**, {m['input_tokens']:,} input + {m['output_tokens']:,} output + "
+        f"{m['thought_tokens']:,} thinking tokens; estimated **CA${m['est_cad']:.2f}** of the CA${m['cap_cad']:.2f} cap "
+        f"(list price USD 0.25 / 1.50 per 1M in/out tokens, at {m['usd_to_cad']} CAD/USD)",
+        "",
+        table([{"purpose": k, "calls": v["calls"], "est_cad": round(v["est_cad"], 4)} for k, v in m["by_purpose"].items()],
+              ["purpose", "calls", "est_cad"]),
+        "",
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
             ("03_rfm", section_rfm), ("tiering", section_tiering), ("dbt", section_dbt),
             ("parity_clean", section_orchestration),
-            ("analyst", section_analyst), ("demo", section_demo)]
+            ("analyst", section_analyst), ("rag_retrieval", section_rag_retrieval), ("rag_ablation", section_rag_ablation),
+            ("judge_v4", section_judge), ("gemini_ledger", section_spend), ("demo", section_demo)]
 
 
 def main() -> None:

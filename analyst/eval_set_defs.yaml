@@ -1,0 +1,115 @@
+# Definition-dependent questions (Phase 7). FROZEN, separate from eval_set.yaml (which is unchanged).
+#
+# Each question can only be answered correctly with a business definition that is NOT in the
+# schema or the v2 glossary: it lives in the knowledge base (knowledge/*.md). The references follow
+# the CURRENT (non-deprecated) doc; the comment on each item gives the doc and what the naive or
+# deprecated reading returns instead, computed on the warehouse before any agent run.
+#
+# Written, and every reference checked, before the first RAG or no-RAG run on these questions.
+# Its SHA-256 is pinned in tests/test_rag.py and recorded in every metrics file.
+
+- id: d01
+  difficulty: definition
+  question: How many active customers did we have at the end of Q3 2011?
+  # metric-active-customer (as of 2011-09-30: 90-day window) -> 2,145.
+  # In-quarter reading 2,155; deprecated 180-day window 2,919.
+  sql: |
+    SELECT count(DISTINCT customer_id) FROM fact_sales
+    WHERE invoice_date >= DATE '2011-10-01' - 90 AND invoice_date < '2011-10-01'
+
+- id: d02
+  difficulty: definition
+  question: How many customers had churned as of the end of June 2011?
+  # metric-churn (no order in the 90 days to 2011-06-30) -> 3,050. Deprecated 365-day rule: 702.
+  sql: |
+    SELECT count(*) FROM (
+      SELECT customer_id, max(invoice_date) AS last_order FROM fact_sales
+      WHERE invoice_date < '2011-07-01' GROUP BY customer_id
+    ) c
+    WHERE last_order < DATE '2011-07-01' - 90
+
+- id: d03
+  difficulty: definition
+  question: What was our churn rate at the end of 2010?
+  unit: percent
+  # metric-churn: churned / customers who ever ordered by 2010-12-31 -> 38.70%.
+  sql: |
+    SELECT 100.0 * count(*) FILTER (WHERE last_order < DATE '2011-01-01' - 90) / count(*) FROM (
+      SELECT customer_id, max(invoice_date) AS last_order FROM fact_sales
+      WHERE invoice_date < '2011-01-01' GROUP BY customer_id
+    ) c
+
+- id: d04
+  difficulty: definition
+  question: What was our average order value (AOV) in 2011?
+  # metric-aov (net revenue / orders) -> £445.60. Deprecated gross AOV (metric-aov-legacy): £480.48.
+  sql: |
+    SELECT (
+      (SELECT sum(revenue) FROM fact_sales
+       WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+      + (SELECT sum(revenue) FROM fact_cancellations
+         WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+    ) / (SELECT count(DISTINCT invoice) FROM fact_sales
+         WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01')
+
+- id: d05
+  difficulty: definition
+  question: What was the cancellation rate in 2010?
+  unit: percent
+  # metric-cancellation-rate (value based) -> 5.82%. The 2010 sales FAQ's invoice-count rate: 18.72%.
+  sql: |
+    SELECT 100 * -(SELECT sum(revenue) FROM fact_cancellations
+                   WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01')
+               / (SELECT sum(revenue) FROM fact_sales
+                  WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01')
+
+- id: d06
+  difficulty: definition
+  question: What was our repeat customer rate in 2011?
+  unit: percent
+  # metric-repeat-customer (2+ orders within 2011 / 2011 buyers) -> 64.12%.
+  sql: |
+    SELECT 100.0 * count(*) FILTER (WHERE orders >= 2) / count(*) FROM (
+      SELECT customer_id, count(DISTINCT invoice) AS orders FROM fact_sales
+      WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' GROUP BY customer_id
+    ) c
+
+- id: d07
+  difficulty: definition
+  question: How many new customers did we acquire in September 2011?
+  # metric-new-customer (first-ever order in the month) -> 188.
+  sql: |
+    SELECT count(*) FROM (
+      SELECT customer_id, min(invoice_date) AS first_order FROM fact_sales GROUP BY customer_id
+    ) c
+    WHERE first_order >= '2011-09-01' AND first_order < '2011-10-01'
+
+- id: d08
+  difficulty: definition
+  question: What was our international revenue in 2011?
+  # metric-international-revenue (not UK, not 'Unspecified') -> £1,422,681.16. Including Unspecified: £1,425,341.93.
+  sql: |
+    SELECT sum(revenue) FROM fact_sales
+    WHERE country NOT IN ('United Kingdom', 'Unspecified')
+      AND invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'
+
+- id: d09
+  difficulty: definition
+  question: How many large orders did we receive in 2011?
+  # metric-large-order (order value >= £1,000) -> 1,168. The 2010 sales FAQ's £500 threshold: 3,844.
+  sql: |
+    SELECT count(*) FROM (
+      SELECT invoice FROM fact_sales
+      WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01'
+      GROUP BY invoice HAVING sum(revenue) >= 1000
+    ) o
+
+- id: d10
+  difficulty: definition
+  question: What share of 2010 revenue came in peak season?
+  unit: percent
+  # metric-peak-season (September-November) -> 36.18%.
+  sql: |
+    SELECT 100 * sum(revenue) FILTER (WHERE extract(month FROM invoice_date) IN (9, 10, 11)) / sum(revenue)
+    FROM fact_sales
+    WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'
