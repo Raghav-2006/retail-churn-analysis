@@ -1,0 +1,24 @@
+# ruff: lint + type-hint enforcement for public functions. Run: ruff check .
+target-version = "py311"
+line-length = 130
+extend-exclude = ["notebooks", "dbt", ".venv-airflow", ".airflow", "data"]
+
+[lint]
+# E/W pycodestyle, F pyflakes, I isort, B bugbear, UP pyupgrade, ANN type hints (public API only, see ignores)
+select = ["E", "W", "F", "I", "B", "UP", "ANN"]
+ignore = [
+    "ANN401",   # Any is allowed where a value is genuinely arbitrary (cache values)
+    "B008",     # FastAPI-style defaults
+    "E731",     # small lambdas are fine
+    "B905",     # zip() truncation is intended where used (e.g. DAG pairs tasks with tasks[1:]) or lengths are pre-checked
+]
+
+[lint.flake8-annotations]
+suppress-dummy-args = true
+ignore-fully-untyped = false
+mypy-init-return = true
+
+[lint.per-file-ignores]
+"tests/*" = ["ANN"]                  # test functions and fixtures don't need annotations
+"orchestration/dags/*" = ["ANN"]
+"src/make_results.py" = ["E501"]

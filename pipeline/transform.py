@@ -20,7 +20,7 @@ NON_PRODUCT_PREFIXES = ("ADJUST", "TEST", "GIFT_")
 
 
 class CleaningLog:
-    def __init__(self):
+    def __init__(self) -> None:
         self.rows = []
 
     def record(self, step: str, before: int, after: int, reason: str) -> None:
@@ -62,7 +62,7 @@ def cancellation_rates(df: pd.DataFrame) -> dict:
     }
 
 
-def clean(raw: pd.DataFrame):
+def clean(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
     """Return (clean_df, cancellations_df, log_df, info)."""
     log = CleaningLog()
     info = {}
@@ -110,7 +110,7 @@ def clean(raw: pd.DataFrame):
     return df.reset_index(drop=True), cancellations.reset_index(drop=True), log.to_frame(), info
 
 
-def run(save: bool = True):
+def run(save: bool = True) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
     from pipeline.extract import extract
 
     raw = extract()

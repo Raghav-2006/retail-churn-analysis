@@ -1,6 +1,7 @@
 """Shared chart style so every figure uses the same palette and minimal layout."""
 from pathlib import Path
 
+import matplotlib.figure
 import matplotlib.pyplot as plt
 
 FIGURES = Path(__file__).resolve().parents[1] / "figures"
@@ -41,7 +42,7 @@ def apply_style() -> None:
     })
 
 
-def save(fig, name: str) -> Path:
+def save(fig: "matplotlib.figure.Figure", name: str) -> Path:
     FIGURES.mkdir(exist_ok=True)
     path = FIGURES / name
     fig.savefig(path)

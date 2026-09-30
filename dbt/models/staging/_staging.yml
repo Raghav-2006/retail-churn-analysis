@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: stg_sales
+    description: Sales lines, renamed (invoice -> invoice_id, stock_code -> product_code) and typed.
+    columns:
+      - name: sales_line_id
+        tests: [unique, not_null]
+      - name: invoice_id
+        tests: [not_null]
+      - name: invoiced_at
+        tests: [not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: product_code
+        tests: [not_null]
+      - name: quantity
+        tests: [not_null]
+      - name: unit_price
+        tests: [not_null]
+  - name: stg_cancellations
+    columns:
+      - name: cancellation_line_id
+        tests: [unique, not_null]
+      - name: invoice_id
+        tests: [not_null]
+      - name: customer_id
+        tests: [not_null]
+  - name: stg_products
+    columns:
+      - name: product_code
+        tests: [unique, not_null]
+      - name: is_product
+        tests:
+          - accepted_values:
+              arguments:
+                values: [true, false]
+                quote: false
+  - name: stg_dates
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+      - name: day_of_week
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
+                quote: false

@@ -108,7 +108,7 @@ def run_readonly(sql: str, max_rows: int = MAX_ROWS, schema: str = SCHEMA) -> tu
     return cols, rows[:max_rows], len(rows) > max_rows
 
 
-def jsonable(v):
+def jsonable(v: object) -> object:
     if isinstance(v, Decimal):
         return float(v)
     if isinstance(v, (datetime, date)):

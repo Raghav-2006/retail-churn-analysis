@@ -19,7 +19,7 @@ from sklearn.preprocessing import StandardScaler
 
 from src.metrics import save_metrics
 from tiering.features import CUTOFF, FEATURES, OUTCOME_END, build_dataset, future_revenue
-from tiering.score import TIERS, WEIGHTS, assign_tiers, explain, percentiles, score_customers
+from tiering.score import TIERS, WEIGHTS, explain, percentiles, score_customers
 
 TRAIN_CUTOFF = "2010-12-01"
 TRAIN_OUTCOME_END = CUTOFF

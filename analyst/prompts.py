@@ -1,6 +1,6 @@
 """Prompt versions for the analyst. v1 is the baseline; later versions add one mitigation each."""
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 SCHEMA = """PostgreSQL warehouse (schema `retail`, already on the search_path). UK online gift wholesaler, GBP.
 

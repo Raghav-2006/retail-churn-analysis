@@ -1,0 +1,359 @@
+{
+ "scenario": "clean",
+ "inject_bug": "",
+ "legacy_exit": 0,
+ "orchestrated_exit": 0,
+ "orchestrated_task_states": {
+  "extract": "success",
+  "transform": "success",
+  "load": "success",
+  "quality": "success",
+  "dbt_build": "success",
+  "tiering": "success",
+  "export": "success"
+ },
+ "orchestrated_dag_state": "success",
+ "orchestrated_internal_checks": {
+  "quality_checks": 17,
+  "quality_warnings": 1,
+  "quality_failures": 0,
+  "dbt_tests": {
+   "pass": 63
+  }
+ },
+ "checks_total": 46,
+ "checks_passed": 46,
+ "parity_pct": 100.0,
+ "pass": true,
+ "warehouse": {
+  "checks": [
+   {
+    "kind": "row_count",
+    "name": "dim_date",
+    "legacy": 739,
+    "orchestrated": 739,
+    "match": true
+   },
+   {
+    "kind": "row_count",
+    "name": "dim_customer",
+    "legacy": 5928,
+    "orchestrated": 5928,
+    "match": true
+   },
+   {
+    "kind": "row_count",
+    "name": "dim_product",
+    "legacy": 4643,
+    "orchestrated": 4643,
+    "match": true
+   },
+   {
+    "kind": "row_count",
+    "name": "fact_sales",
+    "legacy": 776579,
+    "orchestrated": 776579,
+    "match": true
+   },
+   {
+    "kind": "row_count",
+    "name": "fact_cancellations",
+    "legacy": 18744,
+    "orchestrated": 18744,
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.date_key",
+    "legacy": "85f8473b3c91f7128b10a9755daf5516",
+    "orchestrated": "85f8473b3c91f7128b10a9755daf5516",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.day_name",
+    "legacy": "1e1bdd23f435b152e2086f451ef63693",
+    "orchestrated": "1e1bdd23f435b152e2086f451ef63693",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.day_of_month",
+    "legacy": "7a678b80c09ec32f9fb83290195c3c90",
+    "orchestrated": "7a678b80c09ec32f9fb83290195c3c90",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.day_of_week",
+    "legacy": "517c6670dd859cd70a3303f691e3138d",
+    "orchestrated": "517c6670dd859cd70a3303f691e3138d",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.full_date",
+    "legacy": "49e0fd272f88f3b5bd3a94d83a5baf37",
+    "orchestrated": "49e0fd272f88f3b5bd3a94d83a5baf37",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.is_weekend",
+    "legacy": "4461d8d9fa0fb635e7e9f99d6f98f0c9",
+    "orchestrated": "4461d8d9fa0fb635e7e9f99d6f98f0c9",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.month",
+    "legacy": "b027577d0173658a4639dcb7e7feccf5",
+    "orchestrated": "b027577d0173658a4639dcb7e7feccf5",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.month_name",
+    "legacy": "33eaa26f106916e8c8074e427d94a25c",
+    "orchestrated": "33eaa26f106916e8c8074e427d94a25c",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.month_start",
+    "legacy": "77ba3093103f4da94184d9f7a4526e08",
+    "orchestrated": "77ba3093103f4da94184d9f7a4526e08",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.quarter",
+    "legacy": "ab710131f3f6ba5a6303253a5603c980",
+    "orchestrated": "ab710131f3f6ba5a6303253a5603c980",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_date.year",
+    "legacy": "e672429df9e0b07cd87b3a171096a7b6",
+    "orchestrated": "e672429df9e0b07cd87b3a171096a7b6",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_customer.country",
+    "legacy": "3cb7fdb557992bcae9a61ea3e624f85b",
+    "orchestrated": "3cb7fdb557992bcae9a61ea3e624f85b",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_customer.customer_id",
+    "legacy": "91a39210412d6927f497d3fd986127cd",
+    "orchestrated": "91a39210412d6927f497d3fd986127cd",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_customer.first_invoice_date",
+    "legacy": "4d0530903429f2f5622810934db13779",
+    "orchestrated": "4d0530903429f2f5622810934db13779",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_customer.last_invoice_date",
+    "legacy": "ad4521bf914db2cf39afd7febc9655bd",
+    "orchestrated": "ad4521bf914db2cf39afd7febc9655bd",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_product.description",
+    "legacy": "3095a29e1568e2a16451edbeadb12589",
+    "orchestrated": "3095a29e1568e2a16451edbeadb12589",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_product.is_product",
+    "legacy": "448264559e47540449b3fee962aa9bad",
+    "orchestrated": "448264559e47540449b3fee962aa9bad",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "dim_product.stock_code",
+    "legacy": "b82309eebda0a5f222529111c04318ab",
+    "orchestrated": "b82309eebda0a5f222529111c04318ab",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.country",
+    "legacy": "18e8a06a0e3ec785b50281950c77fb02",
+    "orchestrated": "18e8a06a0e3ec785b50281950c77fb02",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.customer_id",
+    "legacy": "3c6291be1cb42b32f212fe3bcacc5e27",
+    "orchestrated": "3c6291be1cb42b32f212fe3bcacc5e27",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.date_key",
+    "legacy": "78c093eb489153a457856c6db5b73803",
+    "orchestrated": "78c093eb489153a457856c6db5b73803",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.invoice",
+    "legacy": "7140946a007a08d7e3007dfc9f97917a",
+    "orchestrated": "7140946a007a08d7e3007dfc9f97917a",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.invoice_date",
+    "legacy": "caea1be17d182c3f3cf5e04fc4a2e8d1",
+    "orchestrated": "caea1be17d182c3f3cf5e04fc4a2e8d1",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.price",
+    "legacy": "7e0069a9307d24e0a5aec3c80c1a9cb9",
+    "orchestrated": "7e0069a9307d24e0a5aec3c80c1a9cb9",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.quantity",
+    "legacy": "16bf7fddc46a9d09479be1a47bb03cba",
+    "orchestrated": "16bf7fddc46a9d09479be1a47bb03cba",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.revenue",
+    "legacy": "6dbc06b2eaeb10c67d40ca5eab803d96",
+    "orchestrated": "6dbc06b2eaeb10c67d40ca5eab803d96",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.sales_line_id",
+    "legacy": "339fcf8e4c69f048e7570ebcabdc8c1b",
+    "orchestrated": "339fcf8e4c69f048e7570ebcabdc8c1b",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_sales.stock_code",
+    "legacy": "f5a1f9fc243fc40b58a39e6e47db2cda",
+    "orchestrated": "f5a1f9fc243fc40b58a39e6e47db2cda",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.cancellation_line_id",
+    "legacy": "7759a6f577d1c4ddfadb69471acddb08",
+    "orchestrated": "7759a6f577d1c4ddfadb69471acddb08",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.country",
+    "legacy": "d5c67a78ac1213e2c31cccbb5cae9cd5",
+    "orchestrated": "d5c67a78ac1213e2c31cccbb5cae9cd5",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.customer_id",
+    "legacy": "892e171a36d52c6ca6200765e8b17e36",
+    "orchestrated": "892e171a36d52c6ca6200765e8b17e36",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.date_key",
+    "legacy": "05acb71b3c59c37323fbc10a9d63517b",
+    "orchestrated": "05acb71b3c59c37323fbc10a9d63517b",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.invoice",
+    "legacy": "a6a766460ba9e25897c54d62487ba1d6",
+    "orchestrated": "a6a766460ba9e25897c54d62487ba1d6",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.invoice_date",
+    "legacy": "339eb8a04c24337e338e86f8f00aaa61",
+    "orchestrated": "339eb8a04c24337e338e86f8f00aaa61",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.price",
+    "legacy": "4974a15abb0513c67fd3d474269982c8",
+    "orchestrated": "4974a15abb0513c67fd3d474269982c8",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.quantity",
+    "legacy": "fa87ddc29bce15e4ae75c1b2b80c175d",
+    "orchestrated": "fa87ddc29bce15e4ae75c1b2b80c175d",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.revenue",
+    "legacy": "cae85fcc72031728e70275cf21dee447",
+    "orchestrated": "cae85fcc72031728e70275cf21dee447",
+    "match": true
+   },
+   {
+    "kind": "column_checksum",
+    "name": "fact_cancellations.stock_code",
+    "legacy": "9cd6356e9ec3fc86065f32b333aa3c4a",
+    "orchestrated": "9cd6356e9ec3fc86065f32b333aa3c4a",
+    "match": true
+   },
+   {
+    "kind": "revenue_total",
+    "name": "fact_sales",
+    "legacy": 17068582.72,
+    "orchestrated": 17068582.72,
+    "match": true
+   },
+   {
+    "kind": "revenue_total",
+    "name": "fact_cancellations",
+    "legacy": -1095136.79,
+    "orchestrated": -1095136.79,
+    "match": true
+   }
+  ],
+  "country_drilldown": []
+ },
+ "tiers": {
+  "customers_legacy": 4908,
+  "customers_orchestrated": 4908,
+  "missing_in_orchestrated": 0,
+  "extra_in_orchestrated": 0,
+  "tier_changed": 0,
+  "tier_agreement_pct": 100.0,
+  "match": true,
+  "transitions": {}
+ },
+ "seconds": 148.7
+}

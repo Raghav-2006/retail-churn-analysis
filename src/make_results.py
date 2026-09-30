@@ -17,7 +17,9 @@ def table(rows: list[dict], cols: list[str]) -> str:
     return "\n".join(lines)
 
 
-def fmt(v) -> str:
+def fmt(v: object) -> str:
+    if isinstance(v, bool):
+        return "yes" if v else "no"
     if isinstance(v, float):
         return f"{v:,.2f}"
     if isinstance(v, int):
@@ -121,7 +123,7 @@ def section_pipeline(m: dict) -> list[str]:
         f"- Freshness: max invoice_date loaded **{m['max_invoice_date']}**",
         f"- Idempotency: content fingerprint `{m['fingerprint']}`; identical to the previous run: "
         f"**{m['identical_to_previous_run']}** ({m['etl_runs_logged']} runs logged in `etl_run_log`)",
-        f"- Partial periods flagged (data covers <50% of the calendar month): "
+        "- Partial periods flagged (data covers <50% of the calendar month): "
         + (", ".join(f"{p['month']} ({p['days_covered']} of {p['days_in_month']} days)"
                      for p in m.get("partial_periods", [])) or "none"),
         f"- Volume anomalies flagged (>3 sd from the rolling 6-month median of full months): "
@@ -247,9 +249,96 @@ def section_analyst(m: dict) -> list[str]:
     ]
 
 
+def section_dbt(m: dict) -> list[str]:
+    b = m["dbt_build"]
+    tests = [{"test": k, "count": v} for k, v in sorted(m["test_types"].items(), key=lambda kv: -kv[1])]
+    feats = [{"cutoff": c, **v} for c, v in m["features"].items()]
+    tiers = [{"comparison": k.replace("_vs_v1", " vs v1").replace("_", " "), **m[k]}
+             for k in ("python_tiers_vs_v1", "sql_tiers_vs_v1")]
+    return [
+        "## dbt transformation layer (dbt build + python -m tiering.verify_dbt)",
+        "",
+        f"- `dbt build` from scratch: **{b['model'].get('success', 0)} models** "
+        f"({m['models'].get('staging', 0)} staging views, {m['models'].get('marts', 0)} mart tables), "
+        f"**{sum(b['test'].values())} data tests: {b['test'].get('pass', 0)} pass, "
+        f"{b['test'].get('fail', 0) + b['test'].get('error', 0)} fail**",
+        f"- Tier outputs match v1 exactly: **{m['matches_v1_exactly']}** "
+        "(features, Python tiers and the SQL tier mart, compared customer by customer with no tolerance)",
+        "",
+        table(tests, ["test", "count"]),
+        "",
+        table(feats, ["cutoff", "customers", "same_customers", "values_compared", "mismatched_values"]),
+        "",
+        table(tiers, ["comparison", "customers", "same_customers", "tier_mismatches", "score_mismatches_exact",
+                      "max_abs_score_diff"]),
+        "",
+    ]
+
+
+def section_orchestration(_: dict) -> list[str]:
+    from metrics import load_metrics
+
+    clean, inj = load_metrics("parity_clean"), load_metrics("parity_injected")
+    loud = load_metrics("orchestration")["quality_failure"]
+
+    def row(name: str, r: dict) -> dict:
+        ic = r["orchestrated_internal_checks"]
+        return {"scenario": name, "injected_bug": r["inject_bug"] or "none",
+                "airflow_run": r["orchestrated_dag_state"],
+                "quality_checks_failed": f"{ic['quality_failures']} of {ic['quality_checks']}",
+                "dbt_tests_passed": f"{(ic['dbt_tests'] or {}).get('pass', 0)} of {sum((ic['dbt_tests'] or {}).values())}",
+                "parity_pct": r["parity_pct"], "checks": f"{r['checks_passed']}/{r['checks_total']}",
+                "tier_agreement_pct": r["tiers"]["tier_agreement_pct"],
+                "verdict": "PASS" if r["pass"] else "FAIL (alert)"}
+
+    drill = ", ".join(f"{d['country']} {d['legacy_rows']:,} -> {d['orchestrated_rows']:,} rows"
+                      for d in inj["country_drilldown"])
+    t = inj["tiers"]
+    return [
+        "## Orchestration and migration parity (Airflow + python -m migration.parity_check)",
+        "",
+        "- Legacy job = v1 `python -m pipeline.run` + v1 tiering, into `legacy_retail`; orchestrated = Airflow DAG "
+        "`retail_pipeline` (extract -> transform -> load -> quality -> dbt_build -> tiering -> export) into "
+        "`orch_retail` / `orch_analytics`",
+        f"- **Clean run: parity {clean['parity_pct']}%** ({clean['checks_passed']}/{clean['checks_total']} checks: "
+        "5 row counts, 38 column checksums, 2 revenue totals, tier assignments for "
+        f"{clean['tiers']['customers_legacy']:,} customers)",
+        f"- **Injected silent failure (`{inj['inject_bug']}`): the Airflow run finished `{inj['orchestrated_dag_state']}`, "
+        f"with every quality check and dbt test passing; the parity check caught it**: parity {inj['parity_pct']}%, "
+        f"{inj['checks_total'] - inj['checks_passed']} checks differ; drill-down: {drill}; "
+        f"{t['missing_in_orchestrated']} customers missing from tiers, {t['tier_changed']} changed tier; "
+        "structured alert written, exit code 1",
+        f"- Loud failure (`{loud['inject_bug']}`): Airflow run `{loud['dag_state']}`; tasks: "
+        + ", ".join(f"{k} {v}" for k, v in loud["tasks"].items())
+        + f"; alert: {loud['alerts'][0]['message'] if loud['alerts'] else 'none'}",
+        "",
+        table([row("clean", clean), row("injected", inj)],
+              ["scenario", "injected_bug", "airflow_run", "quality_checks_failed", "dbt_tests_passed",
+               "parity_pct", "checks", "tier_agreement_pct", "verdict"]),
+        "",
+        f"Mismatched checks in the injected run: {', '.join('`' + c + '`' for c in inj['mismatched_checks'])}",
+        "",
+    ]
+
+
+def section_demo(m: dict) -> list[str]:
+    return [
+        "## Serving: demo database, API and dashboard (python -m service.build_demo)",
+        "",
+        f"- `demo/demo.sqlite`: **{m['size_mb']} MB** (limit 50 MB), built {m['built_at']}; "
+        "pre-aggregated, no raw transactions",
+        "- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt "
+        "version on frozen eval set v2): " + ", ".join(f"{o} {n}" for o, n in m["eval_outcomes"].items()),
+        "",
+        table([{"table": k, "rows": v} for k, v in m["tables"].items()], ["table", "rows"]),
+        "",
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
-            ("03_rfm", section_rfm), ("tiering", section_tiering),
-            ("analyst", section_analyst)]
+            ("03_rfm", section_rfm), ("tiering", section_tiering), ("dbt", section_dbt),
+            ("parity_clean", section_orchestration),
+            ("analyst", section_analyst), ("demo", section_demo)]
 
 
 def main() -> None:

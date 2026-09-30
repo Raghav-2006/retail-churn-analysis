@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: retail
+    description: >
+      Landing layer written by `python -m pipeline.run`: cleaned order lines and conformed
+      dimensions, already reconciled against pandas by pipeline/quality.py.
+    schema: "{{ var('source_schema') }}"
+    tables:
+      - name: fact_sales
+        description: One row per invoice line of a completed sale.
+        columns:
+          - name: sales_line_id
+            tests: [unique, not_null]
+      - name: fact_cancellations
+        description: One row per cancelled invoice line (invoice starts with 'C').
+        columns:
+          - name: cancellation_line_id
+            tests: [unique, not_null]
+      - name: dim_product
+        description: Stock codes with their most common description.
+      - name: dim_date
+        description: Calendar spanning the first to last transaction day.

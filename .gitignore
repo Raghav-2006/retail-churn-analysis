@@ -223,3 +223,12 @@ data/
 
 # Analyst query log
 logs/
+
+# dbt build artefacts
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+
+# Airflow (own venv, SQLite metadata)
+.venv-airflow/
+.airflow/

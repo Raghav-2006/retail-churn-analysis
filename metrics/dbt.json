@@ -1,0 +1,53 @@
+{
+  "features": {
+    "2010-12-01": {
+      "customers": 4239,
+      "same_customers": true,
+      "mismatched_values": 0,
+      "values_compared": 33912
+    },
+    "2011-06-01": {
+      "customers": 4908,
+      "same_customers": true,
+      "mismatched_values": 0,
+      "values_compared": 39264
+    }
+  },
+  "python_tiers_vs_v1": {
+    "customers": 4908,
+    "same_customers": true,
+    "tier_mismatches": 0,
+    "score_mismatches_exact": 0,
+    "max_abs_score_diff": 0.0
+  },
+  "sql_tiers_vs_v1": {
+    "customers": 4908,
+    "same_customers": true,
+    "tier_mismatches": 0,
+    "score_mismatches_exact": 0,
+    "max_abs_score_diff": 0.0
+  },
+  "matches_v1_exactly": true,
+  "dbt_build": {
+    "test": {
+      "pass": 63
+    },
+    "model": {
+      "success": 11
+    }
+  },
+  "test_types": {
+    "custom: assert_tier_shares": 1,
+    "custom: assert_no_future_invoices": 1,
+    "custom: assert_revenue_reconciles": 1,
+    "unique": 12,
+    "not_null": 34,
+    "relationships": 8,
+    "accepted_values": 5,
+    "unique_combination": 1
+  },
+  "models": {
+    "marts": 7,
+    "staging": 4
+  }
+}

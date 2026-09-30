@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 import psycopg
-from sqlalchemy import create_engine, text
+from sqlalchemy import Engine, create_engine, text
 
 ROOT = Path(__file__).resolve().parents[1]
 PGDATA = ROOT / "data" / "pgdata"
@@ -43,13 +43,13 @@ def connect(schema: str = SCHEMA, dsn: str | None = None) -> psycopg.Connection:
 
 
 @lru_cache(maxsize=4)
-def engine(schema: str = SCHEMA):
+def engine(schema: str = SCHEMA) -> Engine:
     """SQLAlchemy engine for pandas.read_sql, with the warehouse schema on the search path."""
     url = get_dsn().replace("postgresql://", "postgresql+psycopg://", 1)
     return create_engine(url, connect_args={"options": f"-csearch_path={schema}"})
 
 
-def read_sql(sql: str, schema: str = SCHEMA, **params) -> pd.DataFrame:
+def read_sql(sql: str, schema: str = SCHEMA, **params: object) -> pd.DataFrame:
     """Run a query; named parameters use :name syntax. text() also keeps a literal '%' safe."""
     with engine(schema).connect() as con:
         return pd.read_sql_query(text(sql), con, params=params or None)

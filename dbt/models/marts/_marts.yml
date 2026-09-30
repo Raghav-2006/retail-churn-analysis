@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: fct_sales
+    description: Order-line sales fact. Grain = one invoice line.
+    columns:
+      - name: sales_line_id
+        tests: [unique, not_null]
+      - name: invoice_id
+        tests: [not_null]
+      - name: invoiced_at
+        tests: [not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_customer'), field: customer_id}
+      - name: product_code
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_product'), field: product_code}
+      - name: date_key
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_key}
+      - name: revenue
+        tests: [not_null]
+
+  - name: fct_cancellations
+    description: Cancelled invoice lines (negative quantity and revenue).
+    columns:
+      - name: cancellation_line_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_customer'), field: customer_id}
+      - name: product_code
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_product'), field: product_code}
+      - name: date_key
+        tests:
+          - relationships:
+              arguments: {to: ref('dim_date'), field: date_key}
+
+  - name: dim_customer
+    description: One row per customer, with home country and lifetime order stats.
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: country
+        tests: [not_null]
+
+  - name: dim_product
+    columns:
+      - name: product_code
+        tests: [unique, not_null]
+      - name: is_product
+        tests:
+          - accepted_values:
+              arguments:
+                values: [true, false]
+                quote: false
+
+  - name: dim_date
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+      - name: day_of_week
+        tests:
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5, 6, 7]
+                quote: false
+
+  - name: mart_customer_features
+    description: The 8 tiering features per customer at each cutoff date (data strictly before the cutoff).
+    tests:
+      - unique_combination:
+          arguments: {columns: [cutoff_date, customer_id]}
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_customer'), field: customer_id}
+      - name: frequency
+        tests: [not_null]
+      - name: monetary
+        tests: [not_null]
+      - name: cancel_rate
+        tests: [not_null]
+
+  - name: mart_customer_tiers
+    description: Composite score and tier per customer at the scoring cutoff (SQL twin of tiering/score.py).
+    columns:
+      - name: customer_id
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('dim_customer'), field: customer_id}
+      - name: tier
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["Tier 1", "Tier 2", "Tier 3", "Tier 4"]
+      - name: score
+        tests: [not_null]

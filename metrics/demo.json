@@ -1,0 +1,23 @@
+{
+  "size_mb": 1.68,
+  "built_at": "2026-09-30T21:16:47+00:00",
+  "tables": {
+    "monthly": 25,
+    "countries": 10,
+    "lorenz": 203,
+    "kpis": 22,
+    "customer_scores": 4908,
+    "tier_summary": 4,
+    "tier_methods": 6,
+    "quality_checks": 17,
+    "eval_answers": 495,
+    "meta": 1
+  },
+  "eval_outcomes": {
+    "correct": 379,
+    "refused": 107,
+    "wrong": 7,
+    "error": 1,
+    "answered_unanswerable": 1
+  }
+}
