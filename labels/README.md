@@ -13,8 +13,7 @@ Fill in three columns per row:
 | `citation_correct` | `1` / `0` | 1 if the cited docs are current (not deprecated), relevant, and define what the SQL computes, **and** any needed definition doc among `docs_shown_to_agent` is cited. An empty citation list is correct only for plain column arithmetic. Docs are in `knowledge/<doc id>.md`. |
 | `notes` | free text | optional; say why when unsure |
 
-Then run `python -m analyst.agreement` (accuracy and Cohen's kappa, judge vs you) or tell Claude
-the labels are done.
+Then run `python -m analyst.agreement` (accuracy and Cohen's kappa, judge vs the human labels).
 
 `human_labels_key.json` maps each `label_id` to its eval record (question id and run), so the
 labels can be joined to the judge's verdicts afterwards. It contains no verdicts.

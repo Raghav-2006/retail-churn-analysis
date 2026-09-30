@@ -44,7 +44,7 @@ citation_correct: 1 if the docs in `cited_docs` are the right basis for the answ
   1 = every cited doc is current (not deprecated), relevant, and defines what the SQL actually computes; AND if the question depends on a business definition that one of `docs_shown_to_agent` provides, that doc is cited.
   1 is also right for an empty `cited_docs` when the question needs no business definition (plain column arithmetic such as "total revenue in 2010").
   0 = cites a deprecated doc, cites a doc whose definition the SQL does not follow, cites irrelevant docs as its basis, or omits a needed definition doc.
-Use only 1 or 0 in the two label columns. If you are unsure, pick your best guess and write why in notes. Save as CSV (keep the file name). Then tell Claude the labels are done."""
+Use only 1 or 0 in the two label columns. If you are unsure, pick your best guess and write why in notes. Save as CSV (keep the file name). Then run python -m analyst.agreement."""
 
 
 def _records(version: str = "v4") -> list[dict]:

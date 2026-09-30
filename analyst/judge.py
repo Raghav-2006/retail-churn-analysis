@@ -9,7 +9,7 @@ grade: faithfulness is "supported by the result", not "correct", so the two meas
 failures (a faithful answer about a wrong query is still wrong).
 
 Verdicts are cached in data/judge_cache.jsonl, keyed by the exact inputs, so a re-run costs nothing.
-Calibration against Raghav's hand labels: python -m analyst.agreement.
+Calibration against the hand labels: python -m analyst.agreement.
 """
 import argparse
 import hashlib
