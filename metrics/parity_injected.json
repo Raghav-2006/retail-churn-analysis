@@ -1,0 +1,71 @@
+{
+  "scenario": "injected",
+  "inject_bug": "drop_country:Norway",
+  "legacy_exit": 0,
+  "orchestrated_exit": 0,
+  "orchestrated_task_states": {
+    "extract": "success",
+    "transform": "success",
+    "load": "success",
+    "quality": "success",
+    "dbt_build": "success",
+    "tiering": "success",
+    "export": "success"
+  },
+  "orchestrated_dag_state": "success",
+  "orchestrated_internal_checks": {
+    "quality_checks": 17,
+    "quality_warnings": 1,
+    "quality_failures": 0,
+    "dbt_tests": {
+      "pass": 63
+    }
+  },
+  "checks_total": 46,
+  "checks_passed": 27,
+  "parity_pct": 58.7,
+  "pass": false,
+  "tiers": {
+    "customers_legacy": 4908,
+    "customers_orchestrated": 4903,
+    "missing_in_orchestrated": 5,
+    "extra_in_orchestrated": 0,
+    "tier_changed": 1,
+    "tier_agreement_pct": 99.878,
+    "match": false,
+    "transitions": {
+      "Tier 2 -> Tier 3": 1,
+      "Tier 2 -> missing": 1,
+      "Tier 3 -> missing": 2,
+      "Tier 4 -> missing": 2
+    }
+  },
+  "seconds": 150.7,
+  "mismatched_checks": [
+    "row_count: dim_customer",
+    "row_count: fact_sales",
+    "column_checksum: dim_customer.country",
+    "column_checksum: dim_customer.customer_id",
+    "column_checksum: dim_customer.first_invoice_date",
+    "column_checksum: dim_customer.last_invoice_date",
+    "column_checksum: dim_product.description",
+    "column_checksum: fact_sales.country",
+    "column_checksum: fact_sales.customer_id",
+    "column_checksum: fact_sales.date_key",
+    "column_checksum: fact_sales.invoice",
+    "column_checksum: fact_sales.invoice_date",
+    "column_checksum: fact_sales.price",
+    "column_checksum: fact_sales.quantity",
+    "column_checksum: fact_sales.revenue",
+    "column_checksum: fact_sales.sales_line_id",
+    "column_checksum: fact_sales.stock_code",
+    "revenue_total: fact_sales"
+  ],
+  "country_drilldown": [
+    {
+      "country": "Norway",
+      "legacy_rows": 1263,
+      "orchestrated_rows": 0
+    }
+  ]
+}

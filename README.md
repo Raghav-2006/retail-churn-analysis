@@ -22,6 +22,7 @@ flowchart LR
     Q -->|any FAIL| X[pipeline stops, exit 1]
     Q -->|pass| E[sql/analysis/*.sql<br/>notebooks]
     Q -->|pass| T[dbt build<br/>staging -> marts, 63 tests]
+    AF[[Airflow DAG orchestrates<br/>extract ... export]] -.-> A
     T --> F[tiering/<br/>reads mart_customer_features]
     Q -->|pass| G[analyst/<br/>Gemini -> SQL as read-only role]
     G --> H[evaluate.py<br/>55 ground-truth questions]
@@ -96,6 +97,39 @@ Star schema: `fact_sales` and `fact_cancellations` (order-line grain) share the 
 The SQL twin matches to the bit because its percentile rank reproduces pandas' tie-averaging, and it sums in the same order as pandas. Everything in `metrics/tiering.json` and the charts is unchanged. CI runs a real `dbt build` on a synthetic dataset and asserts the same equalities (`tests/test_dbt.py`).
 
 ![dbt lineage graph](figures/06_dbt_lineage.png)
+
+## Orchestration and migration parity (`orchestration/`, `migration/`)
+
+**Headline: a bug that passed every internal check was caught by the parallel-run parity check before cutover.**
+
+I injected a transform regression into the Airflow run: it silently drops every Norway sales line (1,263 rows, 0.23% of revenue). The DAG still finished **`success`**, with all 7 tasks green, **0 of 17 quality checks failing, and 63 of 63 dbt tests passing**. The parity check against the legacy job failed it immediately:
+- **parity 58.7%**, with 19 of 46 checks differing: 2 row counts, 15 column checksums, sales revenue (£17,068,582.72 vs £17,030,007.36);
+- the country drill-down named **Norway: 1,263 → 0 rows**;
+- 5 customers vanished from the tiers and 1 more changed tier;
+- a structured alert was written to `logs/alerts.jsonl` and the check exited 1 ("do not decommission the legacy job").
+
+The clean run scored **parity 100%**: 46 of 46 checks, with all 4,908 customers in the same tier.
+
+Why the internal checks can't see this: every one of them compares the warehouse with *the run's own* transform output. If the transform itself is wrong, loaded rows still equal transformed rows, and revenue still reconciles to the penny. Detecting it needs an **independent reference**, which is what a parallel run of the legacy job gives you. It's the same reason a migration needs a parity period before the old system is switched off.
+
+**The DAG** (`orchestration/dags/retail_pipeline.py`, Airflow 3.1.8):
+- **Task chain:** `extract → transform → load → quality → dbt_build → tiering → export`.
+- **Tasks:** each is `python -m pipeline.steps <task>`, reusing the v1 functions unchanged and handing data over through files in `data/runs/<run>/`.
+- **Retries: none.** A data-quality failure won't fix itself on retry.
+- **`max_active_runs=1`**, because two runs would truncate each other's tables.
+- **Failure handling:** a failure in any task writes a structured alert (timestamp, source, check, message, Airflow `run_id`, details) and exits non-zero, so Airflow marks everything downstream `upstream_failed`.
+
+Demonstrated with a *loud* bug (10 negative prices): `quality` **failed** with "1 quality check(s) failed: positive_quantity_price_sales", and `dbt_build`, `tiering` and `export` never ran.
+
+**Why Airflow and not Prefect.** Airflow runs here, so the Prefect fallback wasn't needed. It runs standalone: `airflow dags test` with a SQLite metadata DB, no scheduler or webserver. It lives in **its own virtualenv** (`.venv-airflow`, installed with Airflow's official constraints file), because its pinned SQLAlchemy and other dependencies would otherwise replace the project's.
+
+**What is compared** (`migration/parity_check.py`): the legacy job (`python -m pipeline.run --schema legacy_retail` plus v1 tiering) and the DAG (into `orch_retail` / `orch_analytics`) are run into separate schemas. The check then compares:
+- row counts for all 5 warehouse tables;
+- an md5 checksum of **every column** in key order (38 in total), so changed values are caught, not just changed counts;
+- revenue totals, as exact `NUMERIC` values;
+- the tier of every customer.
+
+It also drills down by country, so a mismatch comes with a likely cause. Reports: `migration/reports/parity_clean.md`, `parity_injected.md` and `alerts_demo.jsonl`.
 
 ## Tiering method and validation
 
@@ -232,7 +266,7 @@ That set is frozen as **eval set v2** (its SHA-256 is pinned in `tests/test_anal
 - 22.8% of rows have no Customer ID and are excluded, so customer-level results describe identified (mostly B2B) buyers only.
 - Tiering is validated on one cutoff and one 6-month window. **14.1%** of that window's revenue came from new customers who could not be scored at all. A rolling multi-cutoff backtest would give confidence intervals.
 - The analyst eval is small: 55 questions × 3 runs, so a single answer moves the rate by about 0.6 points. The mitigations were designed after seeing baseline failures on the same set, so the v2/v3 gains may be optimistic on unseen questions; a held-out question set is the next step. Models were limited to the Gemini Flash family, first by free-tier quota and then by prepaid credits.
-- Orchestration is out of scope. The next step is to run `pipeline.run` as an Airflow (or Dagster) DAG: extract, transform, load and quality as separate tasks, with the quality task gating downstream jobs. To migrate without silent failures: run the old and new pipelines in parallel, compare `etl_run_log` fingerprints and the reconciliation checks, and cut over once they match.
+- Orchestration runs locally via `airflow dags test` (SQLite metadata, no scheduler). A deployed setup would need a Postgres metadata DB, a real executor and alert delivery (Slack or PagerDuty) reading `logs/alerts.jsonl`. The parity check compares full snapshots; at larger scale it would compare per-partition checksums instead.
 
 ## How to run
 
@@ -243,10 +277,15 @@ curl -L -o data/online_retail_ii.zip "https://archive.ics.uci.edu/static/public/
 unzip data/online_retail_ii.zip -d data/
 
 python -m pipeline.run          # extract -> clean -> load PostgreSQL (embedded pgserver) -> 17 checks
-pytest                          # 59 tests; uses the same embedded Postgres (or DATABASE_URL)
+pytest                          # 66 tests; uses the same embedded Postgres (or DATABASE_URL)
 python -m pipeline.dbt_runner build   # dbt: 11 models + 63 tests into schema analytics
 python -m tiering.verify_dbt    # assert dbt features/tiers == frozen v1 output
 python -m tiering.validate      # tiers, baselines, learned weights, sensitivity, charts
+
+# Phase 6: Airflow in its own venv (see requirements-airflow.txt), then:
+python -m orchestration.run_dag --run-name orchestrated                   # the DAG, end to end
+python -m migration.parity_check                                          # legacy vs DAG: expect 100%
+python -m migration.parity_check --inject-bug drop_country:Norway         # silent failure: caught, exit 1
 
 export GEMINI_API_KEY=...       # never committed; .env is gitignored
 python -m analyst.agent "Which 5 countries had the most revenue in 2011?"

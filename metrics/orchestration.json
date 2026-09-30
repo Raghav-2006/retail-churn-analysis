@@ -1,0 +1,36 @@
+{
+  "quality_failure": {
+    "inject_bug": "negative_price:10",
+    "exit_code": 1,
+    "run_id": "manual__2026-09-30T20:44:32.038193+00:00",
+    "dag_state": "failed",
+    "tasks": {
+      "extract": "success",
+      "transform": "success",
+      "load": "success",
+      "quality": "failed",
+      "dbt_build": "upstream_failed",
+      "tiering": "upstream_failed",
+      "export": "upstream_failed"
+    },
+    "alerts": [
+      {
+        "ts": "2026-09-30T20:45:36+00:00",
+        "severity": "error",
+        "source": "quality",
+        "check": "data_quality",
+        "message": "1 quality check(s) failed",
+        "run_id": "manual__2026-09-30T20:44:32.038193+00:00",
+        "details": {
+          "failed": [
+            {
+              "name": "positive_quantity_price_sales",
+              "status": "FAIL",
+              "detail": "10 sales lines with quantity <= 0 or price <= 0"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -228,3 +228,7 @@ logs/
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
+
+# Airflow (own venv, SQLite metadata)
+.venv-airflow/
+.airflow/
