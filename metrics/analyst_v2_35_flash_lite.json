@@ -1,31 +1,35 @@
 {
   "prompt_version": "v2",
   "model": "gemini-3.5-flash-lite",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
   "runs": 3,
-  "questions": 120,
-  "execution_accuracy_pct": 97.92,
+  "questions": 165,
+  "execution_accuracy_pct": 94.57,
   "abstention_accuracy_pct": 100.0,
   "false_abstention_pct": 0.0,
-  "overall_accuracy_pct": 98.33,
-  "confidently_wrong_pct": 1.67,
-  "confidently_wrong_of_answered_pct": 2.08,
+  "overall_accuracy_pct": 95.76,
+  "confidently_wrong_pct": 3.03,
+  "confidently_wrong_of_answered_pct": 3.94,
   "outcomes": {
-    "correct": 94,
-    "refused": 24,
-    "wrong": 2
+    "correct": 122,
+    "wrong": 5,
+    "refused": 36,
+    "error": 2
   },
   "by_difficulty": {
     "easy": 100.0,
     "medium": 100.0,
-    "hard": 95.83,
+    "hard": 91.36,
     "unanswerable": 100.0
   },
-  "retried": 7,
+  "retried": 9,
+  "self_check": {},
   "per_run": {
     "execution_accuracy_pct": [
-      100.0,
-      96.88,
-      96.88
+      97.67,
+      95.35,
+      90.7
     ],
     "abstention_accuracy_pct": [
       100.0,
@@ -33,39 +37,72 @@
       100.0
     ],
     "confidently_wrong_pct": [
-      0.0,
-      2.5,
-      2.5
+      1.82,
+      1.82,
+      5.45
     ],
     "overall_accuracy_pct": [
-      100.0,
-      97.5,
-      97.5
+      98.18,
+      96.36,
+      92.73
     ]
   },
-  "latency_p50_s": 4.5,
-  "latency_p95_s": 9.77,
+  "latency_p50_s": 1.23,
+  "latency_p95_s": 5.54,
   "failures": [
     {
       "id": "h02",
       "difficulty": "hard",
       "question": "For each month from February 2011 to November 2011, what was the percentage change in revenue versus the previous month?",
       "outcomes": {
-        "correct": 2,
-        "wrong": 1
+        "correct": 1,
+        "wrong": 2
       },
-      "example_sql": "WITH monthly_revenue AS (\n    SELECT \n        d.year,\n        d.month,\n        d.month_name,\n        d.month_start,\n        SUM(s.revenue) AS revenue\n    FROM fact_sales s\n    JOIN dim_date d ON s.date_key = d.date_key\n    WHERE s.invoice_date >= '2011-02-01' AND s.invoice_date < '2011-12-01'\n    GROUP BY d.year, d.month, d.month_name, d.month_start\n),\nwith_lag AS (\n    SELECT \n        year,\n        month,\n        month_name,\n        month_start,\n        revenue,\n        LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue\n    FROM monthly_revenue\n)\nSELECT \n    to_char(month_start, 'YYYY-MM') AS year_month,\n    revenue,\n    prev_revenue,\n    CASE \n        WHEN prev_revenue IS NULL OR prev_revenue = 0 THEN NULL\n        ELSE ROUND(CAST(((revenue - prev_revenue) / prev_revenue) * 100 AS NUMERIC), 2)\n    END AS percentage_change\nFROM with_lag\nWHERE month_start >= '2011-02-01' AND month_start <= '2011-11-01'\nORDER BY year, month",
+      "example_sql": "WITH monthly_revenue AS (\n    SELECT \n        d.year,\n        d.month,\n        d.month_start,\n        SUM(s.revenue) AS revenue\n    FROM fact_sales s\n    JOIN dim_date d ON s.date_key = d.date_key\n    WHERE s.invoice_date >= '2011-02-01' AND s.invoice_date < '2011-12-01'\n    GROUP BY d.year, d.month, d.month_start\n),\nrevenue_with_lag AS (\n    SELECT \n        year,\n        month,\n        month_start,\n        revenue,\n        LAG(revenue) OVER (ORDER BY year, month) AS prev_revenue\n    FROM monthly_revenue\n)\nSELECT \n    to_char(month_start, 'YYYY-MM') AS month_name,\n    revenue,\n    prev_revenue,\n    CASE \n        WHEN prev_revenue IS NULL OR prev_revenue = 0 THEN NULL\n        ELSE ROUND(((revenue - prev_revenue) / prev_revenue) * 100.0, 2)\n    END AS percentage_change\nFROM revenue_with_lag\nORDER BY year, month",
       "example_error": null
+    },
+    {
+      "id": "h03",
+      "difficulty": "hard",
+      "question": "For each of the 3 countries with the most revenue, what is its single best-selling product by revenue (stock code and revenue)?",
+      "outcomes": {
+        "correct": 2,
+        "error": 1
+      },
+      "example_sql": "WITH country_revenue AS (    SELECT country, SUM(revenue) AS total_revenue    FROM fact_sales    GROUP BY country    ORDER BY total_revenue DESC    LIMIT 3), product_country_revenue AS (    SELECT        s.country,        s.stock_code,        SUM(s.revenue) AS product_revenue,        ROW_NUMBER() OVER (PARTITION BY s.country ORDER BY SUM(s.revenue) DESC) AS rn    FROM fact_sales s    JOIN country_revenue c ON s.country = c.country    GROUP BY s.country, s.stock_code)SELECT country, stock_code, product_revenue AS revenueFROM product_country_revenueWHERE rn = 1",
+      "example_error": "SyntaxError: syntax error at or near \"product_country_revenueWHERE\"\nLINE 1: ...untry, stock_code, product_revenue AS revenueFROM product_co...\n                                                             ^"
     },
     {
       "id": "h12",
       "difficulty": "hard",
       "question": "What was our net revenue in 2011 after cancellations?",
       "outcomes": {
+        "wrong": 2,
+        "correct": 1
+      },
+      "example_sql": "SELECT COALESCE(SUM(s.revenue), 0) + COALESCE(SUM(c.revenue), 0) AS net_revenue FROM dim_date d LEFT JOIN fact_sales s ON d.date_key = s.date_key AND s.invoice_date >= '2011-01-01' AND s.invoice_date < '2012-01-01' LEFT JOIN fact_cancellations c ON d.date_key = c.date_key AND c.invoice_date >= '2011-01-01' AND c.invoice_date < '2012-01-01' WHERE d.year = 2011",
+      "example_error": null
+    },
+    {
+      "id": "x02",
+      "difficulty": "hard",
+      "question": "What percentage of gross sales value was cancelled in 2011?",
+      "outcomes": {
+        "correct": 2,
+        "error": 1
+      },
+      "example_sql": "SELECT ROUND(COALESCE(ABS(SUM(c.revenue)), 0) * 100.0 / NULLIF(SUM(s.revenue), 0), 4) AS cancellation_percentage_2011 FROM (SELECT revenue FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') s CROSS JOIN (SELECT revenue FROM fact_cancellations WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') c",
+      "example_error": "QueryCanceled: canceling statement due to statement timeout"
+    },
+    {
+      "id": "x03",
+      "difficulty": "hard",
+      "question": "Which 5 customers had the highest net revenue after cancellations, and what was it?",
+      "outcomes": {
         "correct": 2,
         "wrong": 1
       },
-      "example_sql": "SELECT COALESCE(SUM(s.revenue), 0) + COALESCE(SUM(c.revenue), 0) AS net_revenue FROM dim_date d LEFT JOIN fact_sales s ON s.date_key = d.date_key AND s.invoice_date >= '2011-01-01' AND s.invoice_date < '2012-01-01' LEFT JOIN fact_cancellations c ON c.date_key = d.date_key AND c.invoice_date >= '2011-01-01' AND c.invoice_date < '2012-01-01' WHERE d.year = 2011",
+      "example_sql": "SELECT c.customer_id, COALESCE(SUM(s.revenue), 0) + COALESCE(SUM(can.revenue), 0) AS net_revenue FROM dim_customer c LEFT JOIN fact_sales s ON c.customer_id = s.customer_id LEFT JOIN fact_cancellations can ON c.customer_id = can.customer_id GROUP BY c.customer_id ORDER BY net_revenue DESC LIMIT 5",
       "example_error": null
     }
   ]

@@ -32,6 +32,11 @@ FACT_KEYS = ["invoice", "invoice_date", "date_key", "customer_id", "stock_code",
 FOREIGN_KEYS = [("date_key", "dim_date"), ("customer_id", "dim_customer"), ("stock_code", "dim_product")]
 
 
+def read_frame(conn: psycopg.Connection, sql: str) -> pd.DataFrame:
+    cur = conn.execute(sql)
+    return pd.DataFrame(cur.fetchall(), columns=[d.name for d in cur.description])
+
+
 class QualityCheckError(RuntimeError):
     pass
 
@@ -105,6 +110,26 @@ def volume_anomalies(monthly: pd.Series, window: int = 6, k: float = 3.0) -> pd.
     return out
 
 
+def partial_periods(coverage: pd.DataFrame, min_coverage: float = 0.5) -> pd.DataFrame:
+    """Flag months whose data covers less than `min_coverage` of the calendar month.
+
+    `coverage` has one row per month with columns month (first day), first_day, last_day.
+    A row-count z-score cannot catch a partial month reliably: the final month of this data
+    (9 days of December 2011) sits inside the noise of the Sep-Nov peaks. Measuring the
+    calendar span directly does, while the normal Christmas shutdown (sales stop around
+    23 December, 74% coverage) is not flagged.
+    """
+    out = coverage.copy()
+    month = pd.to_datetime(out["month"])
+    days = month.dt.days_in_month
+    span = (pd.to_datetime(out["last_day"]) - pd.to_datetime(out["first_day"])).dt.days + 1
+    out["days_in_month"] = days
+    out["days_covered"] = span
+    out["coverage"] = (span / days).round(3)
+    out["partial"] = out["coverage"] < min_coverage
+    return out
+
+
 def run_checks(conn: psycopg.Connection, raw: pd.DataFrame, sales: pd.DataFrame, cancels: pd.DataFrame,
                tables: dict[str, pd.DataFrame]) -> tuple[list[Check], dict]:
     """Run every check. Returns (checks, extra facts for the report)."""
@@ -161,19 +186,30 @@ def run_checks(conn: psycopg.Connection, raw: pd.DataFrame, sales: pd.DataFrame,
                         "every fact row joins to date, customer and product" if n_orphans == 0
                         else f"orphans: {orphans}"))
 
-    # Volume anomaly: monthly row counts vs a rolling median of the previous 6 months
-    monthly = conn.execute(
-        "SELECT date_trunc('month', invoice_date)::date AS month, count(*) FROM fact_sales GROUP BY 1 ORDER BY 1"
-    ).fetchall()
-    series = pd.Series([n for _, n in monthly], index=[str(m)[:7] for m, _ in monthly], dtype=float)
+    # Volume anomaly: (a) partial periods, measured by calendar coverage; (b) monthly row counts
+    # more than 3 sd from a rolling median of the previous 6 full months
+    monthly = read_frame(conn, """
+        SELECT date_trunc('month', invoice_date)::date AS month, min(invoice_date)::date AS first_day,
+               max(invoice_date)::date AS last_day, count(*) AS rows
+        FROM fact_sales GROUP BY 1 ORDER BY 1""")
+    cov = partial_periods(monthly)
+    full = cov[~cov["partial"]]
+    series = pd.Series(full["rows"].to_numpy(), index=[str(m)[:7] for m in full["month"]], dtype=float)
     vol = volume_anomalies(series)
     flagged = vol[vol["anomaly"]]
-    detail = ", ".join(f"{m}: {int(r.rows):,} rows vs median {r.rolling_median:,.0f} (z={r.z:+.1f})"
-                       for m, r in flagged.iterrows())
-    checks.append(Check("volume_anomaly", "WARN" if len(flagged) else "PASS",
-                        detail or f"no month beyond 3 sd of its rolling median ({len(series)} months)"))
+    parts = [f"{str(r.month)[:7]} is a partial period: data covers {r.first_day} to {r.last_day} "
+             f"({r.days_covered} of {r.days_in_month} days, {100 * r.coverage:.0f}%)"
+             for r in cov[cov["partial"]].itertuples()]
+    parts += [f"{m}: {int(r.rows):,} rows vs median {r.rolling_median:,.0f} (z={r.z:+.1f})"
+              for m, r in flagged.iterrows()]
+    checks.append(Check("volume_anomaly", "WARN" if parts else "PASS",
+                        "; ".join(parts) or f"no partial month and no month beyond 3 sd ({len(cov)} months)"))
     extra["volume_by_month"] = vol.reset_index(names="month").round(2).to_dict(orient="records")
     extra["volume_anomaly_months"] = list(flagged.index)
+    extra["partial_periods"] = [
+        {"month": str(r.month)[:7], "first_day": str(r.first_day), "last_day": str(r.last_day),
+         "days_covered": int(r.days_covered), "days_in_month": int(r.days_in_month), "coverage": float(r.coverage)}
+        for r in cov[cov["partial"]].itertuples()]
 
     # Freshness: the newest loaded invoice equals the newest invoice in the source
     pg_max = q("SELECT max(invoice_date) FROM fact_sales")

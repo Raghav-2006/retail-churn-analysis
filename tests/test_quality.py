@@ -36,3 +36,23 @@ def test_volume_anomaly_flags_a_spike_but_not_normal_noise():
 def test_volume_anomaly_flags_a_drop():
     counts = pd.Series([100, 104, 98, 101, 99, 103, 10], dtype=float)
     assert volume_anomalies(counts)["anomaly"].iloc[-1]
+
+
+def test_partial_period_flags_a_short_final_month_but_not_christmas():
+    from pipeline.quality import partial_periods
+
+    cov = pd.DataFrame({
+        "month": ["2010-12-01", "2011-11-01", "2011-12-01"],
+        "first_day": ["2010-12-01", "2011-11-01", "2011-12-01"],
+        "last_day": ["2010-12-23", "2011-11-30", "2011-12-09"],
+    })
+    out = partial_periods(cov)
+    assert list(out["partial"]) == [False, False, True]
+    assert out.loc[2, "days_covered"] == 9 and out.loc[2, "coverage"] == round(9 / 31, 3)
+
+
+def test_partial_period_catches_a_load_that_stopped_mid_month():
+    from pipeline.quality import partial_periods
+
+    cov = pd.DataFrame({"month": ["2011-06-01"], "first_day": ["2011-06-01"], "last_day": ["2011-06-10"]})
+    assert partial_periods(cov)["partial"].iloc[0]

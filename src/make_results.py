@@ -121,7 +121,10 @@ def section_pipeline(m: dict) -> list[str]:
         f"- Freshness: max invoice_date loaded **{m['max_invoice_date']}**",
         f"- Idempotency: content fingerprint `{m['fingerprint']}`; identical to the previous run: "
         f"**{m['identical_to_previous_run']}** ({m['etl_runs_logged']} runs logged in `etl_run_log`)",
-        f"- Volume anomalies flagged (>3 sd from the rolling 6-month median): "
+        f"- Partial periods flagged (data covers <50% of the calendar month): "
+        + (", ".join(f"{p['month']} ({p['days_covered']} of {p['days_in_month']} days)"
+                     for p in m.get("partial_periods", [])) or "none"),
+        f"- Volume anomalies flagged (>3 sd from the rolling 6-month median of full months): "
         f"{', '.join(m['volume_anomaly_months']) or 'none'}",
         "",
         table(checks, ["name", "status", "detail"]),
@@ -182,35 +185,48 @@ def section_tiering(m: dict) -> list[str]:
     ]
 
 
+PROMPT_LABELS = {
+    "v1": "v1 baseline (schema only)",
+    "v2": "v2 + business glossary",
+    "v3": "v3 + glossary + self-check",
+}
+
+
 def section_analyst(m: dict) -> list[str]:
-    bv, av = m["before_version"], m["after_version"]
     mix = ", ".join(f"{n} {d}" for d, n in m["eval_mix"].items())
     rows, diff_rows, fail_lines = [], [], []
-    for r in m["models"]:
-        for label, x in [(bv, r["before"]), (av, r["after"])]:
-            rows.append({
-                "model": r["model"], "prompt": label, "runs": x["runs"],
-                "execution_accuracy_pct": x["execution_accuracy_pct"],
-                "abstention_accuracy_pct": x["abstention_accuracy_pct"],
-                "confidently_wrong_pct": x["confidently_wrong_pct"],
-                "false_abstention_pct": x["false_abstention_pct"],
-                "latency_p50_s": x["latency_p50_s"], "latency_p95_s": x["latency_p95_s"],
-            })
-            diff_rows.append({"model": r["model"], "prompt": label, **x["by_difficulty"]})
-            for f in x["failures"]:
-                fail_lines.append(f"- {r['model']} / {label} / `{f['id']}` ({f['difficulty']}): {f['question']} "
-                                  f"-> {f['outcomes']}")
+    for r in m["results"]:
+        runs = r["per_run"]["confidently_wrong_pct"]
+        rows.append({
+            "model": r["model"], "prompt": PROMPT_LABELS.get(r["prompt"], r["prompt"]),
+            "execution_accuracy_pct": r["execution_accuracy_pct"],
+            "abstention_accuracy_pct": r["abstention_accuracy_pct"],
+            "confidently_wrong_pct": r["confidently_wrong_pct"],
+            "cw_per_run": " / ".join(f"{x:.1f}" for x in runs),
+            "false_abstention_pct": r["false_abstention_pct"],
+            "errors": r["outcomes"].get("error", 0),
+            "p50_s": r["latency_p50_s"], "p95_s": r["latency_p95_s"],
+        })
+        diff_rows.append({"model": r["model"], "prompt": r["prompt"], **r["by_difficulty"]})
+        for f in r["failures"]:
+            fail_lines.append(f"- {r['model']} / {r['prompt']} / `{f['id']}` ({f['difficulty']}): "
+                              f"{f['question']} -> {f['outcomes']}")
     return [
         "## AI analyst evaluation (python -m analyst.evaluate)",
         "",
-        f"- Ground-truth set: **{m['eval_questions']} questions** ({mix}); each answerable one has a hand-written "
-        "reference SQL, and results are compared as result sets (order-insensitive, numeric tolerance)",
-        "- Confidently wrong = answered (did not abstain, SQL ran) but the result was wrong, "
-        "or answered an unanswerable question; as % of all question-runs",
-        f"- Mitigation `{av}`: data dictionary with the business's metric definitions + a no-proxy answerability rule",
+        f"- Frozen eval set v{m['eval_set_version']}: **{m['eval_questions']} questions** ({mix}), "
+        f"sha256 `{m['eval_set_sha256'][:12]}`; every model and prompt version was graded on this exact file",
+        f"- {rows and m['results'][0]['runs']} runs per (model, prompt); rates are pooled over "
+        f"{m['eval_questions']} x runs question-runs",
+        "- Execution accuracy: answerable questions whose result set matches the hand-written reference "
+        "(order-insensitive, numeric tolerance, extra columns allowed)",
+        "- **Confidently wrong** = answered (did not abstain, SQL ran) and the result was wrong, or answered an "
+        "unanswerable question; % of all question-runs",
         "",
-        table(rows, ["model", "prompt", "runs", "execution_accuracy_pct", "abstention_accuracy_pct",
-                     "confidently_wrong_pct", "false_abstention_pct", "latency_p50_s", "latency_p95_s"]),
+        table(rows, ["model", "prompt", "execution_accuracy_pct", "abstention_accuracy_pct", "confidently_wrong_pct",
+                     "cw_per_run", "false_abstention_pct", "errors", "p50_s", "p95_s"]),
+        "",
+        "Latency is seconds per question, excluding time spent backing off from 429/503 responses.",
         "",
         "**Accuracy by difficulty (% correct, incl. correct refusals)**",
         "",

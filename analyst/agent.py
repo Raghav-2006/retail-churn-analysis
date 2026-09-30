@@ -14,6 +14,7 @@ Every call is logged to logs/analyst.jsonl; generations are cached on disk.
 import hashlib
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -31,7 +32,7 @@ from pipeline.load import READONLY_ROLE
 
 ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = ROOT / "logs" / "analyst.jsonl"
-CACHE_PATH = ROOT / "data" / "analyst_cache.jsonl"
+CACHE_DIR = ROOT / "data" / "analyst_cache"   # one JSONL per model, so models can be evaluated in parallel
 # gemini-3.8-flash / 3.7-flash returned 503 "high demand" on almost every call while this was built;
 # 3.5-flash is the newest Flash model that answered reliably. Override with GEMINI_MODEL.
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
@@ -45,6 +46,19 @@ FORBIDDEN = re.compile(
     r"pg_sleep\w*|pg_read_\w+|pg_write\w*|pg_terminate_backend|pg_cancel_backend|lo_\w+|dblink\w*|set_config)\b",
     re.IGNORECASE,
 )
+
+
+RETRYABLE = {429, 500, 503, 504}   # rate limit / quota, transient server errors, overload
+MAX_API_ATTEMPTS = 12              # about 10 minutes of waiting at most per call
+
+
+def backoff_delay(attempt: int, message: str = "", base: float = 2.0, cap: float = 90.0) -> float:
+    """Exponential backoff with jitter: 2s, 4s, 8s, ... capped at 90s.
+    If the API says how long to wait ("retryDelay": "11s"), wait at least that long."""
+    delay = min(cap, base * 2 ** attempt * random.uniform(0.75, 1.25))
+    if m := re.search(r"retry(?:Delay)?\W+(?:in\s+)?(\d+(?:\.\d+)?)s", message, re.IGNORECASE):
+        delay = max(delay, float(m.group(1)) + 1.0)
+    return round(delay, 2)
 
 
 class UnsafeSQL(ValueError):
@@ -128,7 +142,7 @@ class Answer:
 class Analyst:
     def __init__(self, prompt_version: str = "v1", model: str = MODEL, narrate: bool = True,
                  use_cache: bool = True, cache_tag: str = "", log_path: Path = LOG_PATH,
-                 cache_path: Path = CACHE_PATH):
+                 cache_path: Path | None = None):
         from google import genai
 
         self.client = genai.Client()  # reads GEMINI_API_KEY from the environment
@@ -138,7 +152,8 @@ class Analyst:
         self.narrate = narrate
         self.use_cache = use_cache
         self.cache_tag = cache_tag  # lets the evaluator keep independent runs apart in the cache
-        self.log_path, self.cache_path = log_path, cache_path
+        self.log_path = log_path
+        self.cache_path = cache_path or CACHE_DIR / f"{model}.jsonl"
         self.cache = self._load_cache() if use_cache else {}
         self._backoff = 0.0
 
@@ -151,19 +166,18 @@ class Analyst:
             temperature=0.0,
             response_mime_type="application/json" if json_mode else "text/plain",
         )
-        delay = 4.0
-        for attempt in range(16):  # transient 429/503s are common on a free-tier key
+        for attempt in range(MAX_API_ATTEMPTS):
             try:
                 return self.client.models.generate_content(model=self.model, contents=contents, config=config).text
             except (errors.ServerError, errors.ClientError) as err:
                 code = getattr(err, "code", None)
-                if code == 429 and "PerDay" in str(err):
-                    raise QuotaExhausted(f"daily request quota used up for {self.model}") from err
-                if code not in (429, 500, 503, 504) or attempt == 15:
+                if code not in RETRYABLE or attempt == MAX_API_ATTEMPTS - 1:
+                    if code == 429 and "PerDay" in str(err):
+                        raise QuotaExhausted(f"daily request quota used up for {self.model}") from err
                     raise
-                time.sleep(delay)
-                self._backoff += delay
-                delay = min(delay * 2, 60)
+                wait = backoff_delay(attempt, str(err))
+                time.sleep(wait)
+                self._backoff += wait
         raise RuntimeError("unreachable")
 
     @staticmethod
@@ -195,7 +209,7 @@ class Analyst:
     def _save_cache(self, key: str, ans: Answer) -> None:
         entry = {"key": key, **asdict(ans)}
         self.cache[key] = entry
-        self.cache_path.parent.mkdir(exist_ok=True)
+        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
         with self.cache_path.open("a") as f:
             f.write(json.dumps(entry, default=jsonable) + "\n")
 

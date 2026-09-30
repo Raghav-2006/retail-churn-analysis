@@ -1,50 +1,54 @@
 {
   "prompt_version": "v1",
   "model": "gemini-3.1-flash-lite",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
   "runs": 3,
-  "questions": 120,
-  "execution_accuracy_pct": 100.0,
-  "abstention_accuracy_pct": 87.5,
+  "questions": 165,
+  "execution_accuracy_pct": 97.67,
+  "abstention_accuracy_pct": 91.67,
   "false_abstention_pct": 0.0,
-  "overall_accuracy_pct": 97.5,
-  "confidently_wrong_pct": 2.5,
-  "confidently_wrong_of_answered_pct": 3.03,
+  "overall_accuracy_pct": 96.36,
+  "confidently_wrong_pct": 3.64,
+  "confidently_wrong_of_answered_pct": 4.55,
   "outcomes": {
-    "correct": 96,
+    "correct": 126,
     "answered_unanswerable": 3,
-    "refused": 21
+    "refused": 33,
+    "wrong": 3
   },
   "by_difficulty": {
     "easy": 100.0,
     "medium": 100.0,
-    "hard": 100.0,
-    "unanswerable": 87.5
+    "hard": 96.3,
+    "unanswerable": 91.67
   },
-  "retried": 0,
+  "retried": 3,
+  "self_check": {},
   "per_run": {
     "execution_accuracy_pct": [
-      100.0,
-      100.0,
-      100.0
+      97.67,
+      97.67,
+      97.67
     ],
     "abstention_accuracy_pct": [
-      87.5,
-      87.5,
-      87.5
+      91.67,
+      91.67,
+      91.67
     ],
     "confidently_wrong_pct": [
-      2.5,
-      2.5,
-      2.5
+      3.64,
+      3.64,
+      3.64
     ],
     "overall_accuracy_pct": [
-      97.5,
-      97.5,
-      97.5
+      96.36,
+      96.36,
+      96.36
     ]
   },
-  "latency_p50_s": 2.62,
-  "latency_p95_s": 6.96,
+  "latency_p50_s": 2.67,
+  "latency_p95_s": 6.95,
   "failures": [
     {
       "id": "u01",
@@ -54,6 +58,16 @@
         "answered_unanswerable": 3
       },
       "example_sql": "SELECT SUM(revenue) / NULLIF(SUM(ABS(revenue)), 0) AS profit_margin FROM fact_sales WHERE EXTRACT(YEAR FROM invoice_date) = 2011",
+      "example_error": null
+    },
+    {
+      "id": "x01",
+      "difficulty": "hard",
+      "question": "What was net revenue, after cancellations, in each calendar year?",
+      "outcomes": {
+        "wrong": 3
+      },
+      "example_sql": "SELECT d.year, SUM(s.revenue) + SUM(COALESCE(c.revenue, 0)) AS net_revenue FROM dim_date d JOIN fact_sales s ON d.date_key = s.date_key LEFT JOIN fact_cancellations c ON d.date_key = c.date_key GROUP BY d.year ORDER BY d.year",
       "example_error": null
     }
   ]

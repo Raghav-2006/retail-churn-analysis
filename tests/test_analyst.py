@@ -98,12 +98,22 @@ def test_confidently_wrong_rate():
     assert s["abstention_accuracy_pct"] == 50.0
 
 
+EVAL_SET_V2_SHA256 = "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049"
+
+
+def test_eval_set_is_frozen():
+    """v1, v2 and v3 were all compared on exactly this file; any edit must bump the eval-set version."""
+    from analyst.evaluate import eval_set_sha
+
+    assert eval_set_sha() == EVAL_SET_V2_SHA256
+
+
 def test_eval_set_shape():
     items = load_eval_set()
-    assert 30 <= len(items) <= 40
+    assert len(items) == 55
     assert len({i["id"] for i in items}) == len(items)
     unanswerable = [i for i in items if i["difficulty"] == "unanswerable"]
-    assert 5 <= len(unanswerable) <= 8
+    assert len(unanswerable) == 12
     assert all("sql" in i for i in items if i["difficulty"] != "unanswerable")
     assert all("sql" not in i for i in unanswerable)
 
@@ -131,3 +141,12 @@ def test_percent_questions_accept_fractions_only_when_flagged():
     assert results_match(ref, [[79.65]], percent=True)
     assert not results_match(ref, [[0.7965]])
     assert not results_match(ref, [[0.65]], percent=True)
+
+
+def test_backoff_is_exponential_capped_and_respects_retry_delay():
+    from analyst.agent import backoff_delay
+
+    delays = [backoff_delay(i) for i in range(10)]
+    assert delays[0] < 3 and 12 <= delays[3] <= 20 and max(delays) <= 90
+    assert backoff_delay(0, "Please retry in 11.72s.") >= 12.72
+    assert backoff_delay(0, "'retryDelay': '30s'") >= 31

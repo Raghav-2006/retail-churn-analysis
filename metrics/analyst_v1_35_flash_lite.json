@@ -1,30 +1,34 @@
 {
   "prompt_version": "v1",
   "model": "gemini-3.5-flash-lite",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
   "runs": 3,
-  "questions": 120,
-  "execution_accuracy_pct": 100.0,
+  "questions": 165,
+  "execution_accuracy_pct": 94.57,
   "abstention_accuracy_pct": 100.0,
   "false_abstention_pct": 0.0,
-  "overall_accuracy_pct": 100.0,
-  "confidently_wrong_pct": 0.0,
-  "confidently_wrong_of_answered_pct": 0.0,
+  "overall_accuracy_pct": 95.76,
+  "confidently_wrong_pct": 4.24,
+  "confidently_wrong_of_answered_pct": 5.43,
   "outcomes": {
-    "correct": 96,
-    "refused": 24
+    "correct": 122,
+    "refused": 36,
+    "wrong": 7
   },
   "by_difficulty": {
     "easy": 100.0,
     "medium": 100.0,
-    "hard": 100.0,
+    "hard": 91.36,
     "unanswerable": 100.0
   },
-  "retried": 1,
+  "retried": 6,
+  "self_check": {},
   "per_run": {
     "execution_accuracy_pct": [
-      100.0,
-      100.0,
-      100.0
+      95.35,
+      93.02,
+      95.35
     ],
     "abstention_accuracy_pct": [
       100.0,
@@ -32,17 +36,61 @@
       100.0
     ],
     "confidently_wrong_pct": [
-      0.0,
-      0.0,
-      0.0
+      3.64,
+      5.45,
+      3.64
     ],
     "overall_accuracy_pct": [
-      100.0,
-      100.0,
-      100.0
+      96.36,
+      94.55,
+      96.36
     ]
   },
-  "latency_p50_s": 4.43,
-  "latency_p95_s": 7.83,
-  "failures": []
+  "latency_p50_s": 0.9,
+  "latency_p95_s": 2.13,
+  "failures": [
+    {
+      "id": "h05",
+      "difficulty": "hard",
+      "question": "Among customers who bought in both 2010 and 2011, how many spent less in 2011 than in 2010?",
+      "outcomes": {
+        "correct": 2,
+        "wrong": 1
+      },
+      "example_sql": "WITH yearly_spend AS (SELECT s.customer_id, d.year, SUM(s.revenue) AS total_revenue FROM fact_sales s JOIN dim_date d ON s.date_key = d.date_key WHERE d.year IN (2010, 2011) GROUP BY s.customer_id, d.year), customer_years AS (SELECT customer_id, SUM(CASE WHEN year = 2010 THEN total_revenue ELSE 0 END) AS spend_2010, SUM(CASE WHEN year = 2011 THEN total_revenue ELSE 0 END) AS spend_2011, COUNT(DISTINCT year) AS years_bought FROM yearly_spend GROUP BY customer_id) SELECT count(*) AS customers_spent_less FROM customer_years WHERE years_bought = 2010 AND spend_2011 < spend_2010",
+      "example_error": null
+    },
+    {
+      "id": "x02",
+      "difficulty": "hard",
+      "question": "What percentage of gross sales value was cancelled in 2011?",
+      "outcomes": {
+        "wrong": 2,
+        "correct": 1
+      },
+      "example_sql": "SELECT ROUND(COALESCE(ABS(SUM(c.revenue)), 0) * 100.0 / SUM(s.revenue), 2) AS cancellation_percentage FROM fact_sales s JOIN dim_date d ON s.date_key = d.date_key LEFT JOIN fact_cancellations c ON EXTRACT(YEAR FROM c.invoice_date) = 2011 AND s.stock_code = c.stock_code AND s.customer_id = c.customer_id WHERE d.year = 2011",
+      "example_error": null
+    },
+    {
+      "id": "x03",
+      "difficulty": "hard",
+      "question": "Which 5 customers had the highest net revenue after cancellations, and what was it?",
+      "outcomes": {
+        "correct": 2,
+        "wrong": 1
+      },
+      "example_sql": "SELECT c.customer_id, SUM(s.revenue) + COALESCE(SUM(cn.revenue), 0) AS net_revenue FROM dim_customer c JOIN fact_sales s ON c.customer_id = s.customer_id LEFT JOIN fact_cancellations cn ON c.customer_id = cn.customer_id GROUP BY c.customer_id ORDER BY net_revenue DESC LIMIT 5",
+      "example_error": null
+    },
+    {
+      "id": "x09",
+      "difficulty": "hard",
+      "question": "Which month of 2011 brought in the most new customers (first-ever purchase), and how many?",
+      "outcomes": {
+        "wrong": 3
+      },
+      "example_sql": "SELECT TO_CHAR(d.month_start, 'YYYY-MM') AS month, COUNT(c.customer_id) AS new_customers FROM dim_customer c JOIN dim_date d ON DATE_TRUNC('month', c.first_invoice_date) = d.month_start WHERE EXTRACT(YEAR FROM c.first_invoice_date) = 2011 GROUP BY d.month_start ORDER BY new_customers DESC LIMIT 1",
+      "example_error": null
+    }
+  ]
 }

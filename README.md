@@ -54,7 +54,10 @@ Star schema: `fact_sales` and `fact_cancellations` (order-line grain) share the 
   - schema drift against a stored contract (`pipeline/contract.json`), for both the raw extract and the warehouse
   - monthly volume anomaly (more than 3 sd from the rolling 6-month median)
   - freshness: the newest loaded invoice equals the newest source invoice
-- **Honest caveat on the volume check.** It flags 5 months, and all 5 are the known Sep–Nov seasonal peaks. It does *not* flag the partial final month (Dec 2011, 9 days), because the peaks inflate the rolling standard deviation. A seasonal (year-over-year) baseline would fix this. It is a WARN, not a FAIL, for exactly this reason.
+- **Volume check: two parts.**
+  - A **partial-period** test flags any month whose data covers under 50% of its calendar days. It catches December 2011 (9 of 31 days) and would catch a load that silently stopped mid-month. The Christmas shutdown (sales stop around 23 December) is not flagged.
+  - A **row-count z-score** compares each full month with the rolling median of the previous 6 full months.
+  - The first version had only the z-score and *missed* the partial month, because the Sep–Nov peaks inflate the rolling standard deviation. It still flags those seasonal peaks, since it has no year-over-year baseline, which is why the check is a WARN, not a FAIL.
 - **Tests:** 47 pytest tests cover:
   - each cleaning rule, on hand-made tables
   - load idempotency, and quality checks failing on a silent row loss, against a real Postgres

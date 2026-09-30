@@ -43,6 +43,15 @@ def slug(model: str) -> str:
     return model.replace("gemini-", "").replace(".", "").replace("-", "_")
 
 
+EVAL_SET_VERSION = 2
+
+
+def eval_set_sha() -> str:
+    import hashlib
+
+    return hashlib.sha256(EVAL_SET.read_bytes()).hexdigest()
+
+
 def load_eval_set() -> list[dict]:
     return yaml.safe_load(EVAL_SET.read_text())
 
@@ -219,6 +228,8 @@ def evaluate(prompt_version: str, runs: int = 3, model: str | None = None) -> di
     result = {
         "prompt_version": prompt_version,
         "model": agent.model,
+        "eval_set_version": EVAL_SET_VERSION,
+        "eval_set_sha256": eval_set_sha(),
         "runs": runs,
         **pooled,
         "per_run": {k: [p[k] for p in per_run] for k in keys},
@@ -248,17 +259,23 @@ def failure_table(records: list[dict]) -> list[dict]:
     return rows
 
 
-def compare(before: str, after: str, models: list[str]) -> None:
-    """Collect before/after metrics for each model into metrics/analyst.json (read by make_results.py)."""
+def compare(versions: list[str], models: list[str]) -> None:
+    """Collect every (model, prompt) result into metrics/analyst.json (read by make_results.py).
+    Refuses to compare results graded on different eval-set files."""
     from src.metrics import load_metrics
 
-    rows = []
+    rows, shas = [], set()
     for model in models:
-        b = load_metrics(f"analyst_{before}_{slug(model)}")
-        a = load_metrics(f"analyst_{after}_{slug(model)}")
-        rows.append({"model": model, "before": b, "after": a})
+        for v in versions:
+            m = load_metrics(f"analyst_{v}_{slug(model)}")
+            shas.add(m.get("eval_set_sha256"))
+            rows.append({"model": model, "prompt": v, **{k: m[k] for k in m if k != "per_run"},
+                         "per_run": m["per_run"]})
+    if shas != {eval_set_sha()}:
+        raise SystemExit(f"results come from different eval-set files: {shas}")
     items = load_eval_set()
-    save_metrics("analyst", {"before_version": before, "after_version": after, "models": rows,
+    save_metrics("analyst", {"versions": versions, "models": models, "results": rows,
+                             "eval_set_version": EVAL_SET_VERSION, "eval_set_sha256": eval_set_sha(),
                              "eval_questions": len(items),
                              "eval_mix": dict(Counter(it["difficulty"] for it in items))})
 
@@ -268,11 +285,12 @@ def main() -> None:
     p.add_argument("--prompt", default="v1")
     p.add_argument("--runs", type=int, default=3)
     p.add_argument("--model")
-    p.add_argument("--compare", nargs=2, metavar=("BEFORE", "AFTER"))
-    p.add_argument("--models", nargs="+", default=["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"])
+    p.add_argument("--compare", nargs="+", metavar="VERSION", help="e.g. --compare v1 v2 v3")
+    p.add_argument("--models", nargs="+",
+                   default=["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"])
     args = p.parse_args()
     if args.compare:
-        compare(*args.compare, args.models)
+        compare(args.compare, args.models)
         return
     res = evaluate(args.prompt, args.runs, args.model)
     print(json.dumps({k: v for k, v in res.items() if k != "failures"}, indent=1))
