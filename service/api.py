@@ -6,7 +6,8 @@ GET  /health                    liveness + what the service is serving from
 GET  /customers/{id}/tier       tier, score and the explain() breakdown for one customer
 POST /ask                       answer a business question
 
-/ask serves the cached answers from the frozen eval runs (demo mode). A question that is not
+/ask serves the cached answers from the frozen eval runs (demo mode): by default the RAG +
+self-verification analyst (gemini-3.1-flash-lite, prompt v5), with its citations. A question that is not
 cached gets a clear 404 with the closest cached questions. Live mode (a real Gemini call against
 the warehouse) is used only when ANALYST_LIVE=1 and GEMINI_API_KEY are both set; it is rate
 limited and wrapped in a timeout, and on a timeout or error the API returns an explicit error.
@@ -35,7 +36,7 @@ from service.store import DEFAULT_MODEL, DEFAULT_VERSION, DemoStore, normalize
 from tiering.score import explain
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.9.0"
+VERSION = "0.10.0"
 ASK_TIMEOUT_S = float(os.environ.get("ASK_TIMEOUT_S", "30"))
 LIVE_LIMIT = RateLimiter(int(os.environ.get("LIVE_MAX_CALLS", "10")), per_seconds=3600)
 
@@ -158,8 +159,14 @@ async def ask(body: AskRequest, request: Request) -> JSONResponse:
             "columns": cached["columns"], "rows": cached["rows"], "row_count": cached["row_count"],
             "error": cached["error"],
             "correctness": cached["outcome"],   # graded against the hand-written reference SQL
-            "difficulty": cached["difficulty"], "eval_id": cached["qid"],
-            "note": "Cached answer from the frozen eval run; answer text rendered from the SQL result."})
+            "difficulty": cached["difficulty"], "eval_id": cached["qid"], "eval_set": cached["eval_set"],
+            "citations": cached["citations"],             # v4+: knowledge-base docs the answer relied on
+            "self_verification": cached["verification"],  # v5: pass / corrected / abstained
+            "judge": None if cached["judge_faithful"] is None else {
+                "faithful": cached["judge_faithful"], "citation_correct": cached["judge_citation_correct"],
+                "calibration": "pending human labels: not yet checked against hand labels, do not rely on it"},
+            "note": ("Cached answer from the frozen eval run; answer written by the model." if cached["answer_source"] == "llm"
+                     else "Cached answer from the frozen eval run; answer text rendered from the SQL result.")})
 
     if not live_enabled():
         return JSONResponse({"status": "not_cached", "mode": "demo", "question": body.question,

@@ -452,18 +452,19 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 
 ## Serving: demo database, API and dashboard (python -m service.build_demo)
 
-- `demo/demo.sqlite`: **1.68 MB** (limit 50 MB), built 2026-09-30T21:16:47+00:00; pre-aggregated, no raw transactions
-- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt version on frozen eval set v2): correct 379, refused 107, wrong 7, error 1, answered_unanswerable 1
+- `demo/demo.sqlite`: **1.93 MB** (limit 50 MB), built 2026-09-30T23:18:58+00:00; pre-aggregated, no raw transactions
+- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt version on frozen eval set v2): correct 485, refused 131, wrong 15, abstained 2, error 1, answered_unanswerable 1
 
 | table | rows |
 |---|---|
 | monthly | 25 |
 | countries | 10 |
 | lorenz | 203 |
-| kpis | 22 |
+| kpis | 30 |
 | customer_scores | 4,908 |
 | tier_summary | 4 |
 | tier_methods | 6 |
 | quality_checks | 17 |
-| eval_answers | 495 |
+| eval_answers | 635 |
+| knowledge_docs | 34 |
 | meta | 1 |

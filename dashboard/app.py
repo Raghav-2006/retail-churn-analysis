@@ -6,8 +6,10 @@ Runs entirely from the committed demo database (demo/demo.sqlite, pre-aggregated
 works on Streamlit Community Cloud without Postgres or the raw dataset.
 
 Ask the Data has two modes:
-  demo (default)  the 55 eval questions with the cached answers from the frozen eval runs:
-                  question, SQL, result, answer and the graded correctness label.
+  demo (default)  the 65 eval questions (frozen 55 + 10 definition questions) with the cached answers
+                  from the eval runs: question, answer, SQL, result, cited knowledge-base docs, the
+                  self-verification flag and the graded correctness label. Default: gemini-3.1-flash-lite,
+                  prompt v5 (RAG + self-verification).
   live            only when BOTH secrets exist: GEMINI_API_KEY and DATABASE_URL (a Postgres
                   holding the warehouse). Hard rate limit: LIVE_PER_SESSION per browser session
                   and LIVE_PER_HOUR across all users of the app.
@@ -25,7 +27,7 @@ import streamlit as st  # noqa: E402
 
 from dashboard import charts  # noqa: E402
 from service.ratelimit import RateLimiter  # noqa: E402
-from service.store import DemoStore  # noqa: E402
+from service.store import DEFAULT_MODEL, DEFAULT_VERSION, VERSION_LABELS, DemoStore  # noqa: E402
 from tiering.score import explain  # noqa: E402
 
 LIVE_PER_SESSION = 5
@@ -90,6 +92,17 @@ with overview:
                 f"{float(K['cw_v1_pct']):.1f}% → {float(K['cw_v3_pct']):.1f}%",
                 help=f"{K['cw_v1_count']} → {K['cw_v3_count']} answers, pooled over 3 Gemini models")
     c[3].metric("Scores match v1 after dbt migration", "Yes, bit for bit" if K["dbt_matches_v1"] == "1" else "No")
+    c = st.columns(4)
+    c[0].metric("Definition questions answered correctly (no RAG → RAG)",
+                f"{float(K['defs_exec_norag_pct']):.0f}% → {float(K['defs_exec_rag_pct']):.0f}%",
+                help="10 questions that need a business definition from the knowledge base (gemini-3.1-flash-lite, 2 runs)")
+    c[1].metric("Confidently wrong, 65 questions (no RAG → RAG + self-check)",
+                f"{float(K['cw65_v3_pct']):.1f}% → {float(K['cw65_v5_pct']):.1f}%",
+                help="Prompt v3 vs v5 on the frozen 55 + 10 definition questions, 2 runs each")
+    c[2].metric("Retrieval recall@8 (answerable questions)", f"{float(K['retrieval_recall_answerable']):.2f}",
+                help=f"MRR {float(K['retrieval_mrr_answerable']):.2f}; local MiniLM embeddings in pgvector")
+    c[3].metric("LLM judge vs human agreement", str(K["judge_agreement"]).capitalize(),
+                help="The judge's verdicts are not relied on until 30 hand labels are in (labels/human_labels.csv)")
 
     left, right = st.columns(2)
     with left:
@@ -147,24 +160,49 @@ with ask:
     modes = ["Demo: cached eval answers"] + (["Live: ask Gemini"] if live_ok else [])
     mode = st.radio("Mode", modes, horizontal=True)
     if not live_ok:
-        st.info("Demo mode: these are the 55 questions of the frozen evaluation set, with the answers the "
-                "analyst actually gave, each graded against a hand-written reference query. Live mode appears "
-                "only when the app has both a GEMINI_API_KEY and a DATABASE_URL secret.")
+        st.info("Demo mode: the 65 evaluation questions (the frozen 55 plus 10 that need a business definition), "
+                "with the answers the analyst actually gave, each graded against a hand-written reference query. "
+                "Default: prompt v5, which retrieves definitions from the knowledge base, cites them, and checks "
+                "its numbers against the query result. Live mode appears only when the app has both a "
+                "GEMINI_API_KEY and a DATABASE_URL secret.")
 
     if mode.startswith("Demo"):
         qs = S.questions()
         c1, c2, c3 = st.columns([3, 1, 1])
         labels = {r.question: f"[{r.difficulty}] {r.question}" for r in qs.itertuples()}
         q = c1.selectbox("Question", qs["question"], format_func=labels.get)
-        model = c2.selectbox("Model", ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"])
-        version = c3.selectbox("Prompt", ["v3", "v2", "v1"], format_func={
-            "v1": "v1 baseline", "v2": "v2 + glossary", "v3": "v3 + self-check"}.get)
+        pairs = S.available(q)
+        models = sorted({m for m, _ in pairs}, key=lambda m: m != DEFAULT_MODEL)
+        model = c2.selectbox("Model", models)
+        versions = sorted({v for m, v in pairs if m == model}, reverse=True)
+        version = c3.selectbox("Prompt", versions, index=versions.index(DEFAULT_VERSION) if DEFAULT_VERSION in versions
+                               else 0, format_func=lambda v: VERSION_LABELS.get(v, v))
         a = S.cached_answer(q, model, version)
         color, icon = charts.STATUS[a["outcome"]]
         st.markdown(f"#### {icon} {charts.OUTCOME_LABEL[a['outcome']]}")
         st.markdown(f"**Answer:** {a['answer']}")
-        st.caption("Abstained." if a["abstained"] else
-                   "Answer text is rendered from the SQL result (the eval runs don't generate prose).")
+        flags = ["Abstained: no answer rather than a guess." if a["abstained"] else "Answered."]
+        if a["verification"]:
+            flags.append({"pass": "Self-verification passed: every number in the answer is in the query result.",
+                          "corrected": "Self-verification rewrote the answer so its numbers match the query result.",
+                          "abstained": "Self-verification could not back up the answer, so the analyst abstained."
+                          }[a["verification"]])
+        if a["answer_source"] == "template" and not a["abstained"]:
+            flags.append("Answer text is rendered from the SQL result (this run didn't generate prose).")
+        st.caption(" ".join(flags))
+        if a["citations"] is not None:
+            st.markdown("**Cited definitions:** " + (", ".join(
+                f"`{c}`" + (" (deprecated)" if S.docs.get(c, {}).get("deprecated") else "") for c in a["citations"])
+                or "none"))
+            for c in a["citations"]:
+                doc = S.docs.get(c)
+                if doc:
+                    with st.expander(f"{doc['title']} · {doc['doc_type']} · updated {doc['last_updated']}"):
+                        st.markdown(doc["body"])
+        if a["judge_faithful"] is not None:
+            st.caption(f"LLM judge: {'faithful' if a['judge_faithful'] else 'NOT faithful'} to the result, citations "
+                       f"{'correct' if a['judge_citation_correct'] else 'questionable'}. Uncalibrated: judge-human "
+                       "agreement is pending hand labels, so treat this as a hint only.")
         if a["sql"]:
             st.code(a["sql"], language="sql")
         if a["error"]:
@@ -180,7 +218,8 @@ with ask:
         with st.expander("How every model and prompt version did on this question"):
             grid = S.answers[S.answers["question"] == q].pivot(index="model", columns="prompt_version",
                                                                values="outcome")
-            st.dataframe(grid.map(lambda o: f"{charts.STATUS[o][1]} {o}"), width="stretch")
+            st.dataframe(grid.map(lambda o: f"{charts.STATUS[o][1]} {o}" if isinstance(o, str) else "not run"),
+                         width="stretch")
     else:  # live mode: not exercised in development (no API credits); see README
         if "live_used" not in st.session_state:
             st.session_state.live_used = 0
@@ -197,7 +236,8 @@ with ask:
                 try:
                     from analyst.agent import Analyst
 
-                    ans = Analyst(prompt_version="v3", narrate=True, use_cache=False).ask(q)
+                    # v3 (no RAG): the Cloud app has no local embedding model or knowledge index
+                    ans = Analyst(prompt_version="v3", model=DEFAULT_MODEL, narrate=True, use_cache=False).ask(q)
                     st.markdown(f"**Answer:** {ans.answer}")
                     if ans.sql:
                         st.code(ans.sql, language="sql")

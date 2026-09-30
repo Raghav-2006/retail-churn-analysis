@@ -33,9 +33,10 @@ from pipeline.load import READONLY_ROLE
 ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = ROOT / "logs" / "analyst.jsonl"
 CACHE_DIR = ROOT / "data" / "analyst_cache"   # one JSONL per model, so models can be evaluated in parallel
-# gemini-3.8-flash / 3.7-flash returned 503 "high demand" on almost every call while this was built;
-# 3.5-flash is the newest Flash model that answered reliably. Override with GEMINI_MODEL.
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+# Parts 1-3 compared gemini-3.5-flash, 3.5-flash-lite and 3.1-flash-lite. Phases 7-8 ran under a hard
+# prepaid budget on 3.1-flash-lite only, and analyst/budget.py prices only that model, so it is the
+# default. Override with GEMINI_MODEL (the spend guard then refuses to call an unpriced model).
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 MAX_ROWS = 200
 STATEMENT_TIMEOUT_MS = 15_000
 ABSTAIN_TEXT = "I can't answer that from this data."

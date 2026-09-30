@@ -25,7 +25,7 @@ def test_health(client):
     r = client.get("/health")
     assert r.status_code == 200
     j = r.json()
-    assert j["status"] == "ok" and j["customers"] == 4908 and j["cached_answers"] == 495
+    assert j["status"] == "ok" and j["customers"] == 4908 and j["cached_answers"] == 635
     assert j["live_mode"] is False and r.headers["x-request-id"]
 
 
@@ -58,8 +58,20 @@ def test_ask_shows_a_confidently_wrong_answer_as_such(client):
     j = client.post("/ask", json={"question": "What was our profit margin in 2011?",
                                   "model": "gemini-3.1-flash-lite", "prompt_version": "v1"}).json()
     assert j["correctness"] == "answered_unanswerable" and j["abstained"] is False
-    j = client.post("/ask", json={"question": "What was our profit margin in 2011?"}).json()   # v3
+    j = client.post("/ask", json={"question": "What was our profit margin in 2011?"}).json()   # default: v5
     assert j["correctness"] == "refused" and j["abstained"] is True
+
+
+def test_ask_default_is_rag_with_citations_and_self_verification(client):
+    j = client.post("/ask", json={"question": "What was our average order value (AOV) in 2011?"}).json()
+    assert j["model"] == "gemini-3.1-flash-lite" and j["prompt_version"] == "v5" and j["eval_set"] == "defs"
+    assert j["correctness"] == "correct" and "metric-aov" in j["citations"]
+    assert j["self_verification"] == "pass" and "445.60" in j["answer"]
+    assert "pending human labels" in j["judge"]["calibration"]
+    # without RAG the same question was answered confidently wrong (the deprecated gross AOV)
+    j3 = client.post("/ask", json={"question": "What was our average order value (AOV) in 2011?",
+                                   "model": "gemini-3.1-flash-lite", "prompt_version": "v3"}).json()
+    assert j3["correctness"] == "wrong" and j3["citations"] is None
 
 
 def test_uncached_question_is_refused_not_guessed(client):
