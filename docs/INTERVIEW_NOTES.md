@@ -10,8 +10,10 @@ Likely questions, answered from what this repo actually did and measured. Every 
 > parallel-run parity check caught a bug that had passed every one of those checks. A multi-factor
 > customer tiering model is validated on the next six months' revenue, and it's honest that a
 > simpler baseline wins on one metric. A Gemini text-to-SQL analyst is measured on how often it is
-> confidently wrong: 3.4% down to 0.2% across three models. It's all served through FastAPI and a
-> Streamlit dashboard.
+> confidently wrong: 3.4% down to 0.2% across three models. Adding a pgvector knowledge base
+> of business definitions took questions that need a definition from 20% to 100% correct, and cut
+> the confidently-wrong rate on 65 questions from 9.2% to 1.5%, for under CA$0.40 of API spend.
+> It's all served through FastAPI and a Streamlit dashboard.
 
 ---
 
@@ -182,11 +184,94 @@ In production you don't have a reference. You use:
 
 The eval is what tells you how often those signals miss.
 
+## RAG knowledge layer, LLM judge and self-verification
+
+**Why add RAG to a text-to-SQL agent that already scored 100%?**
+Because the 55 questions only used definitions that were in the schema or the glossary. Real
+questions depend on business definitions that live in documents: "active customer", "churn",
+"AOV". I wrote 10 questions that need one, as a separate frozen set. Without retrieval,
+gemini-3.1-flash-lite got **2 of 10 right** (20%) and was **confidently wrong on 60%** of runs:
+- gross AOV £480.48 instead of the official net £445.60;
+- its own churn window (4,026 churned instead of 3,050);
+- a different peak season.
+
+With the knowledge base it got **10/10 in both runs**. Over all 65 questions, confidently wrong
+went **9.2% → 1.5%**.
+
+**What did RAG break?**
+One frozen question, m04: "average order value, where an order's value is the total revenue of its
+invoice". The net-revenue AOV doc overrode the definition *stated in the question*, in both runs,
+even though my precedence policy says the question wins. Retrieval gives the model a stronger
+prior than the question text. The fix would be to detect "where X is defined as…" and suppress
+conflicting definitions, not to reword the doc.
+
+**How did you evaluate retrieval separately from generation?**
+- I hand-labelled the relevant docs for all 65 questions.
+- I report recall@k, hit@k and MRR at doc level, over the top-k chunks the agent actually sees.
+- I compared chunk sizes of 32/64/128 words and whole docs, at k = 3/5/8.
+- Whole docs at k = 8: recall **0.94**, MRR **0.79** on answerable questions.
+- The setting was picked by a rule fixed before looking: best recall@8, then the smallest k within
+  0.02. So it was not picked by end-to-end accuracy, which would tune on the test set.
+
+**Where does retrieval fail?**
+Unanswerable questions: recall ≈ 0. The doc that says "there is no cost, salesperson or marketing
+data" doesn't embed near "what was our profit margin?". Negative knowledge is hard to retrieve.
+The agent still refused all 12 from the schema alone, so it didn't cost accuracy here. In
+production I'd give each out-of-scope topic its own doc, or add a keyword rule.
+
+**How did you handle outdated or conflicting docs?**
+- 3 docs are marked deprecated with `superseded_by`, and one older FAQ contradicts the metric
+  definitions without being flagged.
+- Deprecated chunks get a similarity penalty and a "DEPRECATED, superseded by …" label. With the
+  penalty, no deprecated doc outranked the current definition. Without it, one did for up to 20%
+  of definition questions.
+- No answer cited a deprecated doc. The FAQ is the harder case: it reaches the prompt for 30% of
+  definition questions even with deprecated docs excluded, and a written precedence policy
+  (metric definition beats FAQ, newer beats older) is what resolves it.
+
+**Why local embeddings and pgvector?**
+- 34 short docs: MiniLM on CPU is free, deterministic and offline. The API budget went to the
+  generations that matter.
+- pgvector keeps vectors next to the metadata in the Postgres that already exists.
+- Search is exact: at a few hundred rows an ANN index can only lose recall.
+- CI tests retrieval against real pgvector with a hashed bag-of-words embedder, so it needs no
+  torch.
+
+**How do you know the LLM judge is any good?**
+I don't yet, and I say so. The judge (same model, temperature 0) scored the v4 answers
+**94.3% faithful** and **67.9% citations correct**. But a judge is only a measurement once it
+agrees with a human.
+- I exported **30 blind answers**, stratified by signals that don't come from the judge.
+- The judge–human accuracy and Cohen's kappa are **pending my labels**. If kappa comes out under
+  about 0.4, the rule is to say so and not rely on the judge.
+- Two things already make me cautious: it grades its own model, and it is strict about
+  over-citing.
+
+**What did self-verification do?**
+It checks that every number in the prose answer appears in the SQL result (or is a SQL constant,
+the row count or in the question). On a mismatch it rewrites once, then abstains.
+- On the real answers: **0 of 106 flagged**, so confidently wrong stayed at 1.5%.
+- The two remaining errors are faithful restatements of a *wrong* query, which a number check
+  can't see.
+- To show the step works, I corrupted the headline number in 51 answers. It caught **51/51** and
+  rewrote all 51 back to the right number.
+
+It's a cheap guard (no call unless there's a mismatch) against narration errors this model didn't
+make here. It is not a fix for wrong SQL: that is what the SQL self-check and RAG are for.
+
+**How did you keep the cost under control?**
+Every Gemini call goes through a spend guard that records its tokens in a committed ledger. Each
+batch prints its estimated calls and cost before it runs, and a call that could take the total
+past CA$8 is refused, keeping completed results.
+- Phases 7–8 took **491 calls, about CA$0.39**, against a CA$1.20 plan.
+- I reused the cached v3 runs as the no-RAG baseline, ran 2 runs instead of 3, cached judge
+  verdicts, and measured v5 by replaying the recorded v4 answers.
+
 ## Serving
 
 **How does the demo work without credits or a database?**
 A 1.68 MB pre-aggregated SQLite database is committed to the repo. It holds the KPIs, all 4,908
-scored customers (the same `explain()` runs on it) and the 495 cached, graded eval answers.
+scored customers (the same `explain()` runs on it) and 635 cached, graded eval answers (including the RAG + self-verification answers with their citations).
 - **FastAPI** serves `/health`, `/customers/{id}/tier` and `/ask`.
 - An uncached question gets a 404: "no answer rather than a guess".
 - **Live mode** has a rate limit and a timeout that returns an explicit error.
