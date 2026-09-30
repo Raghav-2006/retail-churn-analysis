@@ -1,0 +1,76 @@
+{
+  "raw_rows": 1067371,
+  "clean_rows": 776579,
+  "rows_removed": 290792,
+  "pct_removed": 27.24,
+  "cleaning_log": [
+    {
+      "step": "drop_null_customer_id",
+      "rows_before": 1067371,
+      "rows_after": 824364,
+      "removed": 243007,
+      "pct_removed": 22.77,
+      "reason": "revenue can't be attributed to a customer"
+    },
+    {
+      "step": "separate_cancellations",
+      "rows_before": 824364,
+      "rows_after": 805620,
+      "removed": 18744,
+      "pct_removed": 2.27,
+      "reason": "invoice starts with 'C'; saved to cancellations.parquet"
+    },
+    {
+      "step": "drop_nonpositive_qty_price",
+      "rows_before": 805620,
+      "rows_after": 805549,
+      "removed": 71,
+      "pct_removed": 0.01,
+      "reason": "Quantity <= 0 or Price <= 0 is not a sale"
+    },
+    {
+      "step": "drop_exact_duplicates",
+      "rows_before": 805549,
+      "rows_after": 779425,
+      "removed": 26124,
+      "pct_removed": 3.24,
+      "reason": "identical rows are double-logged lines"
+    },
+    {
+      "step": "drop_non_product_codes",
+      "rows_before": 779425,
+      "rows_after": 776579,
+      "removed": 2846,
+      "pct_removed": 0.37,
+      "reason": "postage, fees, adjustments and test codes are not products"
+    }
+  ],
+  "cancellation": {
+    "cancelled_invoices": 7901,
+    "total_invoices": 44876,
+    "cancel_rate_by_invoices_pct": 17.61,
+    "cancelled_revenue": 1095136.79,
+    "gross_revenue": 17743429.18,
+    "cancel_rate_by_revenue_pct": 6.17
+  },
+  "non_product_codes_dropped": {
+    "POST": 1803,
+    "M": 681,
+    "C2": 248,
+    "ADJUST": 32,
+    "BANK CHARGES": 31,
+    "PADS": 17,
+    "DOT": 16,
+    "TEST001": 9,
+    "D": 5,
+    "ADJUST2": 3,
+    "TEST002": 1
+  },
+  "customers": 5852,
+  "invoices": 36594,
+  "products": 4620,
+  "countries": 41,
+  "revenue_gbp": 17068582.72,
+  "date_min": "2009-12-01 07:45:00",
+  "date_max": "2011-12-09 12:50:00"
+}
