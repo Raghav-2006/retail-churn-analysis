@@ -56,6 +56,8 @@
     }
   ],
   "uk_revenue_pct": 83.71,
+  "top_1pct_customers": 59,
+  "top_10pct_customers": 586,
   "top_1pct_share": 32.09,
   "top_10pct_share": 63.89,
   "top_20pct_share": 77.17,

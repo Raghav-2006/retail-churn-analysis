@@ -9,11 +9,11 @@ from pathlib import Path
 METRICS = Path(__file__).resolve().parents[1] / "metrics"
 
 
-def save_metrics(name: str, values: dict) -> Path:
+def save_metrics(name: str, values: dict) -> None:
     METRICS.mkdir(exist_ok=True)
     path = METRICS / f"{name}.json"
     path.write_text(json.dumps(values, indent=2, default=float) + "\n")
-    return path
+    print(f"saved metrics/{path.name} ({len(values)} keys)")
 
 
 def load_metrics(name: str) -> dict:
