@@ -1,0 +1,81 @@
+{
+  "snapshot_date": "2011-12-10 12:50:00",
+  "customers": 5852,
+  "segments": [
+    {
+      "segment": "Champions",
+      "customers": 1476,
+      "pct_customers": 25.2,
+      "revenue": 11816450.0,
+      "pct_revenue": 69.2,
+      "avg_recency": 20.0,
+      "avg_frequency": 15.6
+    },
+    {
+      "segment": "Loyal",
+      "customers": 507,
+      "pct_customers": 8.7,
+      "revenue": 1627960.0,
+      "pct_revenue": 9.5,
+      "avg_recency": 106.0,
+      "avg_frequency": 8.4
+    },
+    {
+      "segment": "Potential",
+      "customers": 885,
+      "pct_customers": 15.1,
+      "revenue": 873898.0,
+      "pct_revenue": 5.1,
+      "avg_recency": 26.0,
+      "avg_frequency": 2.3
+    },
+    {
+      "segment": "At-Risk",
+      "customers": 828,
+      "pct_customers": 14.1,
+      "revenue": 1592996.0,
+      "pct_revenue": 9.3,
+      "avg_recency": 368.0,
+      "avg_frequency": 5.0
+    },
+    {
+      "segment": "Hibernating",
+      "customers": 239,
+      "pct_customers": 4.1,
+      "revenue": 299837.0,
+      "pct_revenue": 1.8,
+      "avg_recency": 416.0,
+      "avg_frequency": 1.6
+    },
+    {
+      "segment": "Lost",
+      "customers": 1269,
+      "pct_customers": 21.7,
+      "revenue": 320422.0,
+      "pct_revenue": 1.9,
+      "avg_recency": 465.0,
+      "avg_frequency": 1.2
+    },
+    {
+      "segment": "Other",
+      "customers": 648,
+      "pct_customers": 11.1,
+      "revenue": 537019.0,
+      "pct_revenue": 3.1,
+      "avg_recency": 109.0,
+      "avg_frequency": 2.1
+    }
+  ],
+  "champions_pct_customers": 25.2,
+  "champions_pct_revenue": 69.2,
+  "at_risk_customers": 828,
+  "at_risk_pct_customers": 14.1,
+  "at_risk_revenue_gbp": 1592996.0,
+  "at_risk_pct_revenue": 9.3,
+  "at_risk_avg_recency_days": 368.0,
+  "at_risk_avg_frequency": 5.0,
+  "verified_customer_ids": [
+    12878,
+    16945
+  ]
+}

@@ -29,6 +29,7 @@ def apply_style() -> None:
         "axes.spines.top": False,
         "axes.spines.right": False,
         "axes.grid": True,
+        "axes.axisbelow": True,
         "axes.grid.axis": "y",
         "grid.color": "#e6e5e0",
         "grid.linewidth": 0.8,
