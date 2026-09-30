@@ -61,3 +61,62 @@ def test_labels_round_trip(tmp_path):
         csv.writer(f).writerow(["L03", "q", "s", "{}", "a", "(none)", "x", "yes", "", ""])
     with pytest.raises(ValueError, match="L03"):
         read_labels(p)
+
+
+def test_numbers_written_in_the_sql_count_as_supported():
+    from analyst.verify import sql_literals
+
+    sql = "SELECT count(*) FROM t WHERE d >= DATE '2011-10-01' - INTERVAL '90 days' HAVING sum(v) >= 1000"
+    assert sql_literals(sql) == {90.0, 1000.0}   # the quoted date contributes nothing
+    answer = "2,145 customers ordered in the 90 days to 30 September; large means at least £1,000."
+    assert unsupported_numbers(answer, "q", ["n"], [[2145]], sql) == []
+    assert unsupported_numbers(answer, "q", ["n"], [[2145]]) == ["90", "£1,000"]
+
+
+def _agent_with(replies):
+    from analyst import prompts
+    from analyst.agent import Analyst
+
+    a = Analyst.__new__(Analyst)
+    a.prompt = prompts.get("v5")
+    calls = []
+    a._generate = lambda contents, **kw: (calls.append(kw["purpose"]), replies.pop(0))[1]
+    return a, calls
+
+
+def test_self_verification_passes_rewrites_or_abstains():
+    q, sql, cols, rows = "How many orders?", "SELECT count(*) FROM fact_sales", ["n"], [[36594]]
+    a, calls = _agent_with([])
+    assert a.verify_answer(q, sql, cols, rows, "There were 36,594 orders.") == ("pass", "There were 36,594 orders.", [])
+    assert calls == []                                               # a clean answer costs no call
+    a, calls = _agent_with(["There were 36,594 orders."])
+    status, final, bad = a.verify_answer(q, sql, cols, rows, "There were 46,594 orders.")
+    assert (status, final, bad, calls) == ("corrected", "There were 36,594 orders.", ["46,594"], ["verify"])
+    a, _ = _agent_with(["Roughly 40,000 orders."])
+    status, final, _ = a.verify_answer(q, sql, cols, rows, "There were 46,594 orders.")
+    assert status == "abstained" and final.startswith("I can't answer")
+
+
+def test_agreement_script_runs_on_a_filled_label_file(tmp_path):
+    """Synthetic labels in a temp dir only (the real labels/human_labels.csv is Raghav's to fill in)."""
+    import csv
+    import json
+
+    from analyst.agreement import agreement
+
+    labels, key = tmp_path / "labels.csv", tmp_path / "key.json"
+    human = [(1, 1), (1, 0), (0, 0), (1, 1)]
+    judge = [(1, 1), (1, 1), (0, 0), (0, 1)]
+    with labels.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["# instructions"])
+        w.writerow(FIELDS)
+        for i, (fa, ci) in enumerate(human):
+            w.writerow([f"L{i}", "q", "s", "{}", "a", "(none)", "x", fa, ci, ""])
+    key.write_text(json.dumps({f"L{i}": {"id": f"q{i}", "run": 0, "set": "frozen", "version": "v4"} for i in range(4)}))
+    verdicts = [{"id": f"q{i}", "run": 0, "faithful": bool(fa), "citation_correct": bool(ci),
+                 "faithfulness_reason": "", "citation_reason": ""} for i, (fa, ci) in enumerate(judge)]
+    out = agreement(labels, key, verdicts)
+    assert out["n"] == 4
+    assert out["faithful"]["accuracy_pct"] == 75.0 and out["faithful"]["disagreements"] == ["L3"]
+    assert out["citation_correct"]["accuracy_pct"] == 75.0 and out["citation_correct"]["cohens_kappa"] == 0.5

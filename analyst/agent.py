@@ -136,6 +136,8 @@ class Answer:
     citations: list[str] = field(default_factory=list)   # v4+: doc ids the model says it used
     retrieved: list[str] = field(default_factory=list)   # v4+: chunk ids shown to the model, in rank order
     narrate_s: float = 0.0          # time spent writing the prose answer (included in latency_s)
+    verification: str | None = None  # v5: pass / corrected / abstained (numbers in the answer vs the result)
+    unsupported: list[str] = field(default_factory=list)   # v5: numbers the first draft could not back up
 
     @property
     def success(self) -> bool:
@@ -305,6 +307,11 @@ class Analyst:
             t_n = time.perf_counter()
             ans.answer = self._narrate(question, ans)
             ans.narrate_s = round(time.perf_counter() - t_n, 2)
+            if self.prompt.verify:
+                ans.verification, ans.answer, ans.unsupported = self.verify_answer(
+                    question, ans.sql, ans.columns, ans.rows[:20], ans.answer)
+                if ans.verification == "abstained":
+                    ans.abstained = True
         elif ans.error is not None:
             ans.answer = "The query failed, so I have no answer."
         ans.backoff_s = round(self._backoff, 2)
@@ -313,6 +320,23 @@ class Analyst:
         if self.use_cache:
             self._save_cache(key, ans)
         return ans
+
+    def verify_answer(self, question: str, sql: str, columns: list[str], rows: list[list],
+                      answer: str) -> tuple[str, str, list[str]]:
+        """Self-verification (v5): every number in the answer must be backed by the result it was
+        written from. If one is not, rewrite once from the result; if the rewrite still has an
+        unsupported number, abstain. Returns (status, final answer, unsupported numbers of the draft)."""
+        from analyst.verify import unsupported_numbers
+
+        bad = unsupported_numbers(answer, question, columns, rows, sql)
+        if not bad:
+            return "pass", answer, []
+        payload = json.dumps({"columns": columns, "rows": rows[:20]}, default=str)
+        fixed = self._generate(prompts.correct(question, sql, payload, answer, bad), json_mode=False,
+                               purpose="verify", system=prompts.NARRATE_SYSTEM).strip()
+        if not unsupported_numbers(fixed, question, columns, rows, sql):
+            return "corrected", fixed, bad
+        return "abstained", f"{ABSTAIN_TEXT} The answer could not be verified against the query result.", bad
 
     def _self_check(self, question: str, sql: str, columns: list[str], rows: list[tuple]) -> dict:
         """Mitigation (v3): show the model its SQL and a result preview; it confirms, fixes or abstains."""

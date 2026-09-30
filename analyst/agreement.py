@@ -7,10 +7,11 @@ chance), separately for faithfulness and citation correctness. Kappa reading use
 < 0.4 poor (do not rely on the judge), 0.4-0.6 moderate, 0.6-0.8 substantial, > 0.8 almost perfect.
 """
 import json
+from pathlib import Path
 
 from sklearn.metrics import cohen_kappa_score, confusion_matrix
 
-from analyst.human_labels import KEY_PATH, read_labels
+from analyst.human_labels import CSV_PATH, KEY_PATH, read_labels
 from src.metrics import load_metrics, save_metrics
 
 LABELS = ("faithful", "citation_correct")
@@ -23,10 +24,13 @@ def verdict(kappa: float) -> str:
             else "substantial" if kappa < 0.8 else "almost perfect")
 
 
-def main() -> dict:
-    human = read_labels()
-    key = json.loads(KEY_PATH.read_text())
-    judged = {(v["id"], v["run"]): v for v in load_metrics(f"judge_{next(iter(key.values()))['version']}")["verdicts"]}
+def agreement(labels_path: Path = CSV_PATH, key_path: Path = KEY_PATH, verdicts: list[dict] | None = None) -> dict:
+    """Join the hand labels to the judge's verdicts and score agreement. Raises if any label is missing."""
+    human = read_labels(labels_path)
+    key = json.loads(key_path.read_text())
+    if verdicts is None:
+        verdicts = load_metrics(f"judge_{next(iter(key.values()))['version']}")["verdicts"]
+    judged = {(v["id"], v["run"]): v for v in verdicts}
     out = {"n": len(human)}
     rows = []
     for label_id, h in sorted(human.items()):
@@ -45,6 +49,11 @@ def main() -> dict:
                   "confusion_human_rows_judge_cols": confusion_matrix(hs, js, labels=[0, 1]).tolist(),
                   "disagreements": [r["label_id"] for r in rows if r[f"human_{c}"] != r[f"judge_{c}"]]}
     out["rows"] = rows
+    return out
+
+
+def main() -> dict:
+    out = agreement()
     save_metrics("judge_agreement", out)
     for c in LABELS:
         print(f"{c}: accuracy {out[c]['accuracy_pct']}%, kappa {out[c]['cohens_kappa']} ({out[c]['reading']})")

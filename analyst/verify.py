@@ -8,7 +8,8 @@ rounding to the precision the answer used, allowing for:
   - percentages written from a fraction (0.253 -> 25.3%) and fractions from a percentage;
   - a sign flip (cancellations are stored negative, reported positive);
   - small derived facts that need no cell: the row count, ranks ("top 5"), numbers that are also
-    in the question, and calendar numbers (years, days of the month, quarters).
+    in the question or written as constants in the executed SQL (the 90 of a 90-day window, the
+    1000 of a £1,000 threshold), and calendar numbers (years, days of the month, quarters).
 Anything else is flagged, and the agent then rewrites the answer once from the result, and abstains
 if the rewrite still has an unsupported number (see Analyst._verify).
 """
@@ -76,9 +77,19 @@ def _calendar(value: float, raw: str, text: str) -> bool:
     return False
 
 
-def unsupported_numbers(answer: str, question: str, columns: list[str], rows: list[list]) -> list[str]:
+def sql_literals(sql: str | None) -> set[float]:
+    """Numeric constants written in the SQL (a 90-day window, a £1,000 threshold): parameters the answer
+    may restate. Quoted dates are dropped first so their parts don't count."""
+    if not sql:
+        return set()
+    bare = re.sub(r"'\d{4}-\d{2}-\d{2}[^']*'", " ", sql)   # dates only: INTERVAL '90 days' keeps its 90
+    return {float(m) for m in re.findall(r"(?<![\w.])\d+(?:\.\d+)?(?![\w.])", bare)}
+
+
+def unsupported_numbers(answer: str, question: str, columns: list[str], rows: list[list],
+                        sql: str | None = None) -> list[str]:
     cells = [n for r in rows for v in r for n in _cell_numbers(v)]
-    allowed = {float(len(rows))} | {n for n, _, _ in numbers(question)}
+    allowed = {float(len(rows))} | {n for n, _, _ in numbers(question)} | sql_literals(sql)
     bad = []
     for value, decimals, raw in numbers(answer):
         small_count = value.is_integer() and 1 <= value <= 10 and decimals == 0 and not re.search(r"[£$%]", raw)

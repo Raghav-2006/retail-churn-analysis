@@ -7,11 +7,11 @@
    "output": 1.5
   }
  },
- "calls": 440,
- "input_tokens": 894026,
- "output_tokens": 31552,
+ "calls": 491,
+ "input_tokens": 912736,
+ "output_tokens": 34302,
  "thought_tokens": 0,
- "est_cad": 0.379168,
+ "est_cad": 0.391492,
  "by_purpose": {
   "smoke_test": {
    "calls": 1,
@@ -40,7 +40,11 @@
   "v4:judge": {
    "calls": 53,
    "est_cad": 0.051782
+  },
+  "v5:verify": {
+   "calls": 51,
+   "est_cad": 0.012323
   }
  },
- "updated_at": "2026-09-30T22:06:09"
+ "updated_at": "2026-09-30T23:14:09"
 }

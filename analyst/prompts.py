@@ -1,5 +1,5 @@
 """Prompt versions for the analyst. v1 is the baseline; later versions add one mitigation each:
-v2 glossary, v3 self-check, v4 RAG over the knowledge base with citations."""
+v2 glossary, v3 self-check, v4 RAG over the knowledge base with citations, v5 answer self-verification."""
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -107,6 +107,7 @@ class Prompt:
     retry: Callable[[str, str, str], str]
     self_check: bool = False
     rag: bool = False
+    verify: bool = False   # v5: check the prose answer's numbers against the SQL result (analyst/verify.py)
 
 
 def _user(question: str) -> str:
@@ -141,6 +142,15 @@ Respond with JSON only:
 {{"abstain": true, "reason": "<one sentence>"}}"""
 
 
+def correct(question: str, sql: str, result_json: str, answer: str, unsupported: list[str]) -> str:
+    """v5 self-verification: the answer used numbers that are not in the result; rewrite it once."""
+    return (f"Question: {question}\nSQL that was run:\n{sql}\nResult (JSON):\n{result_json}\n\n"
+            f"A draft answer was:\n{answer}\n\nThese numbers in the draft do not appear in the result: "
+            f"{', '.join(unsupported)}.\nRewrite the answer in one or two plain sentences using ONLY numbers that "
+            "appear in the result (rounding is fine). Do not compute new totals, averages or percentages. "
+            "Revenue is in GBP (£). Do not mention SQL.")
+
+
 def with_context(context: str, message: str) -> str:
     """Prefix a v4 message with the retrieved knowledge-base excerpts."""
     return f"Knowledge base excerpts:\n\n{context}\n\n---\n{message}"
@@ -164,6 +174,7 @@ VERSIONS = {
     "v2": Prompt("v2", V2_SYSTEM, _user, _retry),
     "v3": Prompt("v3", V2_SYSTEM, _user, _retry, self_check=True),
     "v4": Prompt("v4", V4_SYSTEM, _user, _retry, self_check=True, rag=True),
+    "v5": Prompt("v5", V4_SYSTEM, _user, _retry, self_check=True, rag=True, verify=True),
 }
 
 

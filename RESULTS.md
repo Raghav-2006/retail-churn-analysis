@@ -397,6 +397,33 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 
 **Citations (v4)**: 100.0% of answered question-runs cite at least one doc; definition questions cite the defining doc in 100.0%; 0 cite a deprecated doc; 0 cite a doc that was not retrieved
 
+## Answer self-verification, prompt v5 (python -m analyst.self_verify)
+
+- After the prose answer is written, every number in it must match a cell of the SQL result (rounding, %, £ and 'million' allowed), a constant in the SQL, the row count, or the question. If one does not, the answer is rewritten once from the result; if it still fails, the agent abstains
+- Measured by replaying every recorded v4 answer through the step (the generations are deterministic and recorded; only a rewrite costs a call)
+
+- **frozen**: 86 answers checked -> {'pass': 86, 'corrected': 0, 'abstained': 0}; confidently wrong 1.82% -> 1.82%, execution accuracy 97.67% -> 97.67%
+- **defs**: 20 answers checked -> {'pass': 20, 'corrected': 0, 'abstained': 0}; confidently wrong 0.0% -> 0.0%, execution accuracy 100.0% -> 100.0%
+
+**Fault injection** (the real answers had no unsupported numbers, so the step was tested on corrupted copies): 51 of 53 distinct answers had a headline number to corrupt; detected **51/51**, rewritten correctly **51/51** (original number restored in 51), abstained 0, missed 0. Gemini calls: 51
+
+## Final analyst table: every version, gemini-3.1-flash-lite (python -m analyst.final_table)
+
+- `frozen55` = the frozen 55-question set v2; `all65` = those plus the 10 definition questions
+- Latency: seconds per question, excluding the prose-answer call and 429/503 back-off
+- Cost: SQL-writing + self-check + verification calls per question (prose answer and judge excluded), estimated from the token ledger at list price
+
+| block | version | label | runs | question_runs | execution_accuracy_pct | abstention_accuracy_pct | confidently_wrong_pct | confidently_wrong | latency_p50_s | latency_p95_s | cost_per_question_cad | note |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| frozen55 | v1 | baseline | 3 | 165 | 97.67 | 91.67 | 3.64 | 6/165 | 2.67 | 6.95 | n/a | 3 runs (Part 3); cost not measured (pre-ledger) |
+| frozen55 | v2 | + glossary | 3 | 165 | 97.67 | 100.00 | 1.82 | 3/165 | 1.03 | 2.36 | n/a | 3 runs (Part 3); cost not measured (pre-ledger) |
+| frozen55 | v3 | + SQL self-check | 3 | 165 | 100.00 | 100.00 | 0.00 | 0/165 | 1.82 | 3.52 | CA$0.0009 | 3 runs (Part 3); cost measured on its 20 definition-question runs |
+| frozen55 | v4 | + RAG (knowledge base) | 2 | 110 | 97.67 | 100.00 | 1.82 | 2/110 | 1.86 | 2.62 | CA$0.0021 |  |
+| frozen55 | v5 | + answer self-verification | 2 | 110 | 97.67 | 100.00 | 1.82 | 2/110 | 1.86 | 2.62 | CA$0.0021 | v4 answers replayed through verification; 0 rewrites needed |
+| all65 | v3 | + SQL self-check | 2 | 130 | 84.91 | 100.00 | 9.23 | 12/130 | 1.83 | 3.62 | CA$0.0009 | frozen 55 = cached runs 0-1 |
+| all65 | v4 | + RAG (knowledge base) | 2 | 130 | 98.11 | 100.00 | 1.54 | 2/130 | 1.89 | 2.64 | CA$0.0021 |  |
+| all65 | v5 | + answer self-verification | 2 | 130 | 98.11 | 100.00 | 1.54 | 2/130 | 1.89 | 2.64 | CA$0.0021 | v4 answers replayed through verification; 0 rewrites needed |
+
 ## LLM judge on v4 answers (python -m analyst.judge)
 
 - Judge `gemini-3.1-flash-lite` (the agent's model; the only one in budget), prompt `j1`, temperature 0; 106 answered question-runs judged (0 unparseable verdicts)
@@ -404,9 +431,13 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 - Faithful % by eval outcome: correct 94.2, wrong 100.0
 - Citation-correct % by question set: defs 80.0, frozen 65.1
 
+## Judge vs human agreement (python -m analyst.agreement)
+
+- **PENDING HUMAN LABELS.** `labels/human_labels.csv` (30 blind v4 answers) has not been labelled yet, so the judge is **not calibrated** and its verdicts above should not be relied on. After labelling, `python -m analyst.agreement` reports accuracy and Cohen's kappa
+
 ## Gemini spend, Phases 7-8 (metrics/gemini_ledger.json)
 
-- **440 calls**, 894,026 input + 31,552 output + 0 thinking tokens; estimated **CA$0.38** of the CA$8.00 cap (list price USD 0.25 / 1.50 per 1M in/out tokens, at 1.4 CAD/USD)
+- **491 calls**, 912,736 input + 34,302 output + 0 thinking tokens; estimated **CA$0.39** of the CA$8.00 cap (list price USD 0.25 / 1.50 per 1M in/out tokens, at 1.4 CAD/USD)
 
 | purpose | calls | est_cad |
 |---|---|---|
@@ -417,6 +448,7 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 | v3:agent | 22 | 0.01 |
 | v3:self_check | 16 | 0.01 |
 | v4:judge | 53 | 0.05 |
+| v5:verify | 51 | 0.01 |
 
 ## Serving: demo database, API and dashboard (python -m service.build_demo)
 

@@ -448,11 +448,65 @@ def section_spend(m: dict) -> list[str]:
     ]
 
 
+def section_final(m: dict) -> list[str]:
+    cols = ["block", "version", "label", "runs", "question_runs", "execution_accuracy_pct", "abstention_accuracy_pct",
+            "confidently_wrong_pct", "confidently_wrong", "latency_p50_s", "latency_p95_s", "cost_per_question_cad", "note"]
+    rows = [{**r, "cost_per_question_cad": f"CA${r['cost_per_question_cad']:.4f}" if r["cost_per_question_cad"] else "n/a"}
+            for r in m["rows"]]
+    return [
+        f"## Final analyst table: every version, {m['model']} (python -m analyst.final_table)",
+        "",
+        "- `frozen55` = the frozen 55-question set v2; `all65` = those plus the 10 definition questions",
+        "- Latency: seconds per question, excluding the prose-answer call and 429/503 back-off",
+        "- Cost: SQL-writing + self-check + verification calls per question (prose answer and judge excluded), "
+        "estimated from the token ledger at list price",
+        "",
+        table(rows, cols),
+        "",
+    ]
+
+
+def section_self_verify(m: dict) -> list[str]:
+    if not m.get("complete"):
+        return ["## Answer self-verification", "", f"- stopped: {m.get('stopped_reason')}", ""]
+    rp, inj = m["replay"], m["injection"]
+    lines = ["## Answer self-verification, prompt v5 (python -m analyst.self_verify)", "",
+             "- After the prose answer is written, every number in it must match a cell of the SQL result "
+             "(rounding, %, £ and 'million' allowed), a constant in the SQL, the row count, or the question. "
+             "If one does not, the answer is rewritten once from the result; if it still fails, the agent abstains",
+             "- Measured by replaying every recorded v4 answer through the step (the generations are deterministic "
+             "and recorded; only a rewrite costs a call)", ""]
+    for s, x in rp.items():
+        lines.append(f"- **{s}**: {x['answers_checked']} answers checked -> {x['verification']}; confidently wrong "
+                     f"{x['v4_confidently_wrong_pct']}% -> {x['v5_confidently_wrong_pct']}%, execution accuracy "
+                     f"{x['v4_execution_accuracy_pct']}% -> {x['v5_execution_accuracy_pct']}%")
+    lines += ["",
+              f"**Fault injection** (the real answers had no unsupported numbers, so the step was tested on corrupted "
+              f"copies): {inj['corrupted']} of {inj['distinct_answers']} distinct answers had a headline number to "
+              f"corrupt; detected **{inj['detected']}/{inj['corrupted']}**, rewritten correctly "
+              f"**{inj['corrected']}/{inj['corrected']}** (original number restored in {inj['original_number_restored']}), "
+              f"abstained {inj['abstained']}, missed {inj['missed']}. Gemini calls: {m['gemini_calls']}", ""]
+    return lines
+
+
+def section_agreement(_: dict) -> list[str]:
+    head = ["## Judge vs human agreement (python -m analyst.agreement)", ""]
+    if not (METRICS / "judge_agreement.json").exists():
+        return head + ["- **PENDING HUMAN LABELS.** `labels/human_labels.csv` (30 blind v4 answers) has not been "
+                       "labelled yet, so the judge is **not calibrated** and its verdicts above should not be "
+                       "relied on. After labelling, `python -m analyst.agreement` reports accuracy and Cohen's kappa", ""]
+    a = load_metrics("judge_agreement")
+    return head + [f"- {c}: accuracy **{a[c]['accuracy_pct']}%**, Cohen's kappa **{a[c]['cohens_kappa']}** "
+                   f"({a[c]['reading']}), n = {a['n']}" for c in ("faithful", "citation_correct")] + [""]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
             ("03_rfm", section_rfm), ("tiering", section_tiering), ("dbt", section_dbt),
             ("parity_clean", section_orchestration),
             ("analyst", section_analyst), ("rag_retrieval", section_rag_retrieval), ("rag_ablation", section_rag_ablation),
-            ("judge_v4", section_judge), ("gemini_ledger", section_spend), ("demo", section_demo)]
+            ("self_verify", section_self_verify), ("analyst_final", section_final),
+            ("judge_v4", section_judge), ("judge_v4", section_agreement), ("gemini_ledger", section_spend),
+            ("demo", section_demo)]
 
 
 def main() -> None:

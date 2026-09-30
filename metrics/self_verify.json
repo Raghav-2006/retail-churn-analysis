@@ -1,0 +1,606 @@
+{
+  "replay": {
+    "frozen": {
+      "v4_confidently_wrong_pct": 1.82,
+      "v5_confidently_wrong_pct": 1.82,
+      "v4_execution_accuracy_pct": 97.67,
+      "v5_execution_accuracy_pct": 97.67,
+      "answers_checked": 86,
+      "verification": {
+        "pass": 86,
+        "corrected": 0,
+        "abstained": 0
+      }
+    },
+    "defs": {
+      "v4_confidently_wrong_pct": 0.0,
+      "v5_confidently_wrong_pct": 0.0,
+      "v4_execution_accuracy_pct": 100.0,
+      "v5_execution_accuracy_pct": 100.0,
+      "answers_checked": 20,
+      "verification": {
+        "pass": 20,
+        "corrected": 0,
+        "abstained": 0
+      }
+    }
+  },
+  "injection": {
+    "distinct_answers": 53,
+    "corrupted": 51,
+    "skipped_no_headline_number": 2,
+    "detected": 51,
+    "detection_pct": 100.0,
+    "corrected": 51,
+    "corrected_pct": 100.0,
+    "original_number_restored": 51,
+    "abstained": 0,
+    "abstained_pct": 0.0,
+    "missed": 0,
+    "cases": [
+      {
+        "id": "e01",
+        "original": "\u00a317,068,582.72",
+        "corrupted_answer": "The total gross sales revenue across all sales is \u00a327,068,582.72. This figure represents the sum of all merchandise sales, excluding items such as postage, bank charges, and cancellations.",
+        "flagged": [
+          "\u00a327,068,582.72"
+        ],
+        "status": "corrected",
+        "final_answer": "The total revenue across all sales is \u00a317,068,582.72.",
+        "original_number_restored": true
+      },
+      {
+        "id": "e02",
+        "original": "5,852",
+        "corrupted_answer": "A total of 6,852 distinct customers made at least one purchase. This count reflects customers who successfully completed an order.",
+        "flagged": [
+          "6,852"
+        ],
+        "status": "corrected",
+        "final_answer": "A total of 5,852 distinct customers made at least one purchase. This count reflects all customers who successfully completed an order.",
+        "original_number_restored": true
+      },
+      {
+        "id": "e03",
+        "original": "36,594",
+        "corrupted_answer": "A total of 46,594 orders were placed. This figure represents the number of distinct sales invoices, excluding any cancellation invoices.",
+        "flagged": [
+          "46,594"
+        ],
+        "status": "corrected",
+        "final_answer": "A total of 36,594 orders were placed. This figure represents the number of distinct invoices recorded in the system.",
+        "original_number_restored": true
+      },
+      {
+        "id": "e07",
+        "original": "7,901",
+        "corrupted_answer": "There are 8,901 cancelled invoices in total. This figure is based on the fact_cancellations table, which tracks individual cancellation invoice numbers.",
+        "flagged": [
+          "8,901"
+        ],
+        "status": "corrected",
+        "final_answer": "There are 7,901 cancelled invoices in total.",
+        "original_number_restored": true
+      },
+      {
+        "id": "e08",
+        "original": "\u00a38,218,638.57",
+        "corrupted_answer": "The total gross sales revenue for the calendar year 2010 was \u00a39,218,638.57. This figure represents the sum of all merchandise sales recorded during that period.",
+        "flagged": [
+          "\u00a39,218,638.57"
+        ],
+        "status": "corrected",
+        "final_answer": "The total revenue for the calendar year 2010 was \u00a38,218,638.57. This figure represents the sum of all sales recorded during that period.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m01",
+        "original": "\u00a314,288,773.50",
+        "corrupted_answer": "The top five countries by gross sales revenue are the United Kingdom (\u00a324,288,773.50), EIRE (\u00a3586,626.08), the Netherlands (\u00a3549,773.41), Germany (\u00a3383,289.00), and France (\u00a3309,403.16). These figures represent the total gross sales revenue for each country.",
+        "flagged": [
+          "\u00a324,288,773.50"
+        ],
+        "status": "corrected",
+        "final_answer": "The top five countries by revenue are the United Kingdom (\u00a314,288,773.50), EIRE (\u00a3586,626.08), the Netherlands (\u00a3549,773.41), Germany (\u00a3383,289.00), and France (\u00a3309,403.16).",
+        "original_number_restored": true
+      },
+      {
+        "id": "m02",
+        "original": "\u00a3677,916.07",
+        "corrupted_answer": "The total gross sales revenue was \u00a3777,916.07 in 2009, \u00a38,218,638.57 in 2010, and \u00a38,172,028.08 in 2011.",
+        "flagged": [
+          "\u00a3777,916.07"
+        ],
+        "status": "corrected",
+        "final_answer": "The total revenue was \u00a3677,916.07 in 2009, \u00a38,218,638.57 in 2010, and \u00a38,172,028.08 in 2011.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m03",
+        "original": "\u00a3277,656.25",
+        "corrupted_answer": "The top-selling product is the Regency Cakestand 3 Tier, which generated \u00a3377,656.25 in revenue, followed by the White Hanging Heart T-Light Holder at \u00a3247,203.36 and Paper Craft Little Birdie at \u00a3168,469.60. Rounding out the top ten are the Jumbo Bag Red Retrospot (\u00a3167,920.64), Assorted Colour Bird Ornament (\u00a3124,351.86), Party Bunting (\u00a3103,283.38), Medium Ceramic Top Storage Jar (\u00a381,416.73), Paper Chain Kit 50's Christmas (\u00a376,598.18), Chilli Lights (\u00a369,084.30), and the Jumbo Bag Pink Polkadot (\u00a367,769.76).",
+        "flagged": [
+          "\u00a3377,656.25"
+        ],
+        "status": "corrected",
+        "final_answer": "The top-selling product is the Regency Cakestand 3 Tier with \u00a3277,656.25 in revenue, followed by the White Hanging Heart T-Light Holder (\u00a3247,203.36), Paper Craft Little Birdie (\u00a3168,469.60), Jumbo Bag Red Retrospot (\u00a3167,920.64), Assorted Colour Bird Ornament (\u00a3124,351.86), Party Bunting (\u00a3103,283.38), Medium Ceramic Top Storage Jar (\u00a381,416.73), Paper Chain Kit 50's Christmas (\u00a376,598.18), Chilli Lights (\u00a369,084.30), and Jumbo Bag Pink Polkadot (\u00a367,769.76).",
+        "original_number_restored": true
+      },
+      {
+        "id": "m04",
+        "original": "\u00a3436.50",
+        "corrupted_answer": "The average order value, calculated as the net revenue per distinct invoice, is \u00a3536.50. This figure reflects the official AOV KPI, which accounts for both sales and cancellations.",
+        "flagged": [
+          "\u00a3536.50"
+        ],
+        "status": "corrected",
+        "final_answer": "The average order value is \u00a3436.50. This figure represents the net revenue per distinct invoice, accounting for both sales and cancellations.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m05",
+        "original": "18102",
+        "corrupted_answer": "The customer with ID 28102 has spent the most, with a total expenditure of \u00a3580,987.04.",
+        "flagged": [
+          "28102"
+        ],
+        "status": "corrected",
+        "final_answer": "The customer with ID 18102 has spent the most, with a total expenditure of \u00a3580,987.04.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m06",
+        "original": "\u00a33,687,810.75",
+        "corrupted_answer": "Total revenue is highest on Thursdays at \u00a34,687,810.75 and lowest on Saturdays at \u00a39,803.05. The remaining daily totals are \u00a32,710,228.28 for Monday, \u00a33,262,935.19 for Tuesday, \u00a32,980,706.08 for Wednesday, \u00a32,659,141.18 for Friday, and \u00a31,757,958.19 for Sunday.",
+        "flagged": [
+          "\u00a34,687,810.75"
+        ],
+        "status": "corrected",
+        "final_answer": "Total revenue is highest on Thursdays at \u00a33,687,810.75 and lowest on Saturdays at \u00a39,803.05. The remaining daily totals are \u00a32,710,228.28 for Monday, \u00a33,262,935.19 for Tuesday, \u00a32,980,706.08 for Wednesday, \u00a32,659,141.18 for Friday, and \u00a31,757,958.19 for Sunday.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m09",
+        "original": "\u00a3562,682.91",
+        "corrupted_answer": "In 2011, monthly revenue started at \u00a3662,682.91 in January, fluctuated through the middle of the year, and peaked in November at \u00a31,136,534.00 before ending the year at \u00a3512,228.08 in December. The revenue for the remaining months was \u00a3442,293.59 in February, \u00a3583,143.85 in March, \u00a3454,440.88 in April, \u00a3659,242.49 in May, \u00a3653,264.92 in June, \u00a3591,603.79 in July, \u00a3635,514.38 in August, \u00a3938,752.63 in September, and \u00a31,002,326.56 in October.",
+        "flagged": [
+          "\u00a3662,682.91"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, monthly revenue ranged from \u00a3442,293.59 in February to a peak of \u00a31,136,534.00 in November. The revenue for the other months was \u00a3562,682.91 in January, \u00a3583,143.85 in March, \u00a3454,440.88 in April, \u00a3659,242.49 in May, \u00a3653,264.92 in June, \u00a3591,603.79 in July, \u00a3635,514.38 in August, \u00a3938,752.63 in September, \u00a31,002,326.56 in October, and \u00a3512,228.08 in December.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m10",
+        "original": "\u00a3916,724.49",
+        "corrupted_answer": "The United Kingdom has the largest total value of cancelled items, amounting to \u00a3116,724.49. This figure was calculated by aggregating the negative revenue values from all cancelled invoice lines recorded in the system.",
+        "flagged": [
+          "\u00a3116,724.49"
+        ],
+        "status": "corrected",
+        "final_answer": "The United Kingdom has the largest total value of cancelled items, which amounts to \u00a3916,724.49.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m11",
+        "original": "20.93",
+        "corrupted_answer": "On average, a single order contains approximately 30.93 distinct products. This calculation follows the business definition of basket size, which counts unique stock codes per invoice.",
+        "flagged": [
+          "30.93"
+        ],
+        "status": "corrected",
+        "final_answer": "On average, a single order contains approximately 20.93 distinct products.",
+        "original_number_restored": true
+      },
+      {
+        "id": "m12",
+        "original": "1,618",
+        "corrupted_answer": "There are 2,618 customers who have placed exactly one order. This count reflects customers who have made a purchase.",
+        "flagged": [
+          "2,618"
+        ],
+        "status": "corrected",
+        "final_answer": "There are 1,618 customers who have placed exactly one order.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h01",
+        "original": "\u00a31,155,978.39",
+        "corrupted_answer": "The month with the highest gross sales revenue was November 2010, which generated a total of \u00a32,155,978.39.",
+        "flagged": [
+          "\u00a32,155,978.39"
+        ],
+        "status": "corrected",
+        "final_answer": "The month with the highest revenue was November 2010, which generated a total of \u00a31,155,978.39.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h02",
+        "original": "21.40%",
+        "corrupted_answer": "Between February and November 2011, monthly revenue fluctuated significantly, starting with a 31.40% decrease in February followed by a 31.85% increase in March. Subsequent performance saw a 22.07% drop in April, a 45.07% surge in May, a slight 0.91% decline in June, a 9.44% decrease in July, and then steady growth of 7.42%, 47.72%, 6.77%, and 13.39% through November.",
+        "flagged": [
+          "31.40%"
+        ],
+        "status": "corrected",
+        "final_answer": "Between February and November 2011, monthly revenue fluctuated, starting with a 21.40% decrease in February followed by a 31.85% increase in March. Performance then saw a 22.07% drop in April, a 45.07% surge in May, a 0.91% decline in June, a 9.44% decrease in July, and subsequent growth of 7.42%, 47.72%, 6.77%, and 13.39% through November.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h03",
+        "original": "\u00a3227,965.51",
+        "corrupted_answer": "For our top three revenue-generating countries, the best-selling products are item 85123A in the United Kingdom with \u00a3327,965.51 in revenue, item 22423 in EIRE with \u00a314,636.85, and item 22326 in the Netherlands with \u00a313,315.10. These figures represent gross revenue based on the country of sale as recorded on each invoice line.",
+        "flagged": [
+          "\u00a3327,965.51"
+        ],
+        "status": "corrected",
+        "final_answer": "For our top three revenue-generating countries, the best-selling products are item 85123A in the United Kingdom with \u00a3227,965.51 in revenue, item 22423 in EIRE with \u00a314,636.85, and item 22326 in the Netherlands with \u00a313,315.10.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h04",
+        "original": "63.89%",
+        "corrupted_answer": "The top 10% of customers by revenue are responsible for 73.89% of the total revenue. This calculation is based on customers who have made a purchase.",
+        "flagged": [
+          "73.89%"
+        ],
+        "status": "corrected",
+        "final_answer": "The top 10% of customers by revenue are responsible for approximately 63.89% of the total revenue. This calculation is based on all customers who have made a purchase.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h05",
+        "original": "1,607",
+        "corrupted_answer": "There were 2,607 customers who made purchases in both 2010 and 2011 but spent less in 2011 than they did in 2010. This calculation is based on gross sales revenue, which is the sum of merchandise revenue in GBP.",
+        "flagged": [
+          "2,607"
+        ],
+        "status": "corrected",
+        "final_answer": "There were 1,607 customers who made purchases in both 2010 and 2011 but spent less in 2011 than they did in 2010.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h06",
+        "original": "6.45%",
+        "corrupted_answer": "Revenue in the first quarter of 2011 decreased by 7.45% compared to the first quarter of 2010. This figure represents the change in gross sales revenue, calculated as the sum of merchandise sales.",
+        "flagged": [
+          "7.45%"
+        ],
+        "status": "corrected",
+        "final_answer": "Revenue in the first quarter of 2011 decreased by approximately 6.45% compared to the first quarter of 2010.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h07",
+        "original": "63.16%",
+        "corrupted_answer": "Of the customers who made a purchase in 2010, 73.16% returned to make another purchase in 2011. This calculation is based on the count of distinct customers who placed orders during those respective periods.",
+        "flagged": [
+          "73.16%"
+        ],
+        "status": "corrected",
+        "final_answer": "Of the customers who made a purchase in 2010, approximately 63.16% returned to make another purchase in 2011.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h08",
+        "original": "14156",
+        "corrupted_answer": "The three customers who generated the highest total revenue had their first and last purchases on the following dates: customer 24156 (December 1, 2009, to November 30, 2011), customer 14646 (December 2, 2009, to December 8, 2011), and customer 18102 (December 1, 2009, to December 9, 2011).",
+        "flagged": [
+          "24156"
+        ],
+        "status": "corrected",
+        "final_answer": "The three customers who generated the highest total revenue had their first and last purchases as follows: customer 14156 (December 1, 2009, to November 30, 2011), customer 14646 (December 2, 2009, to December 8, 2011), and customer 18102 (December 1, 2009, to December 9, 2011).",
+        "original_number_restored": true
+      },
+      {
+        "id": "h09",
+        "original": "\u00a3562,682.91",
+        "corrupted_answer": "Throughout 2011, the cumulative gross sales revenue grew steadily from \u00a3662,682.91 in January to \u00a31,004,976.50 by the end of February, reaching \u00a38,172,028.08 by the end of December. The running total for the intervening months was \u00a31,588,120.35 in March, \u00a32,042,561.23 in April, \u00a32,701,803.72 in May, \u00a33,355,068.64 in June, \u00a33,946,672.43 in July, \u00a34,582,186.81 in August, \u00a35,520,939.44 in September, \u00a36,523,266.00 in October, and \u00a37,659,800.00 in November.",
+        "flagged": [
+          "\u00a3662,682.91"
+        ],
+        "status": "corrected",
+        "final_answer": "Throughout 2011, the cumulative revenue grew steadily from \u00a3562,682.91 in January to \u00a31,004,976.50 by the end of February, reaching \u00a31,588,120.35 in March, \u00a32,042,561.23 in April, \u00a32,701,803.72 in May, \u00a33,355,068.64 in June, \u00a33,946,672.43 in July, \u00a34,582,186.81 in August, \u00a35,520,939.44 in September, \u00a36,523,266.00 in October, \u00a37,659,800.00 in November, and a final total of \u00a38,172,028.08 by the end of December.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h10",
+        "original": "\u00a338,787.70",
+        "corrupted_answer": "The five products with the largest revenue growth between 2010 and 2011 are stock codes 22502 (\u00a348,787.70), 47566 (\u00a333,197.63), 22720 (\u00a331,275.10), 22960 (\u00a327,319.22), and 22722 (\u00a318,805.20). These figures represent the increase in total revenue calculated from the fact_sales table for items sold in both years.",
+        "flagged": [
+          "\u00a348,787.70"
+        ],
+        "status": "corrected",
+        "final_answer": "The five products with the largest revenue growth between 2010 and 2011 are stock codes 22502 (\u00a338,787.70), 47566 (\u00a333,197.63), 22720 (\u00a331,275.10), 22960 (\u00a327,319.22), and 22722 (\u00a318,805.20).",
+        "original_number_restored": true
+      },
+      {
+        "id": "h11",
+        "original": "\u00a3302.55",
+        "corrupted_answer": "The median order value is \u00a3402.55. This figure represents the middle value of all gross revenue totals per invoice, excluding cancellation invoices.",
+        "flagged": [
+          "\u00a3402.55"
+        ],
+        "status": "corrected",
+        "final_answer": "The median order value is \u00a3302.55. This figure represents the middle value of all revenue totals per invoice.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h12",
+        "original": "\u00a37,578,795.86",
+        "corrupted_answer": "In 2011, the net revenue after accounting for cancellations was \u00a38,578,795.86. This figure represents the total gross sales combined with the negative revenue from cancelled invoice lines during that year.",
+        "flagged": [
+          "\u00a38,578,795.86"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, the net revenue after accounting for cancellations was \u00a37,578,795.86.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h13",
+        "original": "80,995",
+        "corrupted_answer": "The product with stock code 23843 was returned the most, with a total of 90,995 units coming back. This figure is based on the definition of units returned as the negative sum of quantities in the cancellations table.",
+        "flagged": [
+          "90,995"
+        ],
+        "status": "corrected",
+        "final_answer": "The product with stock code 23843 was returned the most, with a total of 80,995 units coming back.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h14",
+        "original": "1,537",
+        "corrupted_answer": "We acquired 2,537 new customers in 2011, based on the date of their first ever order. Please note that this total covers the period up to December 9, 2011.",
+        "flagged": [
+          "2,537"
+        ],
+        "status": "corrected",
+        "final_answer": "We acquired 1,537 new customers in 2011, based on the date of their first ever order.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h15",
+        "original": "79.65%",
+        "corrupted_answer": "Customers who made a purchase in 2010 accounted for 89.65% of the total gross sales revenue generated in 2011. This calculation is based on gross sales revenue, defined as the sum of merchandise sales.",
+        "flagged": [
+          "89.65%"
+        ],
+        "status": "corrected",
+        "final_answer": "Customers who made a purchase in 2010 accounted for approximately 79.65% of the total revenue generated in 2011.",
+        "original_number_restored": true
+      },
+      {
+        "id": "h16",
+        "original": "\u00a31,939.26",
+        "corrupted_answer": "In 2011, the average revenue per active customer\u2014defined as those who placed at least one order during that year\u2014was \u00a32,939.26.",
+        "flagged": [
+          "\u00a32,939.26"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, the average revenue per active customer was \u00a31,939.26.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x01",
+        "original": "\u00a3654,533.96",
+        "corrupted_answer": "The net revenue, calculated as gross sales plus cancellation revenue, was \u00a3754,533.96 in 2009, \u00a37,740,116.11 in 2010, and \u00a37,578,795.86 in 2011.",
+        "flagged": [
+          "\u00a3754,533.96"
+        ],
+        "status": "corrected",
+        "final_answer": "The net revenue was \u00a3654,533.96 in 2009, \u00a37,740,116.11 in 2010, and \u00a37,578,795.86 in 2011.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x02",
+        "original": "7.26%",
+        "corrupted_answer": "In 2011, the value-based cancellation rate was 8.26%. This represents the percentage of gross sales revenue that was cancelled during that year.",
+        "flagged": [
+          "8.26%"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, approximately 7.26% of the total gross sales value was cancelled.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x03",
+        "original": "18102",
+        "corrupted_answer": "The five customers with the highest net revenue after cancellations are customer 28102 (\u00a3570,380.61), customer 14646 (\u00a3521,491.07), customer 14156 (\u00a3285,688.20), customer 14911 (\u00a3246,528.69), and customer 17450 (\u00a3231,390.55).",
+        "flagged": [
+          "28102"
+        ],
+        "status": "corrected",
+        "final_answer": "The five customers with the highest net revenue after cancellations are customer 18102 (\u00a3570,380.61), customer 14646 (\u00a3521,491.07), customer 14156 (\u00a3285,688.20), customer 14911 (\u00a3246,528.69), and customer 17450 (\u00a3231,390.55).",
+        "original_number_restored": true
+      },
+      {
+        "id": "x04",
+        "original": "18102",
+        "corrupted_answer": "The three customers with the highest revenue are customer 28102 with \u00a3580,987.04 and 8 cancelled invoices, customer 14646 with \u00a3526,751.52 and 12 cancelled invoices, and customer 14156 with \u00a3303,069.88 and 46 cancelled invoices.",
+        "flagged": [
+          "28102"
+        ],
+        "status": "corrected",
+        "final_answer": "The three customers with the highest revenue are customer 18102 with \u00a3580,987.04 and 8 cancelled invoices, customer 14646 with \u00a3526,751.52 and 12 cancelled invoices, and customer 14156 with \u00a3303,069.88 and 46 cancelled invoices.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x05",
+        "original": "590",
+        "corrupted_answer": "For sales to France, there were 690 orders placed and 124 invoices cancelled. These figures were calculated by counting distinct sales invoices and distinct cancellation invoices respectively.",
+        "flagged": [
+          "690"
+        ],
+        "status": "corrected",
+        "final_answer": "For sales to France, there were 590 orders placed and 124 invoices cancelled.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x07",
+        "original": "3.52%",
+        "corrupted_answer": "Revenue for the peak season (September to November) increased by 4.52% in 2011 compared to the same period in 2010.",
+        "flagged": [
+          "4.52%"
+        ],
+        "status": "corrected",
+        "final_answer": "Revenue for the period of September to November increased by approximately 3.52% in 2011 compared to the same period in 2010.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x08",
+        "original": "854",
+        "corrupted_answer": "There were 954 customers who made a purchase during the first half of 2011 but did not return to buy anything during the second half of the year.",
+        "flagged": [
+          "954"
+        ],
+        "status": "corrected",
+        "final_answer": "There were 854 customers who made a purchase during the first half of 2011 but did not return to buy anything during the second half of the year.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x09",
+        "original": "221",
+        "corrupted_answer": "The month of October 2011 saw the highest number of new customer acquisitions, with a total of 321 first-time purchasers. This result is based on the definition of a new customer as someone whose first-ever order occurred during that specific period.",
+        "flagged": [
+          "321"
+        ],
+        "status": "corrected",
+        "final_answer": "October 2011 was the most successful month for acquiring new customers, bringing in a total of 221 first-time purchasers.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x10",
+        "original": "1,660",
+        "corrupted_answer": "In November 2011, we had 2,660 active customers. This figure represents customers who placed at least one order during that month.",
+        "flagged": [
+          "2,660"
+        ],
+        "status": "corrected",
+        "final_answer": "In November 2011, we had 1,660 active customers. This figure represents customers who placed at least one order during that month.",
+        "original_number_restored": true
+      },
+      {
+        "id": "x11",
+        "original": "\u00a3524.41",
+        "corrupted_answer": "The average revenue per order for our top three countries is \u00a3624.41 in France, \u00a3509.02 in Germany, and \u00a3428.31 in the United Kingdom. These figures represent the average order value, calculated net of cancellations.",
+        "flagged": [
+          "\u00a3624.41"
+        ],
+        "status": "corrected",
+        "final_answer": "The average revenue per order for our top three countries is \u00a3524.41 in France, \u00a3509.02 in Germany, and \u00a3428.31 in the United Kingdom.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d01",
+        "original": "2,145",
+        "corrupted_answer": "At the end of Q3 2011, we had 3,145 active customers. This figure represents customers who placed at least one order during the 90-day period leading up to that date.",
+        "flagged": [
+          "3,145"
+        ],
+        "status": "corrected",
+        "final_answer": "At the end of Q3 2011, we had 2,145 active customers. This figure represents customers who placed at least one order during the 90-day period leading up to that date.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d02",
+        "original": "3,050",
+        "corrupted_answer": "As of the end of June 2011, there were 4,050 customers who had churned. Based on the current definition, these are customers who placed an order in the past but did not make a purchase during the 90-day window leading up to that date.",
+        "flagged": [
+          "4,050"
+        ],
+        "status": "corrected",
+        "final_answer": "As of the end of June 2011, 3,050 customers had churned. These are customers who had not made a purchase in the 90 days leading up to that date.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d03",
+        "original": "38.70%",
+        "corrupted_answer": "At the end of 2010, our churn rate was 48.70%. This is based on the definition where a customer is considered churned if they have not placed an order in the last 90 days.",
+        "flagged": [
+          "48.70%"
+        ],
+        "status": "corrected",
+        "final_answer": "At the end of 2010, our churn rate was 38.70%. This is based on the definition where a customer is considered churned if they have not placed an order in the last 90 days.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d04",
+        "original": "\u00a3445.60",
+        "corrupted_answer": "In 2011, the average order value was \u00a3545.60. This figure is calculated as the net revenue\u2014which accounts for both sales and cancellations\u2014divided by the total number of orders for the period ending December 9th.",
+        "flagged": [
+          "\u00a3545.60"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, the average order value was \u00a3445.60. This figure represents the net revenue, accounting for both sales and cancellations, divided by the total number of orders for that year.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d05",
+        "original": "5.82%",
+        "corrupted_answer": "In 2010, the value-based cancellation rate was 6.82%. This figure represents the percentage of total gross revenue that was lost to cancellations during that year.",
+        "flagged": [
+          "6.82%"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2010, the cancellation rate was approximately 5.82%. This figure represents the percentage of total gross revenue that was lost to cancellations during that year.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d06",
+        "original": "64.12%",
+        "corrupted_answer": "In 2011, our repeat customer rate was 74.12%. This figure represents the percentage of customers who placed two or more orders during that year.",
+        "flagged": [
+          "74.12%"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, our repeat customer rate was approximately 64.12%. This figure represents the percentage of customers who placed two or more orders during that year.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d07",
+        "original": "188",
+        "corrupted_answer": "We acquired 288 new customers in September 2011. A customer is defined as new if their first-ever order occurred during that month.",
+        "flagged": [
+          "288"
+        ],
+        "status": "corrected",
+        "final_answer": "We acquired 188 new customers in September 2011. A customer is defined as new if their first-ever order occurred during that month.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d08",
+        "original": "\u00a31,422,681.16",
+        "corrupted_answer": "In 2011, our international revenue\u2014defined as all sales excluding the United Kingdom and unspecified locations\u2014totaled \u00a32,422,681.16.",
+        "flagged": [
+          "\u00a32,422,681.16"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2011, our international revenue\u2014excluding the United Kingdom and unspecified locations\u2014totaled \u00a31,422,681.16.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d09",
+        "original": "1,168",
+        "corrupted_answer": "We received 2,168 large orders in 2011, defined as invoices with a gross value of at least \u00a31,000. Please note that this total covers the period up to December 9, 2011.",
+        "flagged": [
+          "2,168"
+        ],
+        "status": "corrected",
+        "final_answer": "We received 1,168 large orders in 2011, defined as invoices with a total revenue of at least \u00a31,000.",
+        "original_number_restored": true
+      },
+      {
+        "id": "d10",
+        "original": "36.18%",
+        "corrupted_answer": "During 2010, the peak season\u2014defined as the wholesale buying period from September through November\u2014accounted for 46.18% of the total annual revenue.",
+        "flagged": [
+          "46.18%"
+        ],
+        "status": "corrected",
+        "final_answer": "In 2010, the peak season accounted for 36.18% of the total annual revenue.",
+        "original_number_restored": true
+      }
+    ]
+  },
+  "complete": true,
+  "gemini_calls": 51
+}
