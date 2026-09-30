@@ -397,9 +397,16 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 
 **Citations (v4)**: 100.0% of answered question-runs cite at least one doc; definition questions cite the defining doc in 100.0%; 0 cite a deprecated doc; 0 cite a doc that was not retrieved
 
+## LLM judge on v4 answers (python -m analyst.judge)
+
+- Judge `gemini-3.1-flash-lite` (the agent's model; the only one in budget), prompt `j1`, temperature 0; 106 answered question-runs judged (0 unparseable verdicts)
+- Faithful to the SQL result: **94.3%**; citations correct: **67.9%**
+- Faithful % by eval outcome: correct 94.2, wrong 100.0
+- Citation-correct % by question set: defs 80.0, frozen 65.1
+
 ## Gemini spend, Phases 7-8 (metrics/gemini_ledger.json)
 
-- **387 calls**, 771,193 input + 27,366 output + 0 thinking tokens; estimated **CA$0.33** of the CA$8.00 cap (list price USD 0.25 / 1.50 per 1M in/out tokens, at 1.4 CAD/USD)
+- **440 calls**, 894,026 input + 31,552 output + 0 thinking tokens; estimated **CA$0.38** of the CA$8.00 cap (list price USD 0.25 / 1.50 per 1M in/out tokens, at 1.4 CAD/USD)
 
 | purpose | calls | est_cad |
 |---|---|---|
@@ -409,6 +416,7 @@ Latency excludes the prose-answer call and 429/503 back-off, so both conditions 
 | v4:narrate | 108 | 0.04 |
 | v3:agent | 22 | 0.01 |
 | v3:self_check | 16 | 0.01 |
+| v4:judge | 53 | 0.05 |
 
 ## Serving: demo database, API and dashboard (python -m service.build_demo)
 
