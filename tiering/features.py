@@ -12,9 +12,14 @@ score rank customers by what they went on to spend?"
 """
 import pandas as pd
 
-from pipeline.db import SCHEMA, read_sql
+SCHEMA = "retail"            # = pipeline.db.SCHEMA; the DB layer is imported lazily so that
+ANALYTICS_SCHEMA = "analytics"  # tiering.score (and the dashboard) need only pandas
 
-ANALYTICS_SCHEMA = "analytics"
+
+def read_sql(sql: str, schema: str, **params) -> pd.DataFrame:
+    from pipeline.db import read_sql as _read_sql
+
+    return _read_sql(sql, schema=schema, **params)
 
 CUTOFF = "2011-06-01"
 OUTCOME_END = "2011-12-01"  # exclusive: outcomes cover 2011-06-01 .. 2011-11-30

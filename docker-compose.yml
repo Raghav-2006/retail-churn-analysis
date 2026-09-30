@@ -1,0 +1,41 @@
+# API + Postgres.
+#   docker compose up --build            API on :8000 (demo mode), Postgres on :5432
+#
+# The API serves tiers and cached answers from the demo database baked into the image, so it
+# works without loading the warehouse. Postgres is there for live mode: load it with the
+# pipeline (python -m pipeline.run with DATABASE_URL pointing at it), then set ANALYST_LIVE=1
+# and GEMINI_API_KEY in a .env file (never committed).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: retail
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d retail"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    image: retail-api:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/retail
+      ANALYST_LIVE: ${ANALYST_LIVE:-0}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ASK_TIMEOUT_S: "30"
+      LIVE_MAX_CALLS: "10"
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:

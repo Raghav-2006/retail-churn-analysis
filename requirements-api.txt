@@ -1,0 +1,9 @@
+# Runtime dependencies of the API image (service/). Demo mode needs only the first four;
+# the rest are imported lazily, for live mode against a Postgres warehouse.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pandas>=2.2
+PyYAML>=6.0
+psycopg[binary]>=3.2
+SQLAlchemy>=2.0
+google-genai>=1.0

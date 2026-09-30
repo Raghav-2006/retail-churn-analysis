@@ -321,10 +321,24 @@ def section_orchestration(_: dict) -> list[str]:
     ]
 
 
+def section_demo(m: dict) -> list[str]:
+    return [
+        "## Serving: demo database, API and dashboard (python -m service.build_demo)",
+        "",
+        f"- `demo/demo.sqlite`: **{m['size_mb']} MB** (limit 50 MB), built {m['built_at']}; "
+        "pre-aggregated, no raw transactions",
+        "- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt "
+        "version on frozen eval set v2): " + ", ".join(f"{o} {n}" for o, n in m["eval_outcomes"].items()),
+        "",
+        table([{"table": k, "rows": v} for k, v in m["tables"].items()], ["table", "rows"]),
+        "",
+    ]
+
+
 SECTIONS = [("pipeline", section_pipeline), ("01_clean", section_clean), ("02_sql", section_sql),
             ("03_rfm", section_rfm), ("tiering", section_tiering), ("dbt", section_dbt),
             ("parity_clean", section_orchestration),
-            ("analyst", section_analyst)]
+            ("analyst", section_analyst), ("demo", section_demo)]
 
 
 def main() -> None:

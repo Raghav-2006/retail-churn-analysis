@@ -1,0 +1,10 @@
+# Streamlit Community Cloud installs this file (it looks next to the entrypoint first).
+# Demo mode needs only the first four; the rest are for live mode (GEMINI_API_KEY + DATABASE_URL secrets).
+streamlit>=1.40
+pandas>=2.2
+numpy>=1.26
+altair>=5.0
+PyYAML>=6.0
+psycopg[binary]>=3.2
+SQLAlchemy>=2.0
+google-genai>=1.0

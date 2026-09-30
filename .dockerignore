@@ -1,0 +1,14 @@
+data/
+logs/
+.airflow/
+.venv-airflow/
+dbt/target/
+dbt/logs/
+.git/
+**/__pycache__/
+.pytest_cache/
+notebooks/
+figures/
+migration/reports/
+*.env
+.env

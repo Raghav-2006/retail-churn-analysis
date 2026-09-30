@@ -296,3 +296,21 @@ Latency is seconds per question, excluding time spent backing off from 429/503 r
 - gemini-3.1-flash-lite / v1 / `u01` (unanswerable): What was our profit margin in 2011? -> {'answered_unanswerable': 3}
 - gemini-3.1-flash-lite / v1 / `x01` (hard): What was net revenue, after cancellations, in each calendar year? -> {'wrong': 3}
 - gemini-3.1-flash-lite / v2 / `x01` (hard): What was net revenue, after cancellations, in each calendar year? -> {'wrong': 3}
+
+## Serving: demo database, API and dashboard (python -m service.build_demo)
+
+- `demo/demo.sqlite`: **1.68 MB** (limit 50 MB), built 2026-09-30T21:16:47+00:00; pre-aggregated, no raw transactions
+- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt version on frozen eval set v2): correct 379, refused 107, wrong 7, error 1, answered_unanswerable 1
+
+| table | rows |
+|---|---|
+| monthly | 25 |
+| countries | 10 |
+| lorenz | 203 |
+| kpis | 22 |
+| customer_scores | 4,908 |
+| tier_summary | 4 |
+| tier_methods | 6 |
+| quality_checks | 17 |
+| eval_answers | 495 |
+| meta | 1 |
