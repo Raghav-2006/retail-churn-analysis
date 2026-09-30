@@ -11,7 +11,7 @@ import pandas as pd
 
 from tiering.features import FEATURES
 
-# Documented starting weights (spec): R 0.25, F 0.25, M 0.30, breadth 0.10, cancellations 0.10.
+# Documented starting weights: R 0.25, F 0.25, M 0.30, breadth 0.10, cancellations 0.10.
 # Tenure, average order value and regularity are computed and shown in explanations,
 # but carry zero weight in v1; the learned model in validate.py tests whether they add signal.
 WEIGHTS = {

@@ -98,7 +98,7 @@ def test_self_verification_passes_rewrites_or_abstains():
 
 
 def test_agreement_script_runs_on_a_filled_label_file(tmp_path):
-    """Synthetic labels in a temp dir only (the real labels/human_labels.csv is Raghav's to fill in)."""
+    """Synthetic labels in a temp dir only (the real labels/human_labels.csv is filled in by hand)."""
     import csv
     import json
 
