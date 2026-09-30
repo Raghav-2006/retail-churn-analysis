@@ -197,9 +197,12 @@ def section_analyst(m: dict) -> list[str]:
     rows, diff_rows, fail_lines = [], [], []
     for r in m["results"]:
         runs = r["per_run"]["confidently_wrong_pct"]
+        n_cw = r["outcomes"].get("wrong", 0) + r["outcomes"].get("answered_unanswerable", 0)
         rows.append({
-            "model": r["model"], "prompt": PROMPT_LABELS.get(r["prompt"], r["prompt"]),
+            "model": r["model"], "prompt": PROMPT_LABELS.get(r["prompt"], r["prompt"]), "runs": r["runs"],
             "execution_accuracy_pct": r["execution_accuracy_pct"],
+            "confidently_wrong": f"{n_cw}/{r['questions']}",
+            "self_check_fixes": r.get("self_check", {}).get("fix", "-") if r["prompt"] == "v3" else "-",
             "abstention_accuracy_pct": r["abstention_accuracy_pct"],
             "confidently_wrong_pct": r["confidently_wrong_pct"],
             "cw_per_run": " / ".join(f"{x:.1f}" for x in runs),
@@ -216,15 +219,20 @@ def section_analyst(m: dict) -> list[str]:
         "",
         f"- Frozen eval set v{m['eval_set_version']}: **{m['eval_questions']} questions** ({mix}), "
         f"sha256 `{m['eval_set_sha256'][:12]}`; every model and prompt version was graded on this exact file",
-        f"- {rows and m['results'][0]['runs']} runs per (model, prompt); rates are pooled over "
-        f"{m['eval_questions']} x runs question-runs",
+        "- 3 runs per (model, prompt), except gemini-3.5-flash v3: 2 complete runs before the API key's "
+        "prepaid credits ran out (402) during the third; rates are pooled over all question-runs",
         "- Execution accuracy: answerable questions whose result set matches the hand-written reference "
         "(order-insensitive, numeric tolerance, extra columns allowed)",
         "- **Confidently wrong** = answered (did not abstain, SQL ran) and the result was wrong, or answered an "
         "unanswerable question; % of all question-runs",
         "",
-        table(rows, ["model", "prompt", "execution_accuracy_pct", "abstention_accuracy_pct", "confidently_wrong_pct",
-                     "cw_per_run", "false_abstention_pct", "errors", "p50_s", "p95_s"]),
+        table(rows, ["model", "prompt", "runs", "execution_accuracy_pct", "abstention_accuracy_pct",
+                     "confidently_wrong_pct", "confidently_wrong", "cw_per_run", "errors", "self_check_fixes",
+                     "p50_s", "p95_s"]),
+        "",
+        "False abstention (refusing an answerable question) was 0.00% in every configuration. `errors` = SQL "
+        "still failing after the one retry (a visible failure, not a confident one). `self_check_fixes` = "
+        "question-runs where v3's review rewrote the SQL.",
         "",
         "Latency is seconds per question, excluding time spent backing off from 429/503 responses.",
         "",

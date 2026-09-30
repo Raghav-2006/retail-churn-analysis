@@ -1,0 +1,74 @@
+{
+  "prompt_version": "v1",
+  "model": "gemini-3.5-flash",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
+  "runs": 3,
+  "questions": 165,
+  "execution_accuracy_pct": 96.9,
+  "abstention_accuracy_pct": 100.0,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 97.58,
+  "confidently_wrong_pct": 2.42,
+  "confidently_wrong_of_answered_pct": 3.1,
+  "outcomes": {
+    "correct": 125,
+    "wrong": 4,
+    "refused": 36
+  },
+  "by_difficulty": {
+    "easy": 83.33,
+    "medium": 100.0,
+    "hard": 98.77,
+    "unanswerable": 100.0
+  },
+  "retried": 2,
+  "self_check": {},
+  "per_run": {
+    "execution_accuracy_pct": [
+      97.67,
+      95.35,
+      97.67
+    ],
+    "abstention_accuracy_pct": [
+      100.0,
+      100.0,
+      100.0
+    ],
+    "confidently_wrong_pct": [
+      1.82,
+      3.64,
+      1.82
+    ],
+    "overall_accuracy_pct": [
+      98.18,
+      96.36,
+      98.18
+    ]
+  },
+  "latency_p50_s": 4.96,
+  "latency_p95_s": 23.51,
+  "failures": [
+    {
+      "id": "e08",
+      "difficulty": "easy",
+      "question": "What was total revenue in calendar year 2010?",
+      "outcomes": {
+        "wrong": 3
+      },
+      "example_sql": "SELECT SUM(revenue) AS total_revenue FROM (SELECT revenue, date_key FROM retail.fact_sales UNION ALL SELECT revenue, date_key FROM retail.fact_cancellations) AS all_transactions JOIN retail.dim_date d ON all_transactions.date_key = d.date_key WHERE d.year = 2010",
+      "example_error": null
+    },
+    {
+      "id": "h09",
+      "difficulty": "hard",
+      "question": "What was the cumulative (running total) revenue at the end of each month of 2011?",
+      "outcomes": {
+        "correct": 2,
+        "wrong": 1
+      },
+      "example_sql": "WITH monthly_rev AS (\n    SELECT\n        d.year,\n        d.month,\n        SUM(val.revenue) AS monthly_revenue\n    FROM (\n        SELECT date_key, revenue FROM retail.fact_sales\n        UNION ALL\n        SELECT date_key, revenue FROM retail.fact_cancellations\n    ) val\n    JOIN retail.dim_date d ON val.date_key = d.date_key\n    WHERE d.year = 2011\n    GROUP BY d.year, d.month\n)\nSELECT\n    year,\n    month,\n    SUM(monthly_revenue) OVER (ORDER BY month) AS cumulative_revenue\nFROM monthly_rev\nORDER BY month",
+      "example_error": null
+    }
+  ]
+}
