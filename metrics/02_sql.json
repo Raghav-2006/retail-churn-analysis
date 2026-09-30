@@ -1,0 +1,69 @@
+{
+  "peak_month": "2010-11",
+  "peak_month_revenue_gbp": 1155978.39,
+  "median_month_revenue_gbp": 611685.29,
+  "peak_vs_median_ratio": 1.89,
+  "top_countries": [
+    {
+      "Country": "United Kingdom",
+      "revenue": 14288773.5,
+      "pct_of_total": 83.71
+    },
+    {
+      "Country": "EIRE",
+      "revenue": 586626.08,
+      "pct_of_total": 3.44
+    },
+    {
+      "Country": "Netherlands",
+      "revenue": 549773.41,
+      "pct_of_total": 3.22
+    },
+    {
+      "Country": "Germany",
+      "revenue": 383289.0,
+      "pct_of_total": 2.25
+    },
+    {
+      "Country": "France",
+      "revenue": 309403.16,
+      "pct_of_total": 1.81
+    },
+    {
+      "Country": "Australia",
+      "revenue": 167800.01,
+      "pct_of_total": 0.98
+    },
+    {
+      "Country": "Spain",
+      "revenue": 97766.75,
+      "pct_of_total": 0.57
+    },
+    {
+      "Country": "Switzerland",
+      "revenue": 93400.94,
+      "pct_of_total": 0.55
+    },
+    {
+      "Country": "Sweden",
+      "revenue": 86045.14,
+      "pct_of_total": 0.5
+    },
+    {
+      "Country": "Denmark",
+      "revenue": 67422.69,
+      "pct_of_total": 0.4
+    }
+  ],
+  "uk_revenue_pct": 83.71,
+  "top_1pct_share": 32.09,
+  "top_10pct_share": 63.89,
+  "top_20pct_share": 77.17,
+  "median_order_value_min_gbp": 259.76,
+  "median_order_value_max_gbp": 320.68,
+  "aov_min_gbp": 398.98,
+  "aov_max_gbp": 660.09,
+  "pooled_mom_retention_pct": 38.57,
+  "mom_retention_min_pct": 30.94,
+  "mom_retention_max_pct": 45.34
+}
