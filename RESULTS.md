@@ -297,20 +297,174 @@ Latency is seconds per question, excluding time spent backing off from 429/503 r
 - gemini-3.1-flash-lite / v1 / `x01` (hard): What was net revenue, after cancellations, in each calendar year? -> {'wrong': 3}
 - gemini-3.1-flash-lite / v2 / `x01` (hard): What was net revenue, after cancellations, in each calendar year? -> {'wrong': 3}
 
+## Knowledge layer: retrieval eval (python -m rag.evaluate)
+
+- 34 knowledge docs (`knowledge/`), embedded locally with `sentence-transformers/all-MiniLM-L6-v2` (384-d, no API) into pgvector (`knowledge.chunks`), exact cosine search
+- Chunk configurations: `w32` 157 chunks (mean 27.5 words), `w64` 74 chunks (mean 43.9 words), `w128` 38 chunks (mean 79.0 words), `doc` 34 chunks (mean 87.9 words)
+- Hand-labelled relevant docs for all 65 questions (`knowledge/relevance.yaml`); ranking is doc level over the top-k chunks the agent would see. Deprecated docs get a 0.10 similarity penalty (`penalize`)
+- **Chosen for the agent** (pre-registered rule: best recall@8, then the smallest k within 0.02): `doc`, k = 8 (recall 0.777, MRR 0.643 on all 65)
+
+| subset | chunks | k | questions | recall_at_k | hit_at_k | MRR |
+|---|---|---|---|---|---|---|
+| all | w32 | 3 | 65 | 0.61 | 0.72 | 0.56 |
+| defs | w32 | 3 | 10 | 0.95 | 1.00 | 0.95 |
+| answerable | w32 | 3 | 53 | 0.75 | 0.89 | 0.69 |
+| all | w32 | 5 | 65 | 0.68 | 0.78 | 0.58 |
+| defs | w32 | 5 | 10 | 0.95 | 1.00 | 0.95 |
+| answerable | w32 | 5 | 53 | 0.83 | 0.96 | 0.71 |
+| all | w32 | 8 | 65 | 0.73 | 0.82 | 0.59 |
+| defs | w32 | 8 | 10 | 0.95 | 1.00 | 0.95 |
+| answerable | w32 | 8 | 53 | 0.90 | 1.00 | 0.72 |
+| all | w64 | 3 | 65 | 0.58 | 0.69 | 0.55 |
+| defs | w64 | 3 | 10 | 0.85 | 0.90 | 0.85 |
+| answerable | w64 | 3 | 53 | 0.71 | 0.85 | 0.68 |
+| all | w64 | 5 | 65 | 0.72 | 0.80 | 0.58 |
+| defs | w64 | 5 | 10 | 0.95 | 1.00 | 0.88 |
+| answerable | w64 | 5 | 53 | 0.88 | 0.98 | 0.71 |
+| all | w64 | 8 | 65 | 0.76 | 0.82 | 0.58 |
+| defs | w64 | 8 | 10 | 0.95 | 1.00 | 0.88 |
+| answerable | w64 | 8 | 53 | 0.93 | 1.00 | 0.72 |
+| all | w128 | 3 | 65 | 0.64 | 0.75 | 0.64 |
+| defs | w128 | 3 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | w128 | 3 | 53 | 0.78 | 0.92 | 0.78 |
+| all | w128 | 5 | 65 | 0.74 | 0.80 | 0.65 |
+| defs | w128 | 5 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | w128 | 5 | 53 | 0.91 | 0.98 | 0.79 |
+| all | w128 | 8 | 65 | 0.77 | 0.82 | 0.65 |
+| defs | w128 | 8 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | w128 | 8 | 53 | 0.94 | 1.00 | 0.80 |
+| all | doc | 3 | 65 | 0.64 | 0.75 | 0.63 |
+| defs | doc | 3 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | doc | 3 | 53 | 0.78 | 0.92 | 0.77 |
+| all | doc | 5 | 65 | 0.75 | 0.80 | 0.64 |
+| defs | doc | 5 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | doc | 5 | 53 | 0.92 | 0.98 | 0.78 |
+| all | doc | 8 | 65 | 0.78 | 0.83 | 0.64 |
+| defs | doc | 8 | 10 | 0.95 | 1.00 | 0.93 |
+| answerable | doc | 8 | 53 | 0.94 | 1.00 | 0.79 |
+
+**Deprecated/conflicting docs on the 10 definition questions (k = 8)**: share of questions whose context contains a trap doc, and share where a trap outranks the current definition
+
+| chunks | policy | recall | trap_in_context | trap_above_relevant |
+|---|---|---|---|---|
+| w32 | include | 0.95 | 0.50 | 0.00 |
+| w32 | penalize | 0.95 | 0.50 | 0.00 |
+| w32 | exclude | 0.95 | 0.20 | 0.00 |
+| w64 | include | 0.95 | 0.60 | 0.10 |
+| w64 | penalize | 0.95 | 0.60 | 0.00 |
+| w64 | exclude | 0.95 | 0.20 | 0.00 |
+| w128 | include | 0.95 | 0.60 | 0.10 |
+| w128 | penalize | 0.95 | 0.60 | 0.00 |
+| w128 | exclude | 0.95 | 0.30 | 0.00 |
+| doc | include | 0.95 | 0.60 | 0.20 |
+| doc | penalize | 0.95 | 0.60 | 0.00 |
+| doc | exclude | 0.95 | 0.30 | 0.00 |
+
+**Misses at the chosen setting** (11): `u01`, `u02`, `u04`, `u05`, `u06`, `u07`, `u10`, `x12`, `x13`, `x14`, `x15`
+
+## RAG ablation: without vs with retrieval (python -m analyst.ablation)
+
+- Model `gemini-3.1-flash-lite`, 2 runs per condition. No RAG = prompt v3 (glossary + self-check); RAG = v4 (v3 + the top-8 retrieved docs + mandatory citations)
+- No-RAG on the frozen 55 reuses the cached v3 runs 0-1 from Part 3 (same question file, prompt and model; SHA-256 checked); everything else was run fresh
+
+| condition | questions | question_runs | execution_accuracy_pct | abstention_accuracy_pct | confidently_wrong_pct | confidently_wrong | false_abstention_pct | exec_per_run | p50_s | p95_s |
+|---|---|---|---|---|---|---|---|---|---|---|
+| no_rag_v3 | frozen55 | 110 | 100.00 | 100.00 | 0.00 | 0/110 | 0.00 | 100.0 / 100.0 | 1.83 | 3.64 |
+| no_rag_v3 | defs10 | 20 | 20.00 | - | 60.00 | 12/20 | 20.00 | 20.0 / 20.0 | 1.83 | 3.43 |
+| no_rag_v3 | all65 | 130 | 84.91 | 100.00 | 9.23 | 12/130 | 3.77 | 84.9 / 84.9 | 1.83 | 3.62 |
+| rag_v4 | frozen55 | 110 | 97.67 | 100.00 | 1.82 | 2/110 | 0.00 | 97.7 / 97.7 | 1.86 | 2.62 |
+| rag_v4 | defs10 | 20 | 100.00 | - | 0.00 | 0/20 | 0.00 | 100.0 / 100.0 | 1.97 | 3.16 |
+| rag_v4 | all65 | 130 | 98.11 | 100.00 | 1.54 | 2/130 | 0.00 | 98.1 / 98.1 | 1.89 | 2.64 |
+
+Latency excludes the prose-answer call and 429/503 back-off, so both conditions time the same steps (v4 includes retrieval). Estimated cost per question (SQL + self-check calls): no_rag_v3 CA$0.0009, rag_v4 CA$0.0021
+
+**Definition questions, outcome per run**
+
+| id | question | no_rag | rag |
+|---|---|---|---|
+| d01 | How many active customers did we have at the end of Q3 2011? | wrong / wrong | correct / correct |
+| d02 | How many customers had churned as of the end of June 2011? | wrong / wrong | correct / correct |
+| d03 | What was our churn rate at the end of 2010? | abstained / abstained | correct / correct |
+| d04 | What was our average order value (AOV) in 2011? | wrong / wrong | correct / correct |
+| d05 | What was the cancellation rate in 2010? | wrong / wrong | correct / correct |
+| d06 | What was our repeat customer rate in 2011? | correct / correct | correct / correct |
+| d07 | How many new customers did we acquire in September 2011? | correct / correct | correct / correct |
+| d08 | What was our international revenue in 2011? | wrong / wrong | correct / correct |
+| d09 | How many large orders did we receive in 2011? | abstained / abstained | correct / correct |
+| d10 | What share of 2010 revenue came in peak season? | wrong / wrong | correct / correct |
+
+**Frozen 55: question-runs whose outcome changed with RAG**: `m04` run0: correct -> wrong, run1: correct -> wrong
+
+**Citations (v4)**: 100.0% of answered question-runs cite at least one doc; definition questions cite the defining doc in 100.0%; 0 cite a deprecated doc; 0 cite a doc that was not retrieved
+
+## Answer self-verification, prompt v5 (python -m analyst.self_verify)
+
+- After the prose answer is written, every number in it must match a cell of the SQL result (rounding, %, £ and 'million' allowed), a constant in the SQL, the row count, or the question. If one does not, the answer is rewritten once from the result; if it still fails, the agent abstains
+- Measured by replaying every recorded v4 answer through the step (the generations are deterministic and recorded; only a rewrite costs a call)
+
+- **frozen**: 86 answers checked -> {'pass': 86, 'corrected': 0, 'abstained': 0}; confidently wrong 1.82% -> 1.82%, execution accuracy 97.67% -> 97.67%
+- **defs**: 20 answers checked -> {'pass': 20, 'corrected': 0, 'abstained': 0}; confidently wrong 0.0% -> 0.0%, execution accuracy 100.0% -> 100.0%
+
+**Fault injection** (the real answers had no unsupported numbers, so the step was tested on corrupted copies): 51 of 53 distinct answers had a headline number to corrupt; detected **51/51**, rewritten correctly **51/51** (original number restored in 51), abstained 0, missed 0. Gemini calls: 51
+
+## Final analyst table: every version, gemini-3.1-flash-lite (python -m analyst.final_table)
+
+- `frozen55` = the frozen 55-question set v2; `all65` = those plus the 10 definition questions
+- Latency: seconds per question, excluding the prose-answer call and 429/503 back-off
+- Cost: SQL-writing + self-check + verification calls per question (prose answer and judge excluded), estimated from the token ledger at list price
+
+| block | version | label | runs | question_runs | execution_accuracy_pct | abstention_accuracy_pct | confidently_wrong_pct | confidently_wrong | latency_p50_s | latency_p95_s | cost_per_question_cad | note |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| frozen55 | v1 | baseline | 3 | 165 | 97.67 | 91.67 | 3.64 | 6/165 | 2.67 | 6.95 | n/a | 3 runs (Part 3); cost not measured (pre-ledger) |
+| frozen55 | v2 | + glossary | 3 | 165 | 97.67 | 100.00 | 1.82 | 3/165 | 1.03 | 2.36 | n/a | 3 runs (Part 3); cost not measured (pre-ledger) |
+| frozen55 | v3 | + SQL self-check | 3 | 165 | 100.00 | 100.00 | 0.00 | 0/165 | 1.82 | 3.52 | CA$0.0009 | 3 runs (Part 3); cost measured on its 20 definition-question runs |
+| frozen55 | v4 | + RAG (knowledge base) | 2 | 110 | 97.67 | 100.00 | 1.82 | 2/110 | 1.86 | 2.62 | CA$0.0021 |  |
+| frozen55 | v5 | + answer self-verification | 2 | 110 | 97.67 | 100.00 | 1.82 | 2/110 | 1.86 | 2.62 | CA$0.0021 | v4 answers replayed through verification; 0 rewrites needed |
+| all65 | v3 | + SQL self-check | 2 | 130 | 84.91 | 100.00 | 9.23 | 12/130 | 1.83 | 3.62 | CA$0.0009 | frozen 55 = cached runs 0-1 |
+| all65 | v4 | + RAG (knowledge base) | 2 | 130 | 98.11 | 100.00 | 1.54 | 2/130 | 1.89 | 2.64 | CA$0.0021 |  |
+| all65 | v5 | + answer self-verification | 2 | 130 | 98.11 | 100.00 | 1.54 | 2/130 | 1.89 | 2.64 | CA$0.0021 | v4 answers replayed through verification; 0 rewrites needed |
+
+## LLM judge on v4 answers (python -m analyst.judge)
+
+- Judge `gemini-3.1-flash-lite` (the agent's model; the only one in budget), prompt `j1`, temperature 0; 106 answered question-runs judged (0 unparseable verdicts)
+- Faithful to the SQL result: **94.3%**; citations correct: **67.9%**
+- Faithful % by eval outcome: correct 94.2, wrong 100.0
+- Citation-correct % by question set: defs 80.0, frozen 65.1
+
+## Judge vs human agreement (python -m analyst.agreement)
+
+- **PENDING HUMAN LABELS.** `labels/human_labels.csv` (30 blind v4 answers) has not been labelled yet, so the judge is **not calibrated** and its verdicts above should not be relied on. After labelling, `python -m analyst.agreement` reports accuracy and Cohen's kappa
+
+## Gemini spend, Phases 7-8 (metrics/gemini_ledger.json)
+
+- **491 calls**, 912,736 input + 34,302 output + 0 thinking tokens; estimated **CA$0.39** of the CA$8.00 cap (list price USD 0.25 / 1.50 per 1M in/out tokens, at 1.4 CAD/USD)
+
+| purpose | calls | est_cad |
+|---|---|---|
+| smoke_test | 1 | 0.00 |
+| v4:agent | 132 | 0.15 |
+| v4:self_check | 108 | 0.12 |
+| v4:narrate | 108 | 0.04 |
+| v3:agent | 22 | 0.01 |
+| v3:self_check | 16 | 0.01 |
+| v4:judge | 53 | 0.05 |
+| v5:verify | 51 | 0.01 |
+
 ## Serving: demo database, API and dashboard (python -m service.build_demo)
 
-- `demo/demo.sqlite`: **1.68 MB** (limit 50 MB), built 2026-09-30T21:16:47+00:00; pre-aggregated, no raw transactions
-- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt version on frozen eval set v2): correct 379, refused 107, wrong 7, error 1, answered_unanswerable 1
+- `demo/demo.sqlite`: **1.93 MB** (limit 50 MB), built 2026-09-30T23:18:58+00:00; pre-aggregated, no raw transactions
+- Cached eval answers served by `POST /ask` and the dashboard's demo mode (run 0 of each model x prompt version on frozen eval set v2): correct 485, refused 131, wrong 15, abstained 2, error 1, answered_unanswerable 1
 
 | table | rows |
 |---|---|
 | monthly | 25 |
 | countries | 10 |
 | lorenz | 203 |
-| kpis | 22 |
+| kpis | 30 |
 | customer_scores | 4,908 |
 | tier_summary | 4 |
 | tier_methods | 6 |
 | quality_checks | 17 |
-| eval_answers | 495 |
+| eval_answers | 635 |
+| knowledge_docs | 34 |
 | meta | 1 |

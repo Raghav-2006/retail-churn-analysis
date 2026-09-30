@@ -35,7 +35,8 @@ from analyst.agent import Analyst, Answer, run_readonly
 from src.metrics import METRICS, save_metrics
 
 EVAL_SET = Path(__file__).parent / "eval_set.yaml"
-DIFFICULTIES = ["easy", "medium", "hard", "unanswerable"]
+EVAL_SETS = {"frozen": EVAL_SET, "defs": Path(__file__).parent / "eval_set_defs.yaml"}   # defs: Phase 7, 10 questions
+DIFFICULTIES = ["easy", "medium", "hard", "unanswerable", "definition"]
 CONFIDENTLY_WRONG = {"wrong", "answered_unanswerable"}
 
 
@@ -46,14 +47,14 @@ def slug(model: str) -> str:
 EVAL_SET_VERSION = 2
 
 
-def eval_set_sha() -> str:
+def eval_set_sha(which: str = "frozen") -> str:
     import hashlib
 
-    return hashlib.sha256(EVAL_SET.read_bytes()).hexdigest()
+    return hashlib.sha256(EVAL_SETS[which].read_bytes()).hexdigest()
 
 
-def load_eval_set() -> list[dict]:
-    return yaml.safe_load(EVAL_SET.read_text())
+def load_eval_set(which: str = "frozen") -> list[dict]:
+    return yaml.safe_load(EVAL_SETS[which].read_text())
 
 
 # ---- result-set matching ------------------------------------------------------------
@@ -182,11 +183,12 @@ def summarise(records: list[dict]) -> dict:
     answered = [r for r in records if r["outcome"] in {"correct", "wrong", "answered_unanswerable"}]
     outcomes = Counter(r["outcome"] for r in records)
     cw = sum(r["outcome"] in CONFIDENTLY_WRONG for r in records)
+    pct = lambda num, den: round(100 * num / den, 2) if den else None
     return {
         "questions": n,
-        "execution_accuracy_pct": round(100 * sum(r["outcome"] == "correct" for r in answerable) / len(answerable), 2),
-        "abstention_accuracy_pct": round(100 * sum(r["outcome"] == "refused" for r in unanswerable) / len(unanswerable), 2),
-        "false_abstention_pct": round(100 * sum(r["outcome"] == "abstained" for r in answerable) / len(answerable), 2),
+        "execution_accuracy_pct": pct(sum(r["outcome"] == "correct" for r in answerable), len(answerable)),
+        "abstention_accuracy_pct": pct(sum(r["outcome"] == "refused" for r in unanswerable), len(unanswerable)),
+        "false_abstention_pct": pct(sum(r["outcome"] == "abstained" for r in answerable), len(answerable)),
         "overall_accuracy_pct": round(100 * sum(r["outcome"] in {"correct", "refused"} for r in records) / n, 2),
         "confidently_wrong_pct": round(100 * cw / n, 2),
         "confidently_wrong_of_answered_pct": round(100 * cw / len(answered), 2) if answered else 0.0,
@@ -194,50 +196,81 @@ def summarise(records: list[dict]) -> dict:
         "by_difficulty": {
             d: round(100 * sum(r["outcome"] in {"correct", "refused"} for r in records if r["difficulty"] == d)
                      / max(1, sum(r["difficulty"] == d for r in records)), 2)
-            for d in DIFFICULTIES
+            for d in DIFFICULTIES if any(r["difficulty"] == d for r in records)
         },
         "retried": sum(r["attempts"] > 1 for r in records),
         "self_check": dict(Counter(r.get("self_check") for r in records if r.get("self_check"))),
     }
 
 
-def evaluate(prompt_version: str, runs: int = 3, model: str | None = None) -> dict:
-    items = load_eval_set()
+# Planning numbers for the cost estimate printed before a run (measured on the first runs,
+# rounded up): Gemini calls per question and tokens per call.
+CALLS_PER_QUESTION = {"v1": 1.2, "v2": 1.2, "v3": 2.2, "v4": 2.3}
+TOKENS_PER_CALL = {"v1": (1_200, 200), "v2": (1_500, 200), "v3": (1_800, 250), "v4": (3_500, 300)}
+
+
+def metrics_name(prompt_version: str, model: str, eval_set: str = "frozen") -> str:
+    return f"analyst_{prompt_version}_{slug(model)}" + ("" if eval_set == "frozen" else f"_{eval_set}")
+
+
+def evaluate(prompt_version: str, runs: int = 3, model: str | None = None, eval_set: str = "frozen",
+             narrate: bool = False) -> dict:
+    from analyst import budget
+
+    items = load_eval_set(eval_set)
     references = {
         it["id"]: run_readonly(it["sql"], max_rows=10_000)[1] for it in items if "sql" in it
     }
     kwargs = {"model": model} if model else {}
-    records = []
-    for run in range(runs):
-        agent = Analyst(prompt_version, narrate=False, cache_tag=f"eval-run{run}", **kwargs)
-        for it in items:
-            ans = agent.ask(it["question"])
-            outcome = grade(it, ans, references.get(it["id"]))
-            records.append({
-                "run": run, "id": it["id"], "difficulty": it["difficulty"], "question": it["question"],
-                "outcome": outcome, "sql": ans.sql, "error": ans.error, "attempts": ans.attempts,
-                "latency_s": ans.latency_s, "backoff_s": ans.backoff_s, "rows": len(ans.rows),
-                "self_check": ans.self_check,
-            })
-            print(f"[{prompt_version} run {run}] {it['id']:<4} {outcome:<22} {ans.latency_s:>6.1f}s", flush=True)
+    agents = [Analyst(prompt_version, narrate=narrate, cache_tag=f"eval-run{run}", **kwargs) for run in range(runs)]
+    todo = sum(agents[run]._key(it["question"]) not in agents[run].cache for run in range(runs) for it in items)
+    per_q = CALLS_PER_QUESTION.get(prompt_version, 2.5) + (1 if narrate else 0)
+    tin, tout = TOKENS_PER_CALL.get(prompt_version, (4_000, 400))
+    budget.estimate(f"{prompt_version} on {eval_set} x{runs} runs ({todo} uncached question-runs)",
+                    round(todo * per_q), agents[0].model, tin, tout)
+    records, stopped = [], None
+    try:
+        for run, agent in enumerate(agents):
+            for it in items:
+                ans = agent.ask(it["question"])
+                outcome = grade(it, ans, references.get(it["id"]))
+                records.append({
+                    "run": run, "id": it["id"], "difficulty": it["difficulty"], "question": it["question"],
+                    "outcome": outcome, "sql": ans.sql, "error": ans.error, "attempts": ans.attempts,
+                    "latency_s": ans.latency_s, "backoff_s": ans.backoff_s, "rows": len(ans.rows),
+                    "self_check": ans.self_check, "narrate_s": ans.narrate_s,
+                    "columns": ans.columns, "result": ans.rows[:20], "answer": ans.answer,
+                    "citations": ans.citations, "retrieved": ans.retrieved,
+                })
+                print(f"[{prompt_version} {eval_set} run {run}] {it['id']:<4} {outcome:<22} {ans.latency_s:>6.1f}s"
+                      f"  calls {sum(a.calls for a in agents)}  spent CA${budget.spent_cad():.4f}", flush=True)
+    except budget.BudgetExceeded as err:
+        stopped = str(err)
+        print(f"STOPPED: {err}. Keeping the {len(records)} completed records.", flush=True)
 
-    per_run = [summarise([r for r in records if r["run"] == k]) for k in range(runs)]
-    pooled = summarise(records)
-    lat = np.array([r["latency_s"] for r in records])
+    done_runs = sorted({r["run"] for r in records})
+    per_run = [summarise([r for r in records if r["run"] == k]) for k in done_runs]
+    pooled = summarise(records) if records else {}
+    # comparable with the older, un-narrated runs: latency without the prose-writing call
+    lat = np.array([r["latency_s"] - r["narrate_s"] for r in records]) if records else np.array([0.0])
     keys = ["execution_accuracy_pct", "abstention_accuracy_pct", "confidently_wrong_pct", "overall_accuracy_pct"]
     result = {
         "prompt_version": prompt_version,
-        "model": agent.model,
-        "eval_set_version": EVAL_SET_VERSION,
-        "eval_set_sha256": eval_set_sha(),
+        "model": agents[0].model,
+        "eval_set": eval_set,
+        "eval_set_version": EVAL_SET_VERSION if eval_set == "frozen" else 1,
+        "eval_set_sha256": eval_set_sha(eval_set),
         "runs": runs,
+        "complete": stopped is None,
+        "stopped_reason": stopped,
+        "gemini_calls": sum(a.calls for a in agents),
         **pooled,
         "per_run": {k: [p[k] for p in per_run] for k in keys},
         "latency_p50_s": round(float(np.percentile(lat, 50)), 2),
         "latency_p95_s": round(float(np.percentile(lat, 95)), 2),
         "failures": failure_table(records),
     }
-    name = f"analyst_{prompt_version}_{slug(agent.model)}"
+    name = metrics_name(prompt_version, agents[0].model, eval_set)
     save_metrics(name, result)
     (METRICS / f"{name}_records.json").write_text(json.dumps(records, indent=1, default=str) + "\n")
     return result
@@ -285,6 +318,8 @@ def main() -> None:
     p.add_argument("--prompt", default="v1")
     p.add_argument("--runs", type=int, default=3)
     p.add_argument("--model")
+    p.add_argument("--set", default="frozen", choices=sorted(EVAL_SETS), help="which frozen question set")
+    p.add_argument("--narrate", action="store_true", help="also write the prose answer (one more call)")
     p.add_argument("--compare", nargs="+", metavar="VERSION", help="e.g. --compare v1 v2 v3")
     p.add_argument("--models", nargs="+",
                    default=["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"])
@@ -292,7 +327,7 @@ def main() -> None:
     if args.compare:
         compare(args.compare, args.models)
         return
-    res = evaluate(args.prompt, args.runs, args.model)
+    res = evaluate(args.prompt, args.runs, args.model, args.set, args.narrate)
     print(json.dumps({k: v for k, v in res.items() if k != "failures"}, indent=1))
     for f in res["failures"]:
         print(f"\n{f['id']} [{f['difficulty']}] {f['question']}\n  {f['outcomes']}\n  SQL: {f['example_sql']}\n"

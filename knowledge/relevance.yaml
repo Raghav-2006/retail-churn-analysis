@@ -1,0 +1,70 @@
+# Hand-labelled retrieval relevance: for every eval question (the frozen 55 in analyst/eval_set.yaml
+# and the 10 in analyst/eval_set_defs.yaml), the knowledge docs a careful analyst would need.
+# Labelled from the questions and the docs only, before any retrieval run.
+#   relevant: doc ids that count as hits for recall@k and MRR (doc level)
+#   traps:    deprecated or conflicting docs that must NOT be followed (definition questions only)
+e01: {relevant: [metric-revenue]}
+e02: {relevant: [metric-customer-count]}
+e03: {relevant: [metric-order-value]}
+e06: {relevant: [caveat-date-coverage, table-fact-sales]}
+e07: {relevant: [caveat-cancellations, table-fact-cancellations]}
+e08: {relevant: [metric-revenue]}
+m01: {relevant: [metric-revenue, caveat-countries]}
+m02: {relevant: [metric-revenue]}
+m03: {relevant: [table-dim-product, metric-revenue]}
+m04: {relevant: [metric-aov, metric-order-value]}
+m05: {relevant: [metric-revenue, metric-customer-count]}
+m06: {relevant: [table-dim-date]}
+m09: {relevant: [metric-revenue, caveat-date-coverage]}
+m10: {relevant: [caveat-cancellations, table-fact-cancellations]}
+m11: {relevant: [metric-order-value]}
+m12: {relevant: [metric-order-value, metric-repeat-customer]}
+h01: {relevant: [metric-revenue]}
+h02: {relevant: [metric-revenue, caveat-date-coverage]}
+h03: {relevant: [caveat-countries, table-dim-product]}
+h04: {relevant: [metric-revenue, metric-customer-count]}
+h05: {relevant: [metric-revenue, metric-customer-count]}
+h06: {relevant: [metric-revenue]}
+h07: {relevant: [metric-customer-count]}
+h08: {relevant: [table-dim-customer]}
+h09: {relevant: [metric-revenue]}
+h10: {relevant: [table-dim-product, metric-revenue]}
+h11: {relevant: [metric-order-value]}
+h12: {relevant: [metric-net-revenue]}
+h13: {relevant: [metric-units-returns]}
+h14: {relevant: [metric-new-customer]}
+h15: {relevant: [metric-revenue, metric-customer-count]}
+h16: {relevant: [metric-active-customer]}
+u01: {relevant: [caveat-no-cost-data]}
+u02: {relevant: [caveat-no-cost-data]}
+u04: {relevant: [caveat-no-cost-data]}
+u05: {relevant: [caveat-no-cost-data]}
+u06: {relevant: [caveat-no-cost-data]}
+u07: {relevant: [caveat-no-cost-data]}
+u09: {relevant: [caveat-no-cost-data, table-dim-customer]}
+u10: {relevant: [caveat-no-cost-data]}
+x01: {relevant: [metric-net-revenue]}
+x02: {relevant: [metric-cancellation-rate]}
+x03: {relevant: [metric-net-revenue]}
+x04: {relevant: [metric-revenue, caveat-cancellations]}
+x05: {relevant: [metric-order-value, caveat-cancellations]}
+x06: {relevant: [metric-revenue, caveat-countries]}
+x07: {relevant: [metric-peak-season, metric-revenue]}
+x08: {relevant: [metric-customer-count]}
+x09: {relevant: [metric-new-customer]}
+x10: {relevant: [metric-active-customer]}
+x11: {relevant: [metric-order-value, metric-aov]}
+x12: {relevant: [caveat-no-cost-data]}
+x13: {relevant: [caveat-no-cost-data]}
+x14: {relevant: [caveat-no-cost-data]}
+x15: {relevant: [caveat-no-cost-data]}
+d01: {relevant: [metric-active-customer], traps: [metric-active-customer-2009, sales-team-faq-2010]}
+d02: {relevant: [metric-churn], traps: [metric-churn-2010]}
+d03: {relevant: [metric-churn], traps: [metric-churn-2010]}
+d04: {relevant: [metric-aov, metric-net-revenue], traps: [metric-aov-legacy]}
+d05: {relevant: [metric-cancellation-rate], traps: [sales-team-faq-2010]}
+d06: {relevant: [metric-repeat-customer]}
+d07: {relevant: [metric-new-customer]}
+d08: {relevant: [metric-international-revenue]}
+d09: {relevant: [metric-large-order], traps: [sales-team-faq-2010]}
+d10: {relevant: [metric-peak-season]}

@@ -1,0 +1,66 @@
+{
+  "prompt_version": "v4",
+  "model": "gemini-3.1-flash-lite",
+  "eval_set": "frozen",
+  "eval_set_version": 2,
+  "eval_set_sha256": "da756242da03001b3bc19cc18bad107cf3c4266496b18d174eda719c9fec0049",
+  "runs": 2,
+  "complete": true,
+  "stopped_reason": null,
+  "gemini_calls": 282,
+  "questions": 110,
+  "execution_accuracy_pct": 97.67,
+  "abstention_accuracy_pct": 100.0,
+  "false_abstention_pct": 0.0,
+  "overall_accuracy_pct": 98.18,
+  "confidently_wrong_pct": 1.82,
+  "confidently_wrong_of_answered_pct": 2.33,
+  "outcomes": {
+    "correct": 84,
+    "wrong": 2,
+    "refused": 24
+  },
+  "by_difficulty": {
+    "easy": 100.0,
+    "medium": 90.0,
+    "hard": 100.0,
+    "unanswerable": 100.0
+  },
+  "retried": 0,
+  "self_check": {
+    "ok": 78,
+    "fix": 8
+  },
+  "per_run": {
+    "execution_accuracy_pct": [
+      97.67,
+      97.67
+    ],
+    "abstention_accuracy_pct": [
+      100.0,
+      100.0
+    ],
+    "confidently_wrong_pct": [
+      1.82,
+      1.82
+    ],
+    "overall_accuracy_pct": [
+      98.18,
+      98.18
+    ]
+  },
+  "latency_p50_s": 1.86,
+  "latency_p95_s": 2.62,
+  "failures": [
+    {
+      "id": "m04",
+      "difficulty": "medium",
+      "question": "What is the average order value, where an order's value is the total revenue of its invoice?",
+      "outcomes": {
+        "wrong": 2
+      },
+      "example_sql": "WITH net_revenue AS (SELECT (SELECT COALESCE(SUM(revenue), 0) FROM fact_sales) + (SELECT COALESCE(SUM(revenue), 0) FROM fact_cancellations) AS total_net_revenue), order_count AS (SELECT COUNT(DISTINCT invoice) AS total_orders FROM fact_sales) SELECT total_net_revenue / NULLIF(total_orders, 0) AS aov FROM net_revenue, order_count",
+      "example_error": null
+    }
+  ]
+}

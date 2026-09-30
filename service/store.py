@@ -14,8 +14,10 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 DEMO_DB = Path(os.environ.get("DEMO_DB", ROOT / "demo" / "demo.sqlite"))
-DEFAULT_MODEL = "gemini-3.5-flash"
-DEFAULT_VERSION = "v3"
+DEFAULT_MODEL = "gemini-3.1-flash-lite"   # the only model with the RAG (v4) and self-verification (v5) runs
+DEFAULT_VERSION = "v5"
+VERSION_LABELS = {"v1": "v1 baseline", "v2": "v2 + glossary", "v3": "v3 + SQL self-check", "v4": "v4 + RAG",
+                  "v5": "v5 + RAG + self-verification"}
 
 
 def normalize(question: str) -> str:
@@ -50,9 +52,19 @@ class DemoStore:
     def answers(self) -> pd.DataFrame:
         return self.table("eval_answers")
 
+    @cached_property
+    def docs(self) -> dict[str, dict]:
+        """Knowledge-base docs (id -> title, type, deprecated, body), for showing citations."""
+        return {r["doc_id"]: r for r in self.table("knowledge_docs").to_dict("records")}
+
     def questions(self) -> pd.DataFrame:
         return (self.answers[["qid", "difficulty", "question"]].drop_duplicates("qid")
                 .sort_values("qid").reset_index(drop=True))
+
+    def available(self, question: str) -> list[tuple[str, str]]:
+        """(model, prompt version) pairs with a cached answer for this question."""
+        a = self.answers[self.answers["question_norm"] == normalize(question)]
+        return sorted(zip(a["model"], a["prompt_version"], strict=True))
 
     def cached_answer(self, question: str, model: str = DEFAULT_MODEL, version: str = DEFAULT_VERSION) -> dict | None:
         a = self.answers
@@ -60,9 +72,11 @@ class DemoStore:
         if hit.empty:
             return None
         r = {k: (None if isinstance(v, float) and v != v else v) for k, v in hit.iloc[0].to_dict().items()}  # NaN -> None
-        for col in ("columns", "rows", "reference_columns", "reference_rows"):
+        for col in ("columns", "rows", "reference_columns", "reference_rows", "citations"):
             r[col] = json.loads(r[col]) if r.get(col) else None
         r["abstained"] = bool(r["abstained"])
+        for col in ("judge_faithful", "judge_citation_correct"):
+            r[col] = None if r.get(col) is None else bool(r[col])
         return r
 
     def similar_questions(self, question: str, n: int = 3) -> list[str]:

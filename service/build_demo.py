@@ -21,6 +21,8 @@ CACHE_DIR = ROOT / "data" / "analyst_cache"
 MAX_ROWS = 20
 MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 VERSIONS = ["v1", "v2", "v3"]
+RAG_MODEL = "gemini-3.1-flash-lite"   # Phases 7-8 ran on this model only (budget)
+NEW_COLUMNS = ["eval_set", "answer_source", "citations", "verification", "judge_faithful", "judge_citation_correct"]
 
 
 def _metrics(name: str) -> dict:
@@ -52,7 +54,92 @@ def normalize(q: str) -> str:
     return re.sub(r"[^a-z0-9 ]", "", " ".join(q.lower().split()))
 
 
+def _reference(item: dict) -> dict:
+    from analyst.agent import run_readonly
+
+    ref = run_readonly(item["sql"], max_rows=MAX_ROWS) if "sql" in item else None
+    return {"reference_sql": item.get("sql"),
+            "reference_columns": json.dumps(ref[0]) if ref else None,
+            "reference_rows": json.dumps([[_jsonable(v) for v in row] for row in ref[1]], default=str) if ref else None}
+
+
 def eval_answers() -> pd.DataFrame:
+    """Every cached answer: v1-v3 x 3 models on the frozen 55, then the Phase 7-8 rows (v3 on the
+    definition questions, v4 RAG and v5 RAG + self-verification on all 65), run 0 of each."""
+    legacy = legacy_eval_answers()
+    for col in NEW_COLUMNS:
+        if col not in legacy:
+            legacy[col] = None
+    legacy["eval_set"] = "frozen"
+    legacy["answer_source"] = "template"
+    return pd.concat([legacy, rag_eval_answers()], ignore_index=True)
+
+
+def legacy_eval_answers() -> pd.DataFrame:
+    """v1-v3 x 3 models, run 0 of frozen eval set v2. Rebuilt from the per-model answer caches when they
+    are present; otherwise carried over from the previous demo database (same eval-set SHA required),
+    because those caches are local files that are not in the repository."""
+    from analyst.evaluate import eval_set_sha
+
+    if not all((CACHE_DIR / f"{m}.jsonl").exists() for m in MODELS) and DEMO_DB.exists():
+        with sqlite3.connect(DEMO_DB) as con:
+            prev = pd.read_sql_query("SELECT * FROM eval_answers WHERE prompt_version IN ('v1', 'v2', 'v3') "
+                                     "AND (eval_set IS NULL OR eval_set = 'frozen')"
+                                     if "eval_set" in pd.read_sql_query("SELECT * FROM eval_answers LIMIT 0", con)
+                                     else "SELECT * FROM eval_answers", con)
+        if set(prev["eval_set_sha256"]) != {eval_set_sha()} or len(prev) != len(MODELS) * len(VERSIONS) * 55:
+            raise LookupError("previous demo answers are not from frozen eval set v2; rebuild them from the caches")
+        return prev.drop(columns=[c for c in NEW_COLUMNS if c in prev])
+    return _legacy_from_cache()
+
+
+def rag_eval_answers() -> pd.DataFrame:
+    import yaml
+
+    from analyst.evaluate import eval_set_sha, metrics_name
+
+    judge = {(v["id"], v["run"]): v for v in _metrics("judge_v4")["verdicts"]}
+    out = []
+    for eval_set, fname in (("frozen", "eval_set.yaml"), ("defs", "eval_set_defs.yaml")):
+        items = {i["id"]: i for i in yaml.safe_load((ROOT / "analyst" / fname).read_text())}
+        refs = {qid: _reference(it) for qid, it in items.items()}
+        for version in ("v3", "v4", "v5"):
+            if version == "v3" and eval_set == "frozen":
+                continue   # already among the legacy rows
+            name = metrics_name(version, RAG_MODEL, eval_set)
+            for r in json.loads((ROOT / "metrics" / f"{name}_records.json").read_text()):
+                if r["run"] != 0:
+                    continue
+                llm = version in ("v4", "v5") and r["outcome"] in ("correct", "wrong", "answered_unanswerable")
+                abstained = r["outcome"] in ("abstained", "refused")
+                j = judge.get((r["id"], r["run"])) if llm else None
+                out.append({
+                    "model": RAG_MODEL, "prompt_version": version, "qid": r["id"], "difficulty": r["difficulty"],
+                    "question": r["question"], "question_norm": normalize(r["question"]), "abstained": int(abstained),
+                    "sql": r["sql"], "error": r["error"], "columns": json.dumps(r["columns"]),
+                    "rows": json.dumps(r["result"][:MAX_ROWS], default=str), "row_count": r["rows"],
+                    "answer": r["answer"] if llm or abstained and r["answer"] else
+                    render_answer(r["columns"], r["result"], abstained, r["answer"], r["error"]),
+                    "outcome": r["outcome"], "latency_s": r["latency_s"], "self_check": r.get("self_check"),
+                    **refs[r["id"]], "eval_set_sha256": eval_set_sha(eval_set),
+                    "eval_set": eval_set, "answer_source": "llm" if llm or abstained and r["answer"] else "template",
+                    "citations": json.dumps(r.get("citations") or []) if version != "v3" else None,
+                    "verification": r.get("verification"),
+                    "judge_faithful": int(j["faithful"]) if j else None,
+                    "judge_citation_correct": int(j["citation_correct"]) if j else None,
+                })
+    return pd.DataFrame(out)
+
+
+def knowledge_docs() -> pd.DataFrame:
+    from rag.docs import load_docs
+
+    return pd.DataFrame([{"doc_id": d.id, "title": d.title, "doc_type": d.doc_type, "owner": d.owner,
+                          "last_updated": str(d.last_updated), "deprecated": int(d.deprecated),
+                          "superseded_by": d.superseded_by, "body": d.body} for d in load_docs()])
+
+
+def _legacy_from_cache() -> pd.DataFrame:
     """One row per (model, prompt version, question), from run 0 of the frozen eval set v2."""
     import yaml
 
@@ -147,8 +234,30 @@ def kpis() -> pd.DataFrame:
         *[(f"cw_{v}_pct", round(100 * n / d_, 2), f"Confidently wrong, prompt {v} (%, pooled over 3 models)")
           for v, (n, d_) in pooled.items()],
         *[(f"cw_{v}_count", f"{n}/{d_}", f"Confidently wrong answers, prompt {v}") for v, (n, d_) in pooled.items()],
+        *rag_kpis(),
     ]
     return pd.DataFrame(rows, columns=["key", "value", "label"]).astype({"value": str})
+
+
+def rag_kpis() -> list[tuple]:
+    final = {(r["block"], r["version"]): r for r in _metrics("analyst_final")["rows"]}
+    abl = _metrics("rag_ablation")["conditions"]
+    chosen = _metrics("rag_retrieval")["chosen"]
+    ans = next(r for r in _metrics("rag_retrieval")["results"] if r["subset"] == "answerable"
+               and r["config"] == chosen["config"] and r["k"] == chosen["k"] and r["policy"] == chosen["policy"])
+    inj = _metrics("self_verify")["injection"]
+    return [
+        ("cw65_v3_pct", final[("all65", "v3")]["confidently_wrong_pct"], "Confidently wrong, 65 questions, no RAG (v3, %)"),
+        ("cw65_v5_pct", final[("all65", "v5")]["confidently_wrong_pct"],
+         "Confidently wrong, 65 questions, RAG + self-verification (v5, %)"),
+        ("defs_exec_norag_pct", abl["no_rag_v3"]["defs10"]["execution_accuracy_pct"], "Definition questions correct, no RAG (%)"),
+        ("defs_exec_rag_pct", abl["rag_v4"]["defs10"]["execution_accuracy_pct"], "Definition questions correct, RAG (%)"),
+        ("retrieval_recall_answerable", ans["recall"], f"Retrieval recall@{chosen['k']}, answerable questions"),
+        ("retrieval_mrr_answerable", ans["mrr"], f"Retrieval MRR@{chosen['k']}, answerable questions"),
+        ("verify_injected_detected", f"{inj['detected']}/{inj['corrupted']}", "Self-verification: corrupted numbers caught"),
+        ("judge_agreement", "pending human labels" if not (ROOT / "metrics" / "judge_agreement.json").exists()
+         else str(_metrics("judge_agreement")["faithful"]["cohens_kappa"]), "Judge-human agreement (kappa)"),
+    ]
 
 
 def main(path: Path = DEMO_DB) -> Path:
@@ -164,6 +273,7 @@ def main(path: Path = DEMO_DB) -> Path:
         "tier_methods": pd.DataFrame(t["comparison"]),
         "quality_checks": pd.DataFrame(_metrics("pipeline")["checks"]),
         "eval_answers": eval_answers(),
+        "knowledge_docs": knowledge_docs(),
         "meta": pd.DataFrame([{"built_at": datetime.now(UTC).isoformat(timespec="seconds"),
                                "pipeline_fingerprint": _metrics("pipeline")["fingerprint"],
                                "scoring_cutoff": t["cutoff"], "outcome_window": t["outcome_window"],

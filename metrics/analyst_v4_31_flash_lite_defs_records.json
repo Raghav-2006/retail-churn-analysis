@@ -1,0 +1,764 @@
+[
+ {
+  "run": 0,
+  "id": "d01",
+  "difficulty": "definition",
+  "question": "How many active customers did we have at the end of Q3 2011?",
+  "outcome": "correct",
+  "sql": "SELECT COUNT(DISTINCT customer_id) FROM fact_sales WHERE invoice_date >= DATE '2011-10-01' - INTERVAL '90 days' AND invoice_date < '2011-10-01'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 11.44,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 2.3,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    2145
+   ]
+  ],
+  "answer": "At the end of Q3 2011, we had 2,145 active customers. This figure represents customers who placed at least one order during the 90-day period leading up to that date.",
+  "citations": [
+   "metric-active-customer"
+  ],
+  "retrieved": [
+   "metric-active-customer#0",
+   "caveat-missing-customer-ids#0",
+   "metric-active-customer-2009#0",
+   "metric-customer-count#0",
+   "metric-new-customer#0",
+   "metric-churn#0",
+   "sales-team-faq-2010#0",
+   "table-dim-customer#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d02",
+  "difficulty": "definition",
+  "question": "How many customers had churned as of the end of June 2011?",
+  "outcome": "correct",
+  "sql": "WITH d AS (SELECT DATE '2011-06-30' AS d_date), all_customers AS (SELECT DISTINCT customer_id FROM fact_sales), customer_last_order AS (SELECT customer_id, MAX(invoice_date) AS last_order_date FROM fact_sales WHERE invoice_date < (SELECT d_date + INTERVAL '1 day' FROM d) GROUP BY customer_id) SELECT COUNT(*) FROM customer_last_order WHERE last_order_date < (SELECT d_date + INTERVAL '1 day' - INTERVAL '90 days' FROM d)",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.91,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.68,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    3050
+   ]
+  ],
+  "answer": "As of the end of June 2011, there were 3,050 customers who had churned. Based on the current definition, these are customers who placed an order in the past but did not make a purchase during the 90-day window leading up to that date.",
+  "citations": [
+   "metric-churn",
+   "metric-active-customer",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-churn#0",
+   "caveat-missing-customer-ids#0",
+   "metric-churn-2010#0",
+   "metric-customer-count#0",
+   "caveat-date-coverage#0",
+   "metric-new-customer#0",
+   "sales-team-faq-2010#0",
+   "metric-active-customer#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d03",
+  "difficulty": "definition",
+  "question": "What was our churn rate at the end of 2010?",
+  "outcome": "correct",
+  "sql": "WITH customer_activity AS (SELECT customer_id, MAX(invoice_date) AS last_order_date FROM fact_sales WHERE invoice_date < '2011-01-01' GROUP BY customer_id), total_customers AS (SELECT COUNT(DISTINCT customer_id) AS total_count FROM customer_activity), churned_customers AS (SELECT COUNT(*) AS churned_count FROM customer_activity WHERE last_order_date < '2011-01-01'::timestamp - INTERVAL '90 days') SELECT 100.0 * churned_count / total_count AS churn_rate FROM churned_customers, total_customers",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.64,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.79,
+  "columns": [
+   "churn_rate"
+  ],
+  "result": [
+   [
+    38.70220162224797
+   ]
+  ],
+  "answer": "At the end of 2010, our churn rate was 38.70%. This is based on the definition where a customer is considered churned if they have not placed an order in the last 90 days.",
+  "citations": [
+   "metric-churn",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-churn#0",
+   "metric-churn-2010#0",
+   "rfm-segments#0",
+   "caveat-date-coverage#0",
+   "metric-cancellation-rate#0",
+   "caveat-missing-customer-ids#0",
+   "tier-validation#0",
+   "metric-new-customer#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d04",
+  "difficulty": "definition",
+  "question": "What was our average order value (AOV) in 2011?",
+  "outcome": "correct",
+  "sql": "WITH net_revenue AS (SELECT (SELECT COALESCE(SUM(revenue), 0) FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') + (SELECT COALESCE(SUM(revenue), 0) FROM fact_cancellations WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') AS total_net_revenue), order_count AS (SELECT COUNT(DISTINCT invoice) AS total_orders FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') SELECT total_net_revenue / NULLIF(total_orders, 0) AS aov FROM net_revenue, order_count",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.01,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 1.09,
+  "columns": [
+   "aov"
+  ],
+  "result": [
+   [
+    445.60182619943555
+   ]
+  ],
+  "answer": "In 2011, the average order value was \u00a3445.60. This figure is calculated as the net revenue\u2014which accounts for both sales and cancellations\u2014divided by the total number of orders for the period ending December 9th.",
+  "citations": [
+   "metric-aov",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-aov#0",
+   "metric-aov-legacy#0",
+   "metric-order-value#0",
+   "metric-large-order#0",
+   "sales-team-faq-2010#0",
+   "caveat-date-coverage#0",
+   "metric-new-customer#0",
+   "metric-active-customer#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d05",
+  "difficulty": "definition",
+  "question": "What was the cancellation rate in 2010?",
+  "outcome": "correct",
+  "sql": "WITH gross_sales AS (SELECT SUM(revenue) AS total_gross FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), cancelled_sales AS (SELECT SUM(revenue) AS total_cancelled FROM fact_cancellations WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01') SELECT CASE WHEN total_gross = 0 THEN 0 ELSE 100 * (-total_cancelled / total_gross) END AS cancellation_rate FROM gross_sales, cancelled_sales",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.25,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.98,
+  "columns": [
+   "cancellation_rate"
+  ],
+  "result": [
+   [
+    5.8224054498116224
+   ]
+  ],
+  "answer": "In 2010, the value-based cancellation rate was 5.82%. This figure represents the percentage of total gross revenue that was lost to cancellations during that year.",
+  "citations": [
+   "metric-cancellation-rate"
+  ],
+  "retrieved": [
+   "metric-cancellation-rate#0",
+   "caveat-cancellations#0",
+   "sales-team-faq-2010#0",
+   "metric-units-returns#0",
+   "metric-net-revenue#0",
+   "table-fact-cancellations#0",
+   "metric-revenue#0",
+   "metric-churn#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d06",
+  "difficulty": "definition",
+  "question": "What was our repeat customer rate in 2011?",
+  "outcome": "correct",
+  "sql": "WITH customer_order_counts AS (SELECT customer_id, COUNT(DISTINCT invoice) as order_count FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' GROUP BY customer_id), metrics AS (SELECT COUNT(CASE WHEN order_count >= 2 THEN 1 END)::NUMERIC as repeat_customers, COUNT(*)::NUMERIC as total_customers FROM customer_order_counts) SELECT CASE WHEN total_customers = 0 THEN 0 ELSE (repeat_customers / total_customers) * 100 END as repeat_rate_2011 FROM metrics",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.36,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.9,
+  "columns": [
+   "repeat_rate_2011"
+  ],
+  "result": [
+   [
+    64.11960132890366
+   ]
+  ],
+  "answer": "In 2011, our repeat customer rate was 64.12%. This figure represents the percentage of customers who placed two or more orders during that year.",
+  "citations": [
+   "metric-repeat-customer",
+   "metric-customer-count"
+  ],
+  "retrieved": [
+   "metric-repeat-customer#0",
+   "metric-customer-count#0",
+   "tier-validation#0",
+   "caveat-missing-customer-ids#0",
+   "metric-churn#0",
+   "metric-new-customer#0",
+   "metric-cancellation-rate#0",
+   "rfm-segments#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d07",
+  "difficulty": "definition",
+  "question": "How many new customers did we acquire in September 2011?",
+  "outcome": "correct",
+  "sql": "WITH first_orders AS (SELECT customer_id, MIN(invoice_date) AS first_order_date FROM fact_sales GROUP BY customer_id) SELECT COUNT(customer_id) FROM first_orders WHERE first_order_date >= '2011-09-01' AND first_order_date < '2011-10-01'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.64,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.76,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    188
+   ]
+  ],
+  "answer": "We acquired 188 new customers in September 2011. A customer is defined as new if their first-ever order occurred during that month.",
+  "citations": [
+   "metric-new-customer",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "caveat-missing-customer-ids#0",
+   "metric-customer-count#0",
+   "metric-new-customer#0",
+   "caveat-date-coverage#0",
+   "sales-team-faq-2010#0",
+   "metric-churn#0",
+   "metric-active-customer#0",
+   "tier-validation#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d08",
+  "difficulty": "definition",
+  "question": "What was our international revenue in 2011?",
+  "outcome": "correct",
+  "sql": "SELECT SUM(revenue) FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' AND country != 'United Kingdom' AND country != 'Unspecified'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.27,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.66,
+  "columns": [
+   "sum"
+  ],
+  "result": [
+   [
+    1422681.16
+   ]
+  ],
+  "answer": "In 2011, our international revenue\u2014defined as all sales excluding the United Kingdom and unspecified locations\u2014totaled \u00a31,422,681.16.",
+  "citations": [
+   "metric-international-revenue",
+   "metric-revenue"
+  ],
+  "retrieved": [
+   "metric-international-revenue#0",
+   "caveat-countries#0",
+   "metric-aov#0",
+   "metric-revenue#0",
+   "metric-large-order#0",
+   "table-fact-sales#0",
+   "caveat-currency#0",
+   "caveat-date-coverage#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d09",
+  "difficulty": "definition",
+  "question": "How many large orders did we receive in 2011?",
+  "outcome": "correct",
+  "sql": "SELECT COUNT(*) FROM (SELECT invoice FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' GROUP BY invoice HAVING SUM(revenue) >= 1000) AS large_orders",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.97,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 1.02,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    1168
+   ]
+  ],
+  "answer": "We received 1,168 large orders in 2011, defined as invoices with a gross value of at least \u00a31,000. Please note that this total covers the period up to December 9, 2011.",
+  "citations": [
+   "metric-large-order",
+   "metric-order-value",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-large-order#0",
+   "sales-team-faq-2010#0",
+   "caveat-date-coverage#0",
+   "metric-aov#0",
+   "metric-active-customer#0",
+   "metric-order-value#0",
+   "metric-new-customer#0",
+   "caveat-cancellations#0"
+  ]
+ },
+ {
+  "run": 0,
+  "id": "d10",
+  "difficulty": "definition",
+  "question": "What share of 2010 revenue came in peak season?",
+  "outcome": "correct",
+  "sql": "WITH yearly_revenue AS (SELECT SUM(revenue) AS total_revenue FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), peak_revenue AS (SELECT SUM(revenue) AS peak_rev FROM fact_sales WHERE invoice_date >= '2010-09-01' AND invoice_date < '2010-12-01') SELECT (peak_rev / total_revenue) * 100 AS peak_season_share FROM yearly_revenue, peak_revenue",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.1,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 1.14,
+  "columns": [
+   "peak_season_share"
+  ],
+  "result": [
+   [
+    36.175026735602025
+   ]
+  ],
+  "answer": "During 2010, the peak season\u2014defined as the wholesale buying period from September through November\u2014accounted for 36.18% of the total annual revenue.",
+  "citations": [
+   "metric-peak-season",
+   "metric-revenue",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-peak-season#0",
+   "table-fact-sales#0",
+   "metric-revenue#0",
+   "caveat-date-coverage#0",
+   "metric-net-revenue#0",
+   "metric-aov#0",
+   "tier-validation#0",
+   "metric-large-order#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d01",
+  "difficulty": "definition",
+  "question": "How many active customers did we have at the end of Q3 2011?",
+  "outcome": "correct",
+  "sql": "SELECT COUNT(DISTINCT customer_id) FROM fact_sales WHERE invoice_date >= DATE '2011-10-01' - INTERVAL '90 days' AND invoice_date < '2011-10-01'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.79,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.77,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    2145
+   ]
+  ],
+  "answer": "At the end of Q3 2011, we had 2,145 active customers. This figure represents customers who placed at least one order during the 90-day period leading up to that date.",
+  "citations": [
+   "metric-active-customer"
+  ],
+  "retrieved": [
+   "metric-active-customer#0",
+   "caveat-missing-customer-ids#0",
+   "metric-active-customer-2009#0",
+   "metric-customer-count#0",
+   "metric-new-customer#0",
+   "metric-churn#0",
+   "sales-team-faq-2010#0",
+   "table-dim-customer#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d02",
+  "difficulty": "definition",
+  "question": "How many customers had churned as of the end of June 2011?",
+  "outcome": "correct",
+  "sql": "WITH d AS (SELECT DATE '2011-06-30' AS d_date), all_customers AS (SELECT DISTINCT customer_id FROM fact_sales), customer_last_order AS (SELECT customer_id, MAX(invoice_date) AS last_order_date FROM fact_sales WHERE invoice_date < (SELECT d_date + INTERVAL '1 day' FROM d) GROUP BY customer_id) SELECT COUNT(*) FROM customer_last_order WHERE last_order_date < (SELECT d_date + INTERVAL '1 day' - INTERVAL '90 days' FROM d)",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.95,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.83,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    3050
+   ]
+  ],
+  "answer": "As of the end of June 2011, there were 3,050 customers who had churned. Based on the current definition, these are customers who placed an order in the past but did not make a purchase during the 90-day window leading up to that date.",
+  "citations": [
+   "metric-churn",
+   "metric-active-customer",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-churn#0",
+   "caveat-missing-customer-ids#0",
+   "metric-churn-2010#0",
+   "metric-customer-count#0",
+   "caveat-date-coverage#0",
+   "metric-new-customer#0",
+   "sales-team-faq-2010#0",
+   "metric-active-customer#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d03",
+  "difficulty": "definition",
+  "question": "What was our churn rate at the end of 2010?",
+  "outcome": "correct",
+  "sql": "WITH customer_activity AS (SELECT customer_id, MAX(invoice_date) AS last_order_date FROM fact_sales WHERE invoice_date < '2011-01-01' GROUP BY customer_id), total_customers AS (SELECT COUNT(DISTINCT customer_id) AS total_count FROM customer_activity), churned_customers AS (SELECT COUNT(*) AS churned_count FROM customer_activity WHERE last_order_date < '2011-01-01'::timestamp - INTERVAL '90 days') SELECT 100.0 * churned_count / total_count AS churn_rate FROM churned_customers, total_customers",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.9,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.94,
+  "columns": [
+   "churn_rate"
+  ],
+  "result": [
+   [
+    38.70220162224797
+   ]
+  ],
+  "answer": "At the end of 2010, our churn rate was 38.70%. This is based on the definition where a customer is considered churned if they have not placed an order in the last 90 days.",
+  "citations": [
+   "metric-churn",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-churn#0",
+   "metric-churn-2010#0",
+   "rfm-segments#0",
+   "caveat-date-coverage#0",
+   "metric-cancellation-rate#0",
+   "caveat-missing-customer-ids#0",
+   "tier-validation#0",
+   "metric-new-customer#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d04",
+  "difficulty": "definition",
+  "question": "What was our average order value (AOV) in 2011?",
+  "outcome": "correct",
+  "sql": "WITH net_revenue AS (SELECT (SELECT COALESCE(SUM(revenue), 0) FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') + (SELECT COALESCE(SUM(revenue), 0) FROM fact_cancellations WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') AS total_net_revenue), order_count AS (SELECT COUNT(DISTINCT invoice) AS total_orders FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01') SELECT total_net_revenue / NULLIF(total_orders, 0) AS aov FROM net_revenue, order_count",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.67,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 1.36,
+  "columns": [
+   "aov"
+  ],
+  "result": [
+   [
+    445.60182619943555
+   ]
+  ],
+  "answer": "In 2011, the average order value was \u00a3445.60. This figure is calculated as the net revenue\u2014which accounts for both sales and cancellations\u2014divided by the total number of orders for the period ending December 9th.",
+  "citations": [
+   "metric-aov",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-aov#0",
+   "metric-aov-legacy#0",
+   "metric-order-value#0",
+   "metric-large-order#0",
+   "sales-team-faq-2010#0",
+   "caveat-date-coverage#0",
+   "metric-new-customer#0",
+   "metric-active-customer#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d05",
+  "difficulty": "definition",
+  "question": "What was the cancellation rate in 2010?",
+  "outcome": "correct",
+  "sql": "WITH gross_sales AS (SELECT SUM(revenue) AS total_gross FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), cancelled_sales AS (SELECT SUM(revenue) AS total_cancelled FROM fact_cancellations WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01') SELECT CASE WHEN total_gross = 0 THEN 0 ELSE 100 * (-total_cancelled / total_gross) END AS cancellation_rate FROM gross_sales, cancelled_sales",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.21,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.53,
+  "columns": [
+   "cancellation_rate"
+  ],
+  "result": [
+   [
+    5.8224054498116224
+   ]
+  ],
+  "answer": "In 2010, the value-based cancellation rate was 5.82%. This figure represents the percentage of total gross revenue that was lost to cancellations during that year.",
+  "citations": [
+   "metric-cancellation-rate"
+  ],
+  "retrieved": [
+   "metric-cancellation-rate#0",
+   "caveat-cancellations#0",
+   "sales-team-faq-2010#0",
+   "metric-units-returns#0",
+   "metric-net-revenue#0",
+   "table-fact-cancellations#0",
+   "metric-revenue#0",
+   "metric-churn#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d06",
+  "difficulty": "definition",
+  "question": "What was our repeat customer rate in 2011?",
+  "outcome": "correct",
+  "sql": "WITH customer_order_counts AS (SELECT customer_id, COUNT(DISTINCT invoice) as order_count FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' GROUP BY customer_id), metrics AS (SELECT COUNT(CASE WHEN order_count >= 2 THEN 1 END)::NUMERIC as repeat_customers, COUNT(*)::NUMERIC as total_customers FROM customer_order_counts) SELECT CASE WHEN total_customers = 0 THEN 0 ELSE (repeat_customers / total_customers) * 100 END as repeat_rate_2011 FROM metrics",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.38,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.54,
+  "columns": [
+   "repeat_rate_2011"
+  ],
+  "result": [
+   [
+    64.11960132890366
+   ]
+  ],
+  "answer": "In 2011, our repeat customer rate was 64.12%. This figure represents the percentage of customers who placed two or more orders during that year.",
+  "citations": [
+   "metric-repeat-customer",
+   "metric-customer-count"
+  ],
+  "retrieved": [
+   "metric-repeat-customer#0",
+   "metric-customer-count#0",
+   "tier-validation#0",
+   "caveat-missing-customer-ids#0",
+   "metric-churn#0",
+   "metric-new-customer#0",
+   "metric-cancellation-rate#0",
+   "rfm-segments#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d07",
+  "difficulty": "definition",
+  "question": "How many new customers did we acquire in September 2011?",
+  "outcome": "correct",
+  "sql": "WITH first_orders AS (SELECT customer_id, MIN(invoice_date) AS first_order_date FROM fact_sales GROUP BY customer_id) SELECT COUNT(customer_id) FROM first_orders WHERE first_order_date >= '2011-09-01' AND first_order_date < '2011-10-01'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.95,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.97,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    188
+   ]
+  ],
+  "answer": "We acquired 188 new customers in September 2011. A customer is defined as new if their first-ever order occurred during that month.",
+  "citations": [
+   "metric-new-customer",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "caveat-missing-customer-ids#0",
+   "metric-customer-count#0",
+   "metric-new-customer#0",
+   "caveat-date-coverage#0",
+   "sales-team-faq-2010#0",
+   "metric-churn#0",
+   "metric-active-customer#0",
+   "tier-validation#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d08",
+  "difficulty": "definition",
+  "question": "What was our international revenue in 2011?",
+  "outcome": "correct",
+  "sql": "SELECT SUM(revenue) FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' AND country != 'United Kingdom' AND country != 'Unspecified'",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.1,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.64,
+  "columns": [
+   "sum"
+  ],
+  "result": [
+   [
+    1422681.16
+   ]
+  ],
+  "answer": "In 2011, our international revenue\u2014defined as all sales excluding the United Kingdom and unspecified locations\u2014totaled \u00a31,422,681.16.",
+  "citations": [
+   "metric-international-revenue",
+   "metric-revenue"
+  ],
+  "retrieved": [
+   "metric-international-revenue#0",
+   "caveat-countries#0",
+   "metric-aov#0",
+   "metric-revenue#0",
+   "metric-large-order#0",
+   "table-fact-sales#0",
+   "caveat-currency#0",
+   "caveat-date-coverage#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d09",
+  "difficulty": "definition",
+  "question": "How many large orders did we receive in 2011?",
+  "outcome": "correct",
+  "sql": "SELECT COUNT(*) FROM (SELECT invoice FROM fact_sales WHERE invoice_date >= '2011-01-01' AND invoice_date < '2012-01-01' GROUP BY invoice HAVING SUM(revenue) >= 1000) AS large_orders",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 3.42,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 1.01,
+  "columns": [
+   "count"
+  ],
+  "result": [
+   [
+    1168
+   ]
+  ],
+  "answer": "We received 1,168 large orders in 2011, defined as invoices with a gross value of at least \u00a31,000. Please note that this total covers the period up to December 9, 2011.",
+  "citations": [
+   "metric-large-order",
+   "metric-order-value",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-large-order#0",
+   "sales-team-faq-2010#0",
+   "caveat-date-coverage#0",
+   "metric-aov#0",
+   "metric-active-customer#0",
+   "metric-order-value#0",
+   "metric-new-customer#0",
+   "caveat-cancellations#0"
+  ]
+ },
+ {
+  "run": 1,
+  "id": "d10",
+  "difficulty": "definition",
+  "question": "What share of 2010 revenue came in peak season?",
+  "outcome": "correct",
+  "sql": "WITH yearly_revenue AS (SELECT SUM(revenue) AS total_revenue FROM fact_sales WHERE invoice_date >= '2010-01-01' AND invoice_date < '2011-01-01'), peak_revenue AS (SELECT SUM(revenue) AS peak_rev FROM fact_sales WHERE invoice_date >= '2010-09-01' AND invoice_date < '2010-12-01') SELECT (peak_rev / total_revenue) * 100 AS peak_season_share FROM yearly_revenue, peak_revenue",
+  "error": null,
+  "attempts": 1,
+  "latency_s": 2.87,
+  "backoff_s": 0.0,
+  "rows": 1,
+  "self_check": "ok",
+  "narrate_s": 0.99,
+  "columns": [
+   "peak_season_share"
+  ],
+  "result": [
+   [
+    36.175026735602025
+   ]
+  ],
+  "answer": "During 2010, the peak season\u2014defined as the wholesale buying period from September through November\u2014accounted for 36.18% of the total annual revenue.",
+  "citations": [
+   "metric-peak-season",
+   "metric-revenue",
+   "caveat-date-coverage"
+  ],
+  "retrieved": [
+   "metric-peak-season#0",
+   "table-fact-sales#0",
+   "metric-revenue#0",
+   "caveat-date-coverage#0",
+   "metric-net-revenue#0",
+   "metric-aov#0",
+   "tier-validation#0",
+   "metric-large-order#0"
+  ]
+ }
+]

@@ -33,9 +33,10 @@ from pipeline.load import READONLY_ROLE
 ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = ROOT / "logs" / "analyst.jsonl"
 CACHE_DIR = ROOT / "data" / "analyst_cache"   # one JSONL per model, so models can be evaluated in parallel
-# gemini-3.8-flash / 3.7-flash returned 503 "high demand" on almost every call while this was built;
-# 3.5-flash is the newest Flash model that answered reliably. Override with GEMINI_MODEL.
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+# Parts 1-3 compared gemini-3.5-flash, 3.5-flash-lite and 3.1-flash-lite. Phases 7-8 ran under a hard
+# prepaid budget on 3.1-flash-lite only, and analyst/budget.py prices only that model, so it is the
+# default. Override with GEMINI_MODEL (the spend guard then refuses to call an unpriced model).
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 MAX_ROWS = 200
 STATEMENT_TIMEOUT_MS = 15_000
 ABSTAIN_TEXT = "I can't answer that from this data."
@@ -132,7 +133,12 @@ class Answer:
     model: str = MODEL
     prompt_version: str = ""
     cached: bool = False
-    self_check: str | None = None   # v3 only: ok / fix / abstain
+    self_check: str | None = None   # v3+: ok / fix / abstain
+    citations: list[str] = field(default_factory=list)   # v4+: doc ids the model says it used
+    retrieved: list[str] = field(default_factory=list)   # v4+: chunk ids shown to the model, in rank order
+    narrate_s: float = 0.0          # time spent writing the prose answer (included in latency_s)
+    verification: str | None = None  # v5: pass / corrected / abstained (numbers in the answer vs the result)
+    unsupported: list[str] = field(default_factory=list)   # v5: numbers the first draft could not back up
 
     @property
     def success(self) -> bool:
@@ -142,7 +148,7 @@ class Answer:
 class Analyst:
     def __init__(self, prompt_version: str = "v1", model: str = MODEL, narrate: bool = True,
                  use_cache: bool = True, cache_tag: str = "", log_path: Path = LOG_PATH,
-                 cache_path: Path | None = None):
+                 cache_path: Path | None = None, retriever: object | None = None):
         from google import genai
 
         self.client = genai.Client()  # reads GEMINI_API_KEY from the environment
@@ -156,19 +162,41 @@ class Analyst:
         self.cache_path = cache_path or CACHE_DIR / f"{model}.jsonl"
         self.cache = self._load_cache() if use_cache else {}
         self._backoff = 0.0
+        self.calls = 0   # Gemini calls made by this instance (cache hits make none)
+        self._retriever = retriever
+        self._context = ""   # v4+: retrieved knowledge for the question being answered
+        self._hits: list = []
+
+    @property
+    def retriever(self) -> object:
+        if self._retriever is None:
+            from rag.retrieve import Retriever
+
+            self._retriever = Retriever()
+        return self._retriever
+
+    def _msg(self, message: str) -> str:
+        return prompts.with_context(self._context, message) if self._context else message
 
     # ---- LLM plumbing -------------------------------------------------------------
-    def _generate(self, contents: str, json_mode: bool = True) -> str:
+    def _generate(self, contents: str, json_mode: bool = True, purpose: str = "agent",
+                  system: str | None = None) -> str:
         from google.genai import errors, types
 
+        from analyst import budget
+
         config = types.GenerateContentConfig(
-            system_instruction=self.prompt.system,
+            system_instruction=system or self.prompt.system,
             temperature=0.0,
             response_mime_type="application/json" if json_mode else "text/plain",
         )
         for attempt in range(MAX_API_ATTEMPTS):
+            budget.check(self.model)   # raises BudgetExceeded before a call that could pass the cap
             try:
-                return self.client.models.generate_content(model=self.model, contents=contents, config=config).text
+                resp = self.client.models.generate_content(model=self.model, contents=contents, config=config)
+                budget.record(self.model, f"{self.prompt_version}:{purpose}", resp.usage_metadata)
+                self.calls += 1
+                return resp.text or ""
             except (errors.ServerError, errors.ClientError) as err:
                 code = getattr(err, "code", None)
                 if code not in RETRYABLE or attempt == MAX_API_ATTEMPTS - 1:
@@ -234,10 +262,19 @@ class Analyst:
         ans = Answer(question=question, model=self.model, prompt_version=self.prompt_version)
         self._backoff = 0.0
         t0 = time.perf_counter()
-        contents = self.prompt.user(question)
+        self._context, self._hits = "", []
+        if self.prompt.rag:
+            from rag.retrieve import format_context
+
+            self._hits = self.retriever.retrieve(question)
+            self._context = format_context(self._hits)
+            ans.retrieved = [h.chunk_id for h in self._hits]
+        contents = self._msg(self.prompt.user(question))
         for attempt in (1, 2):  # one retry on a SQL error, with the error fed back
             ans.attempts = attempt
             out = self._parse(self._generate(contents))
+            if self.prompt.rag:
+                ans.citations = [c for c in out.get("citations") or [] if isinstance(c, str)]
             if out.get("abstain"):
                 ans.abstained, ans.sql, ans.error = True, None, None
                 ans.answer = out.get("reason") or ABSTAIN_TEXT
@@ -264,11 +301,18 @@ class Analyst:
                 break
             except (UnsafeSQL, psycopg.Error) as err:
                 ans.sql, ans.error = sql, f"{type(err).__name__}: {err}".strip()
-                contents = self.prompt.retry(question, sql, ans.error)
+                contents = self._msg(self.prompt.retry(question, sql, ans.error))
         if ans.abstained:
             pass
         elif ans.error is None and self.narrate:
+            t_n = time.perf_counter()
             ans.answer = self._narrate(question, ans)
+            ans.narrate_s = round(time.perf_counter() - t_n, 2)
+            if self.prompt.verify:
+                ans.verification, ans.answer, ans.unsupported = self.verify_answer(
+                    question, ans.sql, ans.columns, ans.rows[:20], ans.answer)
+                if ans.verification == "abstained":
+                    ans.abstained = True
         elif ans.error is not None:
             ans.answer = "The query failed, so I have no answer."
         ans.backoff_s = round(self._backoff, 2)
@@ -278,15 +322,34 @@ class Analyst:
             self._save_cache(key, ans)
         return ans
 
+    def verify_answer(self, question: str, sql: str, columns: list[str], rows: list[list],
+                      answer: str) -> tuple[str, str, list[str]]:
+        """Self-verification (v5): every number in the answer must be backed by the result it was
+        written from. If one is not, rewrite once from the result; if the rewrite still has an
+        unsupported number, abstain. Returns (status, final answer, unsupported numbers of the draft)."""
+        from analyst.verify import unsupported_numbers
+
+        bad = unsupported_numbers(answer, question, columns, rows, sql)
+        if not bad:
+            return "pass", answer, []
+        payload = json.dumps({"columns": columns, "rows": rows[:20]}, default=str)
+        fixed = self._generate(prompts.correct(question, sql, payload, answer, bad), json_mode=False,
+                               purpose="verify", system=prompts.NARRATE_SYSTEM).strip()
+        if not unsupported_numbers(fixed, question, columns, rows, sql):
+            return "corrected", fixed, bad
+        return "abstained", f"{ABSTAIN_TEXT} The answer could not be verified against the query result.", bad
+
     def _self_check(self, question: str, sql: str, columns: list[str], rows: list[tuple]) -> dict:
         """Mitigation (v3): show the model its SQL and a result preview; it confirms, fixes or abstains."""
         preview = json.dumps({"columns": columns, "rows": [[jsonable(v) for v in r] for r in rows[:10]],
                               "row_count": len(rows)}, default=str)
-        return self._parse(self._generate(prompts.check(question, sql, preview)))
+        return self._parse(self._generate(self._msg(prompts.check(question, sql, preview)), purpose="self_check"))
 
     def _narrate(self, question: str, ans: Answer) -> str:
         payload = json.dumps({"columns": ans.columns, "rows": ans.rows[:20], "truncated": ans.truncated}, default=str)
-        return self._generate(prompts.narrate(question, ans.sql, payload), json_mode=False).strip()
+        cited = "\n\n".join(h.text for h in self._hits if h.doc_id in ans.citations and not h.deprecated)
+        return self._generate(prompts.narrate(question, ans.sql, payload, cited), json_mode=False,
+                              purpose="narrate", system=prompts.NARRATE_SYSTEM).strip()
 
 
 def main() -> None:

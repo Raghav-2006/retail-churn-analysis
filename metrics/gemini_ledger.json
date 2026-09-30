@@ -1,0 +1,50 @@
+{
+ "cap_cad": 8.0,
+ "usd_to_cad": 1.4,
+ "prices_usd_per_m": {
+  "gemini-3.1-flash-lite": {
+   "input": 0.25,
+   "output": 1.5
+  }
+ },
+ "calls": 491,
+ "input_tokens": 912736,
+ "output_tokens": 34302,
+ "thought_tokens": 0,
+ "est_cad": 0.391492,
+ "by_purpose": {
+  "smoke_test": {
+   "calls": 1,
+   "est_cad": 5e-06
+  },
+  "v4:agent": {
+   "calls": 132,
+   "est_cad": 0.153358
+  },
+  "v4:self_check": {
+   "calls": 108,
+   "est_cad": 0.116951
+  },
+  "v4:narrate": {
+   "calls": 108,
+   "est_cad": 0.038595
+  },
+  "v3:agent": {
+   "calls": 22,
+   "est_cad": 0.011232
+  },
+  "v3:self_check": {
+   "calls": 16,
+   "est_cad": 0.007243
+  },
+  "v4:judge": {
+   "calls": 53,
+   "est_cad": 0.051782
+  },
+  "v5:verify": {
+   "calls": 51,
+   "est_cad": 0.012323
+  }
+ },
+ "updated_at": "2026-09-30T23:14:09"
+}

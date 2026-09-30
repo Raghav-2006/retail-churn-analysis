@@ -22,3 +22,4 @@ mypy-init-return = true
 "tests/*" = ["ANN"]                  # test functions and fixtures don't need annotations
 "orchestration/dags/*" = ["ANN"]
 "src/make_results.py" = ["E501"]
+"analyst/human_labels.py" = ["E501"]   # the labelling instructions are written one CSV row per line

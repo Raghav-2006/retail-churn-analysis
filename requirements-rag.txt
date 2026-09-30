@@ -1,0 +1,5 @@
+# Phase 7: local embeddings for the knowledge layer (rag/). Kept out of requirements.txt so CI and the
+# API image don't pull torch; tests use rag.embed.HashEmbedder instead.
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu   # optional: the small CPU build
+-r requirements.txt
+sentence-transformers>=3.0

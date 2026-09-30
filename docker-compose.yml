@@ -7,7 +7,7 @@
 # and GEMINI_API_KEY in a .env file (never committed).
 services:
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16   # postgres:16 + the pgvector extension (Phase 7 knowledge store)
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}

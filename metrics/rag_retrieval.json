@@ -1,0 +1,2108 @@
+{
+  "embedder": "sentence-transformers/all-MiniLM-L6-v2",
+  "index": {
+    "w32": {
+      "chunk_words": 32,
+      "chunks": 157,
+      "docs": 34,
+      "mean_words": 27.5,
+      "max_words": 39
+    },
+    "w64": {
+      "chunk_words": 64,
+      "chunks": 74,
+      "docs": 34,
+      "mean_words": 43.9,
+      "max_words": 71
+    },
+    "w128": {
+      "chunk_words": 128,
+      "chunks": 38,
+      "docs": 34,
+      "mean_words": 79.0,
+      "max_words": 125
+    },
+    "doc": {
+      "chunk_words": null,
+      "chunks": 34,
+      "docs": 34,
+      "mean_words": 87.9,
+      "max_words": 185
+    }
+  },
+  "ks": [
+    3,
+    5,
+    8
+  ],
+  "results": [
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6077,
+      "hit": 0.7231,
+      "mrr": 0.559
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5455,
+      "hit": 0.6727,
+      "mrr": 0.4879
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.3,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7453,
+      "hit": 0.8868,
+      "mrr": 0.6855
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6769,
+      "hit": 0.7846,
+      "mrr": 0.5769
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6273,
+      "hit": 0.7455,
+      "mrr": 0.5091
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.5,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8302,
+      "hit": 0.9623,
+      "mrr": 0.7075
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7308,
+      "hit": 0.8154,
+      "mrr": 0.5859
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6909,
+      "hit": 0.7818,
+      "mrr": 0.5197
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.5,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8962,
+      "hit": 1.0,
+      "mrr": 0.7186
+    },
+    {
+      "config": "w32",
+      "policy": "include",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6077,
+      "hit": 0.7231,
+      "mrr": 0.559
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5455,
+      "hit": 0.6727,
+      "mrr": 0.4879
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.1,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7453,
+      "hit": 0.8868,
+      "mrr": 0.6855
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6769,
+      "hit": 0.7846,
+      "mrr": 0.5782
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6273,
+      "hit": 0.7455,
+      "mrr": 0.5106
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.3,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8302,
+      "hit": 0.9623,
+      "mrr": 0.7091
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7308,
+      "hit": 0.8154,
+      "mrr": 0.5872
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6909,
+      "hit": 0.7818,
+      "mrr": 0.5212
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.5,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8962,
+      "hit": 1.0,
+      "mrr": 0.7201
+    },
+    {
+      "config": "w32",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6077,
+      "hit": 0.7231,
+      "mrr": 0.559
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5455,
+      "hit": 0.6727,
+      "mrr": 0.4879
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.1,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7453,
+      "hit": 0.8868,
+      "mrr": 0.6855
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6769,
+      "hit": 0.7846,
+      "mrr": 0.5782
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6273,
+      "hit": 0.7455,
+      "mrr": 0.5106
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.1,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8302,
+      "hit": 0.9623,
+      "mrr": 0.7091
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7308,
+      "hit": 0.8154,
+      "mrr": 0.5872
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6909,
+      "hit": 0.7818,
+      "mrr": 0.5212
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.95,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8962,
+      "hit": 1.0,
+      "mrr": 0.7201
+    },
+    {
+      "config": "w32",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.5769,
+      "hit": 0.6923,
+      "mrr": 0.5436
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5273,
+      "hit": 0.6545,
+      "mrr": 0.4909
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.85,
+      "hit": 0.9,
+      "mrr": 0.8333,
+      "trap_in_context": 0.5,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7075,
+      "hit": 0.8491,
+      "mrr": 0.6667
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7154,
+      "hit": 0.8,
+      "mrr": 0.5718
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6727,
+      "hit": 0.7636,
+      "mrr": 0.5197
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8583,
+      "trap_in_context": 0.5,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8774,
+      "hit": 0.9811,
+      "mrr": 0.7013
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7615,
+      "hit": 0.8154,
+      "mrr": 0.5744
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7273,
+      "hit": 0.7818,
+      "mrr": 0.5227
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8583,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.934,
+      "hit": 1.0,
+      "mrr": 0.7044
+    },
+    {
+      "config": "w64",
+      "policy": "include",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.5769,
+      "hit": 0.6923,
+      "mrr": 0.5538
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5273,
+      "hit": 0.6545,
+      "mrr": 0.5
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.85,
+      "hit": 0.9,
+      "mrr": 0.85,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7075,
+      "hit": 0.8491,
+      "mrr": 0.6792
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7154,
+      "hit": 0.8,
+      "mrr": 0.5821
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6727,
+      "hit": 0.7636,
+      "mrr": 0.5288
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.875,
+      "trap_in_context": 0.4,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8774,
+      "hit": 0.9811,
+      "mrr": 0.7138
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7615,
+      "hit": 0.8154,
+      "mrr": 0.5846
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7273,
+      "hit": 0.7818,
+      "mrr": 0.5318
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.875,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.934,
+      "hit": 1.0,
+      "mrr": 0.717
+    },
+    {
+      "config": "w64",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.5769,
+      "hit": 0.6923,
+      "mrr": 0.5538
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5273,
+      "hit": 0.6545,
+      "mrr": 0.5
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.85,
+      "hit": 0.9,
+      "mrr": 0.85,
+      "trap_in_context": 0.1,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.7075,
+      "hit": 0.8491,
+      "mrr": 0.6792
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7154,
+      "hit": 0.8,
+      "mrr": 0.5821
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.6727,
+      "hit": 0.7636,
+      "mrr": 0.5288
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.875,
+      "trap_in_context": 0.1,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.8774,
+      "hit": 0.9811,
+      "mrr": 0.7138
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7615,
+      "hit": 0.8154,
+      "mrr": 0.5846
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7273,
+      "hit": 0.7818,
+      "mrr": 0.5318
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.875,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.934,
+      "hit": 1.0,
+      "mrr": 0.717
+    },
+    {
+      "config": "w64",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6205
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5727
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8833,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.761
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7385,
+      "hit": 0.8,
+      "mrr": 0.6297
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7,
+      "hit": 0.7636,
+      "mrr": 0.5836
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8833,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9057,
+      "hit": 0.9811,
+      "mrr": 0.7723
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7692,
+      "hit": 0.8154,
+      "mrr": 0.6323
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7364,
+      "hit": 0.7818,
+      "mrr": 0.5867
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8833,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.1
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.7755
+    },
+    {
+      "config": "w128",
+      "policy": "include",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6385
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5848
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.4,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.783
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7385,
+      "hit": 0.8,
+      "mrr": 0.6477
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7,
+      "hit": 0.7636,
+      "mrr": 0.5958
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9057,
+      "hit": 0.9811,
+      "mrr": 0.7943
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7692,
+      "hit": 0.8154,
+      "mrr": 0.6503
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7364,
+      "hit": 0.7818,
+      "mrr": 0.5988
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.7975
+    },
+    {
+      "config": "w128",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6385
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5848
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.783
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7385,
+      "hit": 0.8,
+      "mrr": 0.6477
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7,
+      "hit": 0.7636,
+      "mrr": 0.5958
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9057,
+      "hit": 0.9811,
+      "mrr": 0.7943
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7692,
+      "hit": 0.8154,
+      "mrr": 0.6503
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7364,
+      "hit": 0.7818,
+      "mrr": 0.5988
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.3,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.7975
+    },
+    {
+      "config": "w128",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6103
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5697
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.2
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.7484
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7385,
+      "hit": 0.8,
+      "mrr": 0.6203
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7,
+      "hit": 0.7636,
+      "mrr": 0.5815
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.2
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9057,
+      "hit": 0.9811,
+      "mrr": 0.7607
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7769,
+      "hit": 0.8308,
+      "mrr": 0.6247
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7455,
+      "hit": 0.8,
+      "mrr": 0.5868
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.8333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.2
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.7638
+    },
+    {
+      "config": "doc",
+      "policy": "include",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0417,
+      "hit": 0.0833,
+      "mrr": 0.0104
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6282
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5727
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.7704
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7462,
+      "hit": 0.8,
+      "mrr": 0.6382
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7091,
+      "hit": 0.7636,
+      "mrr": 0.5845
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9151,
+      "hit": 0.9811,
+      "mrr": 0.7827
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7769,
+      "hit": 0.8308,
+      "mrr": 0.6427
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7455,
+      "hit": 0.8,
+      "mrr": 0.5898
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.6,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.7858
+    },
+    {
+      "config": "doc",
+      "policy": "penalize",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0417,
+      "hit": 0.0833,
+      "mrr": 0.0104
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.6385,
+      "hit": 0.7538,
+      "mrr": 0.6308
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.5818,
+      "hit": 0.7091,
+      "mrr": 0.5758
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.783,
+      "hit": 0.9245,
+      "mrr": 0.7736
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 3,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7462,
+      "hit": 0.8,
+      "mrr": 0.6408
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7091,
+      "hit": 0.7636,
+      "mrr": 0.5876
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.2,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9151,
+      "hit": 0.9811,
+      "mrr": 0.7858
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 5,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0,
+      "hit": 0.0,
+      "mrr": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "all",
+      "questions": 65,
+      "recall": 0.7769,
+      "hit": 0.8308,
+      "mrr": 0.6453
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "frozen55",
+      "questions": 55,
+      "recall": 0.7455,
+      "hit": 0.8,
+      "mrr": 0.5929
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "defs",
+      "questions": 10,
+      "recall": 0.95,
+      "hit": 1.0,
+      "mrr": 0.9333,
+      "trap_in_context": 0.3,
+      "trap_above_relevant": 0.0
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "answerable",
+      "questions": 53,
+      "recall": 0.9434,
+      "hit": 1.0,
+      "mrr": 0.789
+    },
+    {
+      "config": "doc",
+      "policy": "exclude",
+      "k": 8,
+      "subset": "unanswerable",
+      "questions": 12,
+      "recall": 0.0417,
+      "hit": 0.0833,
+      "mrr": 0.0104
+    }
+  ],
+  "chosen": {
+    "config": "doc",
+    "k": 8,
+    "policy": "penalize",
+    "recall": 0.7769,
+    "mrr": 0.6427
+  },
+  "misses_at_chosen": [
+    {
+      "id": "u01",
+      "question": "What was our profit margin in 2011?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "metric-aov",
+        "metric-units-returns",
+        "metric-revenue",
+        "tier-validation",
+        "caveat-date-coverage",
+        "metric-net-revenue",
+        "table-fact-sales",
+        "metric-large-order"
+      ]
+    },
+    {
+      "id": "u02",
+      "question": "Which salesperson generated the most revenue?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "table-fact-sales",
+        "metric-customer-count",
+        "metric-large-order",
+        "metric-international-revenue",
+        "metric-revenue",
+        "table-dim-customer",
+        "metric-net-revenue",
+        "sales-team-faq-2010"
+      ]
+    },
+    {
+      "id": "u04",
+      "question": "How much did we spend on marketing in 2011, and what was the return on that spend?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "caveat-date-coverage",
+        "metric-units-returns",
+        "tier-validation",
+        "sales-team-faq-2010",
+        "metric-peak-season",
+        "metric-large-order",
+        "caveat-missing-customer-ids",
+        "table-fact-sales"
+      ]
+    },
+    {
+      "id": "u05",
+      "question": "What was the website conversion rate in November 2011?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "tier-validation",
+        "caveat-date-coverage",
+        "metric-churn",
+        "caveat-countries",
+        "metric-aov",
+        "metric-peak-season",
+        "caveat-missing-customer-ids",
+        "metric-international-revenue"
+      ]
+    },
+    {
+      "id": "u06",
+      "question": "How many units of product 85123A are currently in stock?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "table-dim-product",
+        "metric-units-returns",
+        "caveat-non-product-codes",
+        "metric-aov",
+        "metric-order-value",
+        "metric-large-order",
+        "table-fact-sales",
+        "sales-team-faq-2010"
+      ]
+    },
+    {
+      "id": "u07",
+      "question": "What was the average delivery time for orders shipped to France?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "metric-large-order",
+        "metric-churn",
+        "metric-new-customer",
+        "caveat-non-product-codes",
+        "metric-active-customer",
+        "sales-team-faq-2010",
+        "metric-aov",
+        "metric-peak-season"
+      ]
+    },
+    {
+      "id": "u10",
+      "question": "How much discount did customer 12346 get on their orders?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "sales-team-faq-2010",
+        "metric-customer-count",
+        "caveat-missing-customer-ids",
+        "metric-large-order",
+        "metric-new-customer",
+        "caveat-non-product-codes",
+        "metric-churn",
+        "table-dim-customer"
+      ]
+    },
+    {
+      "id": "x12",
+      "question": "What was the gross margin for each product category?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "metric-units-returns",
+        "table-dim-product",
+        "metric-revenue",
+        "metric-aov",
+        "metric-large-order",
+        "metric-order-value",
+        "metric-net-revenue",
+        "table-fact-sales"
+      ]
+    },
+    {
+      "id": "x13",
+      "question": "Which marketing channel brought in the most new customers in 2011?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "metric-new-customer",
+        "caveat-missing-customer-ids",
+        "metric-customer-count",
+        "metric-active-customer-2009",
+        "rfm-segments",
+        "tier-validation",
+        "metric-active-customer",
+        "metric-churn"
+      ]
+    },
+    {
+      "id": "x14",
+      "question": "How much revenue came from wholesale customers versus retail customers?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "metric-customer-count",
+        "caveat-missing-customer-ids",
+        "metric-revenue",
+        "tier-validation",
+        "metric-international-revenue",
+        "tier-methodology",
+        "metric-peak-season",
+        "table-fact-sales"
+      ]
+    },
+    {
+      "id": "x15",
+      "question": "Did we hit our 2011 revenue target?",
+      "relevant": [
+        "caveat-no-cost-data"
+      ],
+      "top_docs": [
+        "caveat-date-coverage",
+        "tier-validation",
+        "metric-aov",
+        "metric-revenue",
+        "sales-team-faq-2010",
+        "table-fact-sales",
+        "metric-peak-season",
+        "metric-net-revenue"
+      ]
+    }
+  ]
+}

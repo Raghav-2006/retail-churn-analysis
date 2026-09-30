@@ -1,0 +1,182 @@
+{
+ "L01": {
+  "id": "d10",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L02": {
+  "id": "d01",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L03": {
+  "id": "d09",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L04": {
+  "id": "x07",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L05": {
+  "id": "x06",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L06": {
+  "id": "x05",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L07": {
+  "id": "x09",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L08": {
+  "id": "d08",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L09": {
+  "id": "e01",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L10": {
+  "id": "h03",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L11": {
+  "id": "e08",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L12": {
+  "id": "h14",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L13": {
+  "id": "h16",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L14": {
+  "id": "d05",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L15": {
+  "id": "d06",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L16": {
+  "id": "h11",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L17": {
+  "id": "x11",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L18": {
+  "id": "m04",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L19": {
+  "id": "m01",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L20": {
+  "id": "h07",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L21": {
+  "id": "x10",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L22": {
+  "id": "d07",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L23": {
+  "id": "h06",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L24": {
+  "id": "d02",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L25": {
+  "id": "h10",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L26": {
+  "id": "d03",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L27": {
+  "id": "m03",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L28": {
+  "id": "h05",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ },
+ "L29": {
+  "id": "d04",
+  "run": 0,
+  "set": "defs",
+  "version": "v4"
+ },
+ "L30": {
+  "id": "h09",
+  "run": 0,
+  "set": "frozen",
+  "version": "v4"
+ }
+}

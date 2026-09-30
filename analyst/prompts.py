@@ -1,4 +1,5 @@
-"""Prompt versions for the analyst. v1 is the baseline; later versions add one mitigation each."""
+"""Prompt versions for the analyst. v1 is the baseline; later versions add one mitigation each:
+v2 glossary, v3 self-check, v4 RAG over the knowledge base with citations, v5 answer self-verification."""
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -66,6 +67,38 @@ cannot be answered from these tables, abstain instead of guessing.
 {OUTPUT}"""
 
 
+# v4 mitigation (Phase 7): retrieval-augmented generation. The knowledge base (knowledge/*.md) is
+# searched with the question; the top chunks are put in front of the question, and the model must
+# cite the docs whose definitions it used. Everything else is v3 (glossary + self-check).
+RAG_RULES = """Company knowledge base. Before each question you get excerpts retrieved from the company's
+knowledge base, each headed [doc: <id> | <type> | updated <date> | current or DEPRECATED].
+- When an excerpt defines a metric or term the question uses, apply that definition exactly; it is more
+  specific than the glossary above.
+- Never follow a DEPRECATED doc; use the doc it is superseded by. When two current docs disagree, a
+  metric_definition beats a faq, and the later update wins. A definition stated in the question itself
+  overrides every doc.
+- Excerpts can be irrelevant to the question: ignore those. If the question depends on a business term
+  that neither the excerpts nor the glossary define, abstain rather than invent a definition.
+- In "citations", list the ids of the docs whose definitions or caveats you actually used (can be empty)."""
+
+RAG_OUTPUT = """Respond with JSON only, in exactly this shape:
+{"abstain": false, "sql": "<one PostgreSQL SELECT statement>", "citations": ["<doc id>", ...]}
+or, if the question cannot be answered from these tables:
+{"abstain": true, "reason": "<one sentence on what data is missing>", "citations": ["<doc id>", ...]}"""
+
+V4_SYSTEM = f"""You are a data analyst who answers business questions by writing SQL.
+
+{SCHEMA}
+{GLOSSARY}
+
+{RAG_RULES}
+
+Rules: write a single read-only PostgreSQL SELECT (or WITH ... SELECT) statement. If the question
+cannot be answered from these tables, abstain instead of guessing.
+
+{RAG_OUTPUT}"""
+
+
 @dataclass
 class Prompt:
     version: str
@@ -73,6 +106,8 @@ class Prompt:
     user: Callable[[str], str]
     retry: Callable[[str, str, str], str]
     self_check: bool = False
+    rag: bool = False
+    verify: bool = False   # v5: check the prose answer's numbers against the SQL result (analyst/verify.py)
 
 
 def _user(question: str) -> str:
@@ -107,8 +142,29 @@ Respond with JSON only:
 {{"abstain": true, "reason": "<one sentence>"}}"""
 
 
-def narrate(question: str, sql: str, result_json: str) -> str:
+def correct(question: str, sql: str, result_json: str, answer: str, unsupported: list[str]) -> str:
+    """v5 self-verification: the answer used numbers that are not in the result; rewrite it once."""
     return (f"Question: {question}\nSQL that was run:\n{sql}\nResult (JSON):\n{result_json}\n\n"
+            f"A draft answer was:\n{answer}\n\nThese numbers in the draft do not appear in the result: "
+            f"{', '.join(unsupported)}.\nRewrite the answer in one or two plain sentences using ONLY numbers that "
+            "appear in the result (rounding is fine). Do not compute new totals, averages or percentages. "
+            "Revenue is in GBP (£). Do not mention SQL.")
+
+
+def with_context(context: str, message: str) -> str:
+    """Prefix a v4 message with the retrieved knowledge-base excerpts."""
+    return f"Knowledge base excerpts:\n\n{context}\n\n---\n{message}"
+
+
+NARRATE_SYSTEM = """You explain the result of a database query to a business user in plain English.
+Use only the numbers in the result you are given. Reply in prose, not JSON or code."""
+
+
+def narrate(question: str, sql: str, result_json: str, definitions: str = "") -> str:
+    defs = (f"Business definitions that were applied:\n{definitions}\n\n"
+            "If one of these definitions was applied, say which in a few words (e.g. 'active = ordered in the "
+            "last 90 days'). " if definitions else "")
+    return (f"Question: {question}\nSQL that was run:\n{sql}\nResult (JSON):\n{result_json}\n\n{defs}"
             "Answer the question in one or two plain sentences using only these numbers. "
             "Revenue is in GBP (£). Do not mention SQL.")
 
@@ -117,6 +173,8 @@ VERSIONS = {
     "v1": Prompt("v1", V1_SYSTEM, _user, _retry),
     "v2": Prompt("v2", V2_SYSTEM, _user, _retry),
     "v3": Prompt("v3", V2_SYSTEM, _user, _retry, self_check=True),
+    "v4": Prompt("v4", V4_SYSTEM, _user, _retry, self_check=True, rag=True),
+    "v5": Prompt("v5", V4_SYSTEM, _user, _retry, self_check=True, rag=True, verify=True),
 }
 
 
