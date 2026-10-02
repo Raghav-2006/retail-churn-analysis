@@ -95,6 +95,20 @@
       "capture_top30_pct": 82.28
     },
     {
+      "method": "XGBoost (learned)",
+      "spearman": 0.5583,
+      "capture_top10_pct": 61.21,
+      "capture_top20_pct": 74.66,
+      "capture_top30_pct": 82.16
+    },
+    {
+      "method": "LightGBM (learned)",
+      "spearman": 0.5571,
+      "capture_top10_pct": 61.16,
+      "capture_top20_pct": 73.35,
+      "capture_top30_pct": 81.62
+    },
+    {
       "method": "Hand-weighted v2 (learned weights, rounded)",
       "spearman": 0.5996,
       "capture_top10_pct": 62.57,
@@ -103,6 +117,62 @@
     }
   ],
   "best_capture_top10_method": "Logistic regression (learned)",
+  "feature_importance_gain": {
+    "XGBoost (learned)": [
+      {
+        "feature": "monetary",
+        "gain": 11349.35,
+        "gain_share_pct": 49.19
+      },
+      {
+        "feature": "regularity",
+        "gain": 2227.17,
+        "gain_share_pct": 9.65
+      },
+      {
+        "feature": "recency",
+        "gain": 2179.62,
+        "gain_share_pct": 9.45
+      },
+      {
+        "feature": "avg_order_value",
+        "gain": 2131.44,
+        "gain_share_pct": 9.24
+      },
+      {
+        "feature": "frequency",
+        "gain": 1621.94,
+        "gain_share_pct": 7.03
+      }
+    ],
+    "LightGBM (learned)": [
+      {
+        "feature": "monetary",
+        "gain": 13523.68,
+        "gain_share_pct": 47.97
+      },
+      {
+        "feature": "frequency",
+        "gain": 2925.12,
+        "gain_share_pct": 10.38
+      },
+      {
+        "feature": "avg_order_value",
+        "gain": 2610.7,
+        "gain_share_pct": 9.26
+      },
+      {
+        "feature": "recency",
+        "gain": 2244.5,
+        "gain_share_pct": 7.96
+      },
+      {
+        "feature": "tenure",
+        "gain": 2183.13,
+        "gain_share_pct": 7.74
+      }
+    ]
+  },
   "learned_weights": [
     {
       "feature": "recency",

@@ -1,16 +1,19 @@
-"""Validate the tiering model on future revenue, compare it with baselines and a
-learned model, test weight sensitivity, and draw the charts.
+"""Validate the tiering model on future revenue, compare it with baselines and
+learned models (logistic regression, scikit-learn gradient boosting, XGBoost, LightGBM),
+test weight sensitivity, and draw the charts.
 
     python -m tiering.validate      # writes metrics/tiering.json and figures/04-05
 
 Scoring date 2011-06-01; outcome = revenue from 2011-06-01 to 2011-11-30.
 
-The learned model must not be fit on the outcome it is judged on, so it is
+The learned models must not be fit on the outcome they are judged on, so they are
 trained one period earlier: features at 2010-12-01 -> revenue 2010-12-01 to
 2011-05-31 (same 6-month horizon), then applied unchanged at 2011-06-01.
 """
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from scipy.stats import spearmanr
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
@@ -70,7 +73,29 @@ def learned_models(train: pd.DataFrame) -> dict:
     # Gradient boosting on raw features (handles NaN regularity natively) as a flexible upper bound
     hgb = HistGradientBoostingClassifier(max_iter=200, learning_rate=0.05, max_leaf_nodes=15,
                                          random_state=42).fit(train[FEATURES], y)
-    return {"logit": logit, "hgb": hgb, "train_positive_rate": float(y.mean())}
+    # XGBoost and LightGBM: same raw features, same target, same training period; both treat NaN
+    # regularity natively. Fixed, untuned settings: nothing is tuned on the 2011-06 test window.
+    xgbm = xgb.XGBClassifier(n_estimators=300, learning_rate=0.05, max_depth=4, subsample=0.8,
+                             colsample_bytree=0.8, random_state=42).fit(train[FEATURES], y)
+    lgbm = lgb.LGBMClassifier(n_estimators=300, learning_rate=0.05, num_leaves=15, subsample=0.8,
+                              colsample_bytree=0.8, random_state=42, verbose=-1).fit(train[FEATURES], y)
+    return {"logit": logit, "hgb": hgb, "xgb": xgbm, "lgbm": lgbm, "train_positive_rate": float(y.mean())}
+
+
+def gain_importance(models: dict, top: int = 5) -> dict[str, list[dict]]:
+    """Top features by total split gain, as a share of the model's total gain."""
+    gains = {
+        "XGBoost (learned)": models["xgb"].get_booster().get_score(importance_type="total_gain"),
+        "LightGBM (learned)": dict(zip(models["lgbm"].booster_.feature_name(),
+                                       models["lgbm"].booster_.feature_importance(importance_type="gain"),
+                                       strict=True)),
+    }
+    out = {}
+    for name, g in gains.items():
+        total = sum(g.values())
+        ranked = sorted(((f, float(g.get(f, 0.0))) for f in FEATURES), key=lambda x: -x[1])[:top]
+        out[name] = [{"feature": f, "gain": round(v, 2), "gain_share_pct": round(100 * v / total, 2)} for f, v in ranked]
+    return out
 
 
 def weight_sensitivity(features: pd.DataFrame, outcome: pd.Series, base_tiers: pd.Series) -> list[dict]:
@@ -109,7 +134,7 @@ def charts(tiers: pd.DataFrame, curves: dict[str, pd.DataFrame], mono_share: flo
     import matplotlib.pyplot as plt
     import matplotlib.ticker as mtick
 
-    from src.style import AQUA, BLUE, GRAY, INK_2, ORANGE, apply_style, save
+    from src.style import AQUA, BLUE, GRAY, INK, INK_2, ORANGE, apply_style, save
 
     apply_style()
     fig, ax = plt.subplots()
@@ -128,7 +153,8 @@ def charts(tiers: pd.DataFrame, curves: dict[str, pd.DataFrame], mono_share: flo
 
     fig, ax = plt.subplots(figsize=(7, 5))
     styles = {"Hand-weighted score": (BLUE, "-"), "Hand-weighted v2 (learned weights, rounded)": (BLUE, ":"),
-              "Monetary only": (ORANGE, "-"), "Equal weights": (AQUA, "--")}
+              "Monetary only": (ORANGE, "-"), "Equal weights": (AQUA, "--"),
+              "XGBoost (learned)": (INK, "-."), "LightGBM (learned)": (INK, ":")}
     for name, (color, ls) in styles.items():
         c = curves[name]
         ax.plot(c["pct_customers"], c["pct_revenue"], color=color, linestyle=ls, label=name)
@@ -173,6 +199,8 @@ def main() -> dict:
             models["logit"].predict_proba(percentiles(features))[:, 1], index=features.index),
         "Gradient boosting (learned)": pd.Series(
             models["hgb"].predict_proba(features)[:, 1], index=features.index),
+        "XGBoost (learned)": pd.Series(models["xgb"].predict_proba(features)[:, 1], index=features.index),
+        "LightGBM (learned)": pd.Series(models["lgbm"].predict_proba(features)[:, 1], index=features.index),
     }
     comparison = [{"method": name, **ranking_metrics(s, outcome)} for name, s in methods.items()]
     curves = {name: capture_curve(s, outcome) for name, s in methods.items()}
@@ -216,6 +244,7 @@ def main() -> dict:
         "monotonic_median": monotonic_median,
         "comparison": comparison,
         "best_capture_top10_method": best["method"],
+        "feature_importance_gain": gain_importance(models),
         "learned_weights": learned_weights,
         "v2_weights": v2_weights,
         "tiers_v2": tiers_v2.reset_index().to_dict(orient="records"),
@@ -230,6 +259,8 @@ def main() -> dict:
     print(tiers.to_string())
     print(pd.DataFrame(comparison).to_string(index=False))
     print(pd.DataFrame(learned_weights).to_string(index=False))
+    for name, imp in metrics["feature_importance_gain"].items():
+        print(f"{name} top-5 gain:", ", ".join(f"{r['feature']} {r['gain_share_pct']}%" for r in imp))
     print("v2 weights:", v2_weights)
     print(tiers_v2.to_string())
     print(pd.DataFrame(sensitivity).to_string(index=False))
