@@ -24,14 +24,14 @@ flowchart TB
 | **Pipeline quality** | 1,067,371 raw rows → 776,579 sales lines. 17 checks per load, **0 failing** (16 pass, 1 warning). Revenue reconciled to the penny (£17,068,582.72); reruns are byte-identical |
 | **dbt layer** | 11 models, **63 tests passing**; after the migration, tier scores match v1 **bit for bit** for all 4,908 customers |
 | **Migration parity** | Clean run **100%** (46/46 checks). An injected silent bug (Norway dropped) passed all 17 quality checks and 63 dbt tests, and was **caught by parity at 58.7%** |
-| **Tiering** | Tier 1 (top 10%) earned **58.3%** of next-6-month revenue, monotonic £5,073 → £125 by tier. **Monetary-only did better: 62.3%**; learned v2 weights 62.6% |
+| **Tiering** | Tier 1 (top 10%) earned **58.3%** of next-6-month revenue, monotonic £5,073 → £125 by tier. **Monetary-only did better: 62.3%**; learned v2 weights 62.6%; XGBoost/LightGBM 61.2%, no better than the simple score |
 | **AI analyst** | Confidently-wrong rate **3.4% → 1.6% → 0.2%** (17/495 → 8/495 → 1/440) with a glossary, then a self-check; v3 execution accuracy 97.7–100% on 3 Gemini models |
 | **RAG knowledge layer** | 10 new questions that need a business definition: **20% → 100%** correct with retrieval (confidently wrong 60% → 0%). All 65 questions: confidently wrong **9.2% → 1.5%**, execution accuracy 84.9% → 98.1%. One regression: RAG broke 1 of the frozen 55. Retrieval recall@8 **0.94**, MRR 0.79 (answerable questions) |
 | **Self-verification + judge** | Number check caught **51/51** injected errors and repaired all 51, but found **0** in the real answers, so confidently wrong stayed 1.5%. LLM judge: 94.3% faithful, 67.9% citations correct; **judge–human agreement pending human labels** |
 
 <details><summary>Stack</summary>
 
-Python, pandas, PostgreSQL 16, pgvector, sentence-transformers, dbt, Airflow 3, scikit-learn, FastAPI, Streamlit, Docker, pytest, ruff, GitHub Actions, Gemini API. Data: Online Retail II, UCI Machine Learning Repository, CC BY 4.0.
+Python, pandas, PostgreSQL 16, pgvector, sentence-transformers, dbt, Airflow 3, scikit-learn, XGBoost, LightGBM, FastAPI, Streamlit, Docker, pytest, ruff, GitHub Actions, Gemini API. Data: Online Retail II, UCI Machine Learning Repository, CC BY 4.0.
 </details>
 
 ---
@@ -165,7 +165,11 @@ Scored on **2011-06-01** using only earlier transactions, then judged on what ea
 | Equal weights | 0.580 | 52.8% |
 | Logistic regression (trained on Dec 2010 → May 2011) | 0.596 | 62.6% |
 | Gradient boosting (same training) | 0.573 | 61.3% |
+| XGBoost (same training, untuned) | 0.558 | 61.2% |
+| LightGBM (same training, untuned) | 0.557 | 61.2% |
 | v2: learned weights rounded to 0.05 | 0.600 | 62.6% |
+
+Gradient-boosted trees did not beat the simple score on this data, so the explainable weighted score stays. XGBoost and LightGBM both put about half their split gain on monetary value (49% and 48%).
 
 **What this says.** v1 ranks the *whole* customer base best (highest Spearman), because recency and frequency separate "will buy again" from "gone". But the top of the list is about who spends big, and a pure monetary ranking wins there.
 

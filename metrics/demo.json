@@ -1,6 +1,6 @@
 {
   "size_mb": 1.93,
-  "built_at": "2026-09-30T23:18:58+00:00",
+  "built_at": "2026-10-02T18:41:23+00:00",
   "tables": {
     "monthly": 25,
     "countries": 10,
@@ -8,7 +8,7 @@
     "kpis": 30,
     "customer_scores": 4908,
     "tier_summary": 4,
-    "tier_methods": 6,
+    "tier_methods": 8,
     "quality_checks": 17,
     "eval_answers": 635,
     "knowledge_docs": 34,

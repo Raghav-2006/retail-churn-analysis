@@ -170,6 +170,7 @@ def section_tiering(m: dict) -> list[str]:
         "",
         table([{**c, "spearman": f"{c['spearman']:.3f}"} for c in m["comparison"]], ["method", "spearman", "capture_top10_pct", "capture_top20_pct", "capture_top30_pct"]),
         "",
+        *boosting_verdict(m),
         "**Learned vs hand weights** (logistic regression on standardized percentile features; "
         "target = top 20% of next-6-month revenue, trained one period earlier)",
         "",
@@ -185,6 +186,30 @@ def section_tiering(m: dict) -> list[str]:
         "",
         *ex_lines,
     ]
+
+
+def boosting_verdict(m: dict) -> list[str]:
+    """XGBoost/LightGBM vs the simple bars (hand-weighted Spearman, monetary-only top-10% capture), plus gain importances."""
+    comp = {c["method"]: c for c in m["comparison"]}
+    gbt = [comp[k] for k in ("XGBoost (learned)", "LightGBM (learned)") if k in comp]
+    if not gbt:
+        return []
+    hand, mono = comp["Hand-weighted score"], comp["Monetary only"]
+    beats = [g["method"] for g in gbt if g["spearman"] > hand["spearman"] or g["capture_top10_pct"] > mono["capture_top10_pct"]]
+    verdict = (f"Gradient-boosted trees did not beat the simple score on this data (best Spearman "
+               f"{max(g['spearman'] for g in gbt):.3f} vs {hand['spearman']:.3f}; best top-10% capture "
+               f"{max(g['capture_top10_pct'] for g in gbt)}% vs monetary-only {mono['capture_top10_pct']}%), "
+               "so the explainable weighted score stays." if not beats else
+               f"{' and '.join(beats)} beat a simple bar (hand-weighted Spearman {hand['spearman']:.3f} or monetary-only "
+               f"top-10% capture {mono['capture_top10_pct']}%).")
+    lines = [f"**XGBoost and LightGBM** (300 trees, learning rate 0.05, fixed settings, untuned; same raw features, "
+             f"target and {m['train_cutoff']} training period as the other learned models): {verdict}", ""]
+    imp = m.get("feature_importance_gain", {})
+    if imp:
+        lines += ["**Top-5 features by gain** (share of each model's total split gain)", "",
+                  table([{"model": name, **{f"#{i + 1}": f"{r['feature']} {r['gain_share_pct']:.1f}%" for i, r in enumerate(rows)}}
+                         for name, rows in imp.items()], ["model", "#1", "#2", "#3", "#4", "#5"]), ""]
+    return lines
 
 
 PROMPT_LABELS = {

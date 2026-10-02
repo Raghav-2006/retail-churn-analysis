@@ -7,7 +7,7 @@ from pipeline.transform import clean
 from tests.conftest import make_raw
 from tiering.features import FEATURES, build_features_legacy, future_revenue
 from tiering.score import WEIGHTS, assign_tiers, explain, percentiles, score_customers
-from tiering.validate import capture, rounded_weights
+from tiering.validate import capture, gain_importance, learned_models, rounded_weights
 
 
 def toy_features(n: int = 20) -> pd.DataFrame:
@@ -105,3 +105,35 @@ def test_features_respect_the_cutoff(pg_dsn):
     assert c1["future_revenue"] == 50.0
     assert data.loc[2, "future_revenue"] == 0.0 and pd.isna(data.loc[2, "regularity"])
     assert list(data.columns) == FEATURES + ["future_revenue"]
+
+
+def test_xgboost_and_lightgbm_give_valid_probabilities_with_missing_regularity():
+    import numpy as np
+
+    rng = np.random.default_rng(0)
+    n = 300
+    train = pd.DataFrame({f: rng.gamma(2.0, 50.0, n) for f in FEATURES})
+    train.loc[train.index[:40], "regularity"] = np.nan              # fewer than 3 orders: no spread to measure
+    train["future_revenue"] = train["monetary"] * rng.uniform(0.5, 1.5, n)
+    models = learned_models(train)
+    for key in ("xgb", "lgbm"):
+        p = models[key].predict_proba(train[FEATURES])
+        assert p.shape == (n, 2) and np.isfinite(p).all()
+        assert ((p >= 0) & (p <= 1)).all() and np.allclose(p.sum(axis=1), 1.0)
+    imp = gain_importance(models)
+    assert set(imp) == {"XGBoost (learned)", "LightGBM (learned)"}
+    for rows in imp.values():
+        assert len(rows) == 5 and {r["feature"] for r in rows} <= set(FEATURES)
+        assert [r["gain"] for r in rows] == sorted((r["gain"] for r in rows), reverse=True)
+
+
+def test_comparison_includes_xgboost_and_lightgbm():
+    from src.metrics import load_metrics
+
+    m = load_metrics("tiering")
+    comp = {c["method"]: c for c in m["comparison"]}
+    for name in ("XGBoost (learned)", "LightGBM (learned)"):
+        c = comp[name]
+        assert -1 <= c["spearman"] <= 1
+        assert 0 <= c["capture_top10_pct"] <= c["capture_top20_pct"] <= c["capture_top30_pct"] <= 100
+        assert len(m["feature_importance_gain"][name]) == 5
